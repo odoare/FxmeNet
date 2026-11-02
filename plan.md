@@ -33,8 +33,10 @@ Findings it relies on (checked against the code on 2026-11-02):
 AudioGridder (MIT, github.com/apohl79/audiogridder) already offloads any
 VST2/VST3/AU plugin to a server, with automation, latency compensation,
 sandboxing, and editors streamed as images. Its server targets macOS and
-Windows; Linux is marked experimental. For third-party plugins it is the right
-tool, and FxmeNet should not compete there. Tier 0 below exists so that a chain
+Windows; Linux is marked experimental. Its last commit is from 2024-07-31, so
+it is no longer maintained. For third-party plugins it is still the right
+tool, and FxmeNet should not compete there. What FxmeNet takes from its code
+is in `doc/audiogridder-notes.md`. Tier 0 below exists so that a chain
 can mix in a foreign plugin, not to be a better AudioGridder.
 
 What FxmeNet does that AudioGridder cannot, by construction:

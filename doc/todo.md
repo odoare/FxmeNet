@@ -10,16 +10,22 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
    `__stdcall` convention are the part to confirm there).
 3. Spike 3: a minimal JUCE plugin hosting a VST3 and embedding its editor,
    in Reaper on Linux (nested XEmbed).
-4. Read AudioGridder (MIT): jitter buffer, PDC, offline render, parameter
-   mapping, sandboxing. Note what to reuse.
 12. Not FxmeNet's code, to report to AmbiRR2: when `isNonRealtime()`, wait for
     the image-source recompute instead of processing with stale taps, so
     offline bounces are deterministic.
 
 ## Phase 1 onwards
 
-6. Phase 2: protocol (with transport, MIDI, latency changes, channel masks),
-   `fxmenet-server`, command-line test client.
+6. Phase 2, remaining:
+   - 6a. Build and run `FxmeNetProtocolTests` and `FxmeNetTransportTests`
+     (written).
+   - 6b. Control channel: TCP framing, the messages of protocol.md 4.2 (JSON
+     and binary), `Common/FxmeNet/control/`.
+   - 6c. `fxmenet-server`: control server, session routing on one UDP
+     socket, reply cache, chain engine (VST3 slots, lock-free swaps),
+     message loop, telemetry pump, discovery responder.
+   - 6d. Command-line test client: a WAV through a chain on the server,
+     compared with local processing (bit-identical).
 7. Phase 3: FxmeNetPlugin tier 0, parameter pool with learn mapping, channel
    enable/disable UI.
 8. Phase 4: shadow editors and telemetry; port Compressor and Equalizer.

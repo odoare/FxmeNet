@@ -1,0 +1,337 @@
+/*
+  ------------------------------------------------------------------------------
+    ProtocolTests.cpp
+
+    The audio-path wire format and fragmentation (Common/FxmeNet/protocol),
+    without JUCE and without a network: headers, transport, MIDI and audio
+    blocks round-trip; malformed input is refused; messages split into
+    datagrams come back whole whatever the order, and incomplete ones are
+    dropped as protocol.md section 3 says.
+
+    SPDX-License-Identifier: LGPL-3.0-or-later
+  ------------------------------------------------------------------------------
+*/
+
+#include <FxmeNet/protocol/Fragmentation.h>
+#include <FxmeNet/protocol/Wire.h>
+
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
+#include <vector>
+
+namespace
+{
+    int failures = 0;
+    int checks   = 0;
+
+    void check (bool condition, const char* what, int line)
+    {
+        ++checks;
+        if (! condition)
+        {
+            ++failures;
+            std::printf ("  FAIL (line %d): %s\n", line, what);
+        }
+    }
+
+    #define CHECK(cond) check ((cond), #cond, __LINE__)
+
+    using namespace fxmenet::wire;
+    using Bytes = std::vector<std::uint8_t>;
+    using Datagrams = std::vector<Bytes>;
+
+    /** numChannels planar channels, sample i of channel c = c * 1000 + i. */
+    std::vector<std::vector<float>> makeAudio (int numChannels, int samples)
+    {
+        std::vector<std::vector<float>> a ((std::size_t) numChannels, std::vector<float> ((std::size_t) samples));
+        for (int c = 0; c < numChannels; ++c)
+            for (int i = 0; i < samples; ++i)
+                a[(std::size_t) c][(std::size_t) i] = (float) (c * 1000 + i) * 0.001f;
+        return a;
+    }
+
+    std::vector<const float*> pointers (const std::vector<std::vector<float>>& a)
+    {
+        std::vector<const float*> p;
+        for (auto& ch : a)
+            p.push_back (ch.data());
+        return p;
+    }
+
+    Bytes encodeRequest (std::uint64_t block, int channels, int samples)
+    {
+        auto audio = makeAudio (channels, samples);
+        auto ptrs = pointers (audio);
+        BlockInfo info;
+        info.block = block;
+        info.samples = (std::uint16_t) samples;
+        info.mask = maskOfFirst (channels);
+        Bytes body;
+        ByteWriter w (body);
+        writeBlock (w, false, info, nullptr, 0, ptrs.data());
+        return body;
+    }
+
+    Datagrams split (Fragmenter& f, std::uint32_t messageId, const Bytes& body)
+    {
+        DatagramHeader h;
+        h.kind = Kind::audioRequest;
+        h.sessionId = 7;
+        h.token = 0x1122334455667788ull;
+        h.messageId = messageId;
+        Datagrams out;
+        f.split (h, body.data(), body.size(), [&] (const std::uint8_t* d, std::size_t n)
+        {
+            out.emplace_back (d, d + n);
+            return true;
+        });
+        return out;
+    }
+
+    /** Feeds datagrams; returns the bodies of the messages completed. */
+    std::vector<Bytes> feed (Reassembler& r, const Datagrams& datagrams)
+    {
+        std::vector<Bytes> done;
+        for (auto& d : datagrams)
+        {
+            Reassembler::Message m;
+            if (r.add (d.data(), d.size(), m))
+                done.emplace_back (m.body, m.body + m.size);
+        }
+        return done;
+    }
+}
+
+int main()
+{
+    //--------------------------------------------------------------------------
+    std::printf ("Header\n");
+    {
+        DatagramHeader h;
+        h.kind = Kind::audioReply;
+        h.flags = 0x8005;
+        h.sessionId = 42;
+        h.token = 0xfedcba9876543210ull;
+        h.messageId = 0xffffffffu;
+        h.fragment = 3;
+        h.fragments = 9;
+
+        Bytes b;
+        ByteWriter w (b);
+        writeHeader (w, h);
+        CHECK (b.size() == headerSize);
+        CHECK (b[0] == 'F' && b[1] == 'X' && b[2] == 'N' && b[3] == 'A');
+
+        DatagramHeader g;
+        ByteReader r (b.data(), b.size());
+        CHECK (readHeader (r, g));
+        CHECK (g.kind == Kind::audioReply && g.flags == 0x8005 && g.sessionId == 42);
+        CHECK (g.token == h.token && g.messageId == h.messageId);
+        CHECK (g.fragment == 3 && g.fragments == 9);
+
+        b[4] = 2;   // another protocol version
+        ByteReader r2 (b.data(), b.size());
+        CHECK (! readHeader (r2, g));
+
+        b[4] = protocolVersion;
+        b[24] = 9; b[25] = 0;   // fragment 9 of 9: out of range
+        ByteReader r3 (b.data(), b.size());
+        CHECK (! readHeader (r3, g));
+    }
+
+    //--------------------------------------------------------------------------
+    std::printf ("Audio request with transport, MIDI and a channel mask\n");
+    {
+        constexpr int samples = 128;
+        auto audio = makeAudio (3, samples);
+        auto ptrs = pointers (audio);
+
+        BlockInfo info;
+        info.block = 123456789012ull;
+        info.samples = samples;
+        info.mask = 0b1011;   // channels 0, 1 and 3; channel 2 disabled
+        info.hasTransport = true;
+        info.transport.bpm = 97.5;
+        info.transport.ppqPosition = 12.25;
+        info.transport.timeInSamples = -64;
+        info.transport.timeSigNumerator = 7;
+        info.transport.timeSigDenominator = 8;
+        info.transport.playing = true;
+        info.transport.looping = true;
+
+        Bytes midi;
+        MidiWriter mw (midi);
+        const std::uint8_t noteOn[] = { 0x90, 60, 100 };
+        const std::uint8_t noteOff[] = { 0x80, 60, 0 };
+        CHECK (mw.add (5, noteOn, 3));
+        CHECK (mw.add (127, noteOff, 3));
+        CHECK (! mw.add (0, noteOn, 0));
+
+        Bytes body;
+        ByteWriter w (body);
+        writeBlock (w, false, info, midi.data(), midi.size(), ptrs.data());
+        CHECK (body.size() == 8 + 2 + 8 + 2 + transportSize + midi.size() + 3 * samples * 4);
+
+        BlockView v;
+        CHECK (readBlock (body.data(), body.size(), false, requestFlags::transport, v));
+        CHECK (v.info.block == info.block && v.info.samples == samples && v.info.mask == 0b1011);
+        CHECK (v.numChannels() == 3);
+        CHECK (v.info.hasTransport && v.info.transport.bpm == 97.5 && v.info.transport.ppqPosition == 12.25);
+        CHECK (v.info.transport.timeInSamples == -64);
+        CHECK (v.info.transport.timeSigNumerator == 7 && v.info.transport.timeSigDenominator == 8);
+        CHECK (v.info.transport.playing && ! v.info.transport.recording && v.info.transport.looping);
+
+        MidiReader mr (v.midi, v.midiBytes);
+        MidiEvent e;
+        CHECK (mr.next (e) && e.sampleOffset == 5 && e.size == 3 && e.data[0] == 0x90);
+        CHECK (mr.next (e) && e.sampleOffset == 127 && e.data[0] == 0x80);
+        CHECK (! mr.next (e));
+
+        std::vector<float> out (samples);
+        bool same = true;
+        for (int c = 0; c < 3; ++c)
+        {
+            v.copyChannel (c, out.data());
+            same = same && out == audio[(std::size_t) c];
+        }
+        CHECK (same);
+
+        CHECK (! readBlock (body.data(), body.size() - 1, false, requestFlags::transport, v));
+        CHECK (! readBlock (body.data(), 10, false, requestFlags::transport, v));
+    }
+
+    //--------------------------------------------------------------------------
+    std::printf ("Audio reply\n");
+    {
+        auto audio = makeAudio (2, 64);
+        auto ptrs = pointers (audio);
+        BlockInfo info;
+        info.block = 3;
+        info.samples = 64;
+        info.mask = maskOfFirst (2);
+        info.chainLatency = 512;
+        info.processMicros = 37;
+
+        Bytes body;
+        ByteWriter w (body);
+        writeBlock (w, true, info, nullptr, 0, ptrs.data());
+
+        BlockView v;
+        CHECK (readBlock (body.data(), body.size(), true, 0, v));
+        CHECK (v.info.chainLatency == 512 && v.info.processMicros == 37);
+        CHECK (! v.info.hasTransport && v.midiBytes == 0);
+        std::vector<float> out (64);
+        v.copyChannel (1, out.data());
+        CHECK (out == audio[1]);
+    }
+
+    //--------------------------------------------------------------------------
+    std::printf ("Masks\n");
+    {
+        CHECK (countChannels (0) == 0);
+        CHECK (countChannels (~std::uint64_t (0)) == 64);
+        CHECK (maskOfFirst (16) == 0xffffu);
+        CHECK (maskOfFirst (64) == ~std::uint64_t (0));
+    }
+
+    //--------------------------------------------------------------------------
+    std::printf ("Telemetry\n");
+    {
+        const std::uint8_t frame[] = { 1, 2, 3, 4, 5 };
+        Bytes body;
+        ByteWriter w (body);
+        writeTelemetry (w, 9, 77, frame, sizeof (frame));
+        TelemetryView v;
+        CHECK (readTelemetry (body.data(), body.size(), v));
+        CHECK (v.slotId == 9 && v.frame == 77 && v.size == 5 && v.codecFrame[4] == 5);
+    }
+
+    //--------------------------------------------------------------------------
+    std::printf ("Fragmentation\n");
+    {
+        Fragmenter f (1400);
+        const auto big = encodeRequest (1, 16, 256);   // 16 channels: about 16 kB
+        const auto pieces = split (f, 10, big);
+        CHECK (pieces.size() == (big.size() + 1399) / 1400);
+        CHECK (pieces.front().size() == headerSize + 1400);
+
+        // In order.
+        {
+            Reassembler r (1400, 1 << 18);
+            auto done = feed (r, pieces);
+            CHECK (done.size() == 1 && done[0] == big);
+        }
+
+        // Reversed, with a duplicate in the middle.
+        {
+            Reassembler r (1400, 1 << 18);
+            Datagrams shuffled (pieces.rbegin(), pieces.rend());
+            shuffled.insert (shuffled.begin() + 3, shuffled[1]);
+            auto done = feed (r, shuffled);
+            CHECK (done.size() == 1 && done[0] == big);
+            CHECK (r.getStatistics().duplicates == 1);
+        }
+
+        // Two messages interleaved.
+        {
+            Reassembler r (1400, 1 << 18);
+            const auto other = encodeRequest (2, 16, 256);
+            const auto otherPieces = split (f, 11, other);
+            Datagrams mixed;
+            for (std::size_t i = 0; i < pieces.size(); ++i)
+            {
+                mixed.push_back (pieces[i]);
+                mixed.push_back (otherPieces[i]);
+            }
+            auto done = feed (r, mixed);
+            CHECK (done.size() == 2 && done[0] == big && done[1] == other);
+        }
+
+        // A lost fragment: the message never completes, and is dropped as
+        // incomplete once the next one does.
+        {
+            Reassembler r (1400, 1 << 18);
+            Datagrams lossy = pieces;
+            lossy.erase (lossy.begin() + 2);
+            CHECK (feed (r, lossy).empty());
+            const auto next = encodeRequest (2, 16, 256);
+            auto done = feed (r, split (f, 11, next));
+            CHECK (done.size() == 1 && done[0] == next);
+            CHECK (r.getStatistics().incomplete == 1);
+        }
+
+        // Single-datagram messages, including an empty body.
+        {
+            Reassembler r (1400, 1 << 18);
+            const auto small = encodeRequest (3, 2, 128);
+            auto one = split (f, 12, small);
+            CHECK (one.size() == 1);
+            auto done = feed (r, one);
+            CHECK (done.size() == 1 && done[0] == small);
+
+            auto empty = split (f, 13, Bytes{});
+            CHECK (empty.size() == 1 && empty[0].size() == headerSize);
+            done = feed (r, empty);
+            CHECK (done.size() == 1 && done[0].empty());
+        }
+
+        // Malformed: a short non-last fragment, a message over the limit,
+        // garbage, a truncated header.
+        {
+            Reassembler r (1400, 4096);
+            Datagrams bad = { pieces[0] };
+            bad[0].pop_back();
+            CHECK (feed (r, bad).empty());
+            CHECK (feed (r, pieces).empty());           // 16 kB > the 4 kB limit
+            CHECK (feed (r, { Bytes (40, 0xab) }).empty());
+            CHECK (feed (r, { Bytes (pieces[0].begin(), pieces[0].begin() + 20) }).empty());
+            CHECK (r.getStatistics().malformed >= 4);
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    std::printf ("%d checks, %d failure(s)\n", checks, failures);
+    return failures == 0 ? 0 : 1;
+}

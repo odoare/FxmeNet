@@ -4,6 +4,29 @@ Newest first. Numbers are those of `todo.md`.
 
 ## 2026-11-02
 
+- Protocol reviewed, no changes. 6 (part, written, not yet built):
+  `Common/` with the wire format (`Wire.h`), fragmentation
+  (`Fragmentation.h`), `AudioTransport` and `UdpTransport`, and two test
+  programs: `FxmeNetProtocolTests` (JUCE-free: round trips, malformed input,
+  fragments in order, reversed, duplicated, interleaved, lost) and
+  `FxmeNetTransportTests` (200 requests of 16 channels x 256 samples through
+  loopback UDP to an echo thread, sample-exact; a wrong-token datagram
+  ignored). Checked: syntax with strict warnings, configure.
+
+- Protocol draft, `doc/protocol.md`: UDP audio (decided) with fragmentation,
+  sequence-numbered blocks, a server reply cache and offline retries; TCP
+  control with JSON and binary frames; latency in every audio reply;
+  transport and MIDI in the request; channel masks; telemetry; discovery;
+  reconnection with resume. Transport-neutral by rule, so a TCP audio
+  transport stays about a day's work if tests call for it (section 11).
+
+- 4: AudioGridder read (streamer, processor, audio worker, sandbox, message
+  format). Findings in `doc/audiogridder-notes.md`: ideas adopted (latency in
+  every reply, bypass delayed by the latency, sandbox with a direct port),
+  practices avoided (blocking and allocating on the audio thread, raw-struct
+  wire format), and the case for UDP with sequence-numbered retries. Its
+  code is not reused.
+
 - 5 (Phase 1 done): GainPan and the loopback harness built and run on
   Linux. The mirror's meters follow the source's and freeze with telemetry
   off, parameters follow both ways, schema `inL inR outL outR`, frames of

@@ -19,6 +19,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # -DFXME_USE_SIBLINGS=OFF.
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Dependencies.cmake)
 
+enable_testing()
+
+# ── Shared code: wire protocol, audio transports, their tests ─────────────────
+add_subdirectory(Common)
+
 # ── The FxmeNet howto plugin (gain, balance, meters; FxmeNet-aware) ───────────
 add_subdirectory(Examples/GainPan)
 

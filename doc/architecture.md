@@ -12,6 +12,12 @@ CMakeLists.txt          root project; JUCE and FxmeTools via cmake/Dependencies.
 cmake/FxmeDeps.cmake    shared resolver (sibling clone or pinned commit), identical
                         in every FX-Mechanics project: copy, never edit here only
 cmake/Dependencies.cmake  pins: JUCE 9.0.4, FxmeTools 94e4e4d
+Common/                 shared by server and client, header-only:
+  FxmeNet/protocol/     Wire.h (datagram header, audio request/reply, telemetry
+                        bodies), Fragmentation.h (Fragmenter, Reassembler); JUCE-free
+  FxmeNet/transport/    AudioTransport.h (the interface, JUCE-free),
+                        UdpTransport.h (juce::DatagramSocket, one session)
+  tests/                FxmeNetProtocolTests (no JUCE), FxmeNetTransportTests (loopback UDP)
 Examples/GainPan/       FxmeNetGainPan: gain, balance, stereo in/out meters, the
                         full FX-Mechanics shell; the FxmeNet-aware howto plugin
 Tools/Loopback/         FxmeNetLoopback: Phase 1 harness, source and mirror of one
@@ -19,7 +25,8 @@ Tools/Loopback/         FxmeNetLoopback: Phase 1 harness, source and mirror of o
 Spikes/                 Phase 0 throwaway programs (FXMENET_BUILD_SPIKES, ON for now)
   HeadlessHost/         spike 1: GUI-free VST3 hosting, WAV through a plugin,
                         state round trip
-doc/                    this file, todo.md, done.md
+doc/                    this file, todo.md, done.md; protocol.md (the wire
+                        protocol, draft); audiogridder-notes.md
 ```
 
 Planned targets (not yet present): `fxmenet-server` (Server/),
@@ -27,6 +34,23 @@ Planned targets (not yet present): `fxmenet-server` (Server/),
 plugin-side classes live in FxmeTools, not here: `net/TelemetryCodec.h`,
 `net/TelemetryRegistry.h`, `net/NetAbi.h` in core, `net/NetBridge.h` in the
 module, documented in FxmeTools `doc/fxmenet-howto.md`.
+
+## Common (protocol and transport)
+
+Implements `doc/protocol.md` sections 3, 5 and 6. `FxmeNetProtocol` is an
+INTERFACE target (include root `Common/`, links FxmeCore for `ByteWriter` /
+`ByteReader`). Encoding appends to a vector the caller reserved once, so it
+does not allocate after that; decoding reads in place (`BlockView`,
+`MidiReader`, `TelemetryView`) and `copyChannel` writes samples straight
+into the caller's buffer. The `Reassembler` preallocates its slots (4
+messages in progress, each up to the session's maximum message size) and
+returns a single-datagram message without copying it.
+
+`AudioTransport` is the seam a TCP audio transport would plug into: the
+rest of the code sends and receives whole messages only. `UdpTransport` is
+the client's side (one peer, one session); the server will share one socket
+among its sessions and route datagrams by session id, reusing `Fragmenter`
+and `Reassembler`.
 
 ## GainPan (Examples/GainPan)
 
