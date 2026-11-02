@@ -16,6 +16,13 @@
         blocks, default 2) counts as late, as it would be in a live DAW.
         Reports round-trip times, late and lost blocks.
 
+    --engine runs the same test through the client engine FxmeNetPlugin
+    uses (Common/FxmeNet/client/ClientEngine.h) instead of talking to the
+    server directly: the WAV is fed in host buffers of --host-block samples
+    (or random sizes up to that, --random-blocks), as a DAW would, offline
+    or paced in real time; the output, realigned by the latency the engine
+    reports, is compared with local processing the same way.
+
     The plugins are given by path: the client reads their identity (uid,
     name, vendor) from its own copy, which also makes the local reference.
     The server must have the same plugins.
@@ -24,6 +31,7 @@
       fxmenet-wavclient --in in.wav --out out.wav --plugin a.vst3 [--plugin b.vst3]...
                         [--server host[:port]] [--block N] [--realtime] [--budget D]
                         [--settle ms] [--no-compare] [--telemetry]
+                        [--engine [--host-block N] [--random-blocks]]
       fxmenet-wavclient --discover
 
     --telemetry switches telemetry on for every FxmeNet-aware slot (as an
@@ -39,12 +47,14 @@
 #include <juce_audio_formats/juce_audio_formats.h>
 #include <juce_audio_processors_headless/juce_audio_processors_headless.h>
 
+#include <FxmeNet/client/ClientEngine.h>
 #include <FxmeNet/control/ControlConnection.h>
 #include <FxmeNet/control/Discovery.h>
 #include <FxmeNet/transport/UdpTransport.h>
 
 #include <iostream>
 #include <map>
+#include <random>
 
 namespace
 {
@@ -71,6 +81,9 @@ struct Options
     bool compare = true;
     bool telemetry = false;
     bool discover = false;
+    bool engine = false;
+    int hostBlock = 512;
+    bool randomBlocks = false;
 
     bool parse (const juce::StringArray& args, juce::String& error)
     {
@@ -96,6 +109,9 @@ struct Options
             else if (a == "--no-compare")            compare = false;
             else if (a == "--telemetry")             telemetry = true;
             else if (a == "--discover")              discover = true;
+            else if (a == "--engine")                engine = true;
+            else if (a == "--host-block" && hasValue) hostBlock = args[++i].getIntValue();
+            else if (a == "--random-blocks")         randomBlocks = true;
             else
             {
                 error = "unknown or incomplete argument: " + a;
@@ -108,6 +124,8 @@ struct Options
             error = "--in, --out and at least one --plugin are required";
         else if (blockSize < 16 || blockSize > 4096)
             error = "--block must be between 16 and 4096";
+        else if (hostBlock < 1 || hostBlock > 8192)
+            error = "--host-block must be between 1 and 8192";
         return error.isEmpty();
     }
 };
@@ -501,6 +519,182 @@ bool processLocally (const juce::OwnedArray<juce::PluginDescription>& descriptio
 }
 
 //==============================================================================
+/** Processes the same chain locally, in the same blocks, and compares. */
+int compareWithLocal (const Options& o, const juce::OwnedArray<juce::PluginDescription>& descriptions,
+                      juce::AudioPluginFormatManager& formats, const juce::AudioBuffer<float>& input,
+                      double sampleRate, const juce::AudioBuffer<float>& remote)
+{
+    if (! o.compare)
+        return 0;
+
+    const int channels = input.getNumChannels();
+    juce::AudioBuffer<float> local (channels, input.getNumSamples());
+    if (! processLocally (descriptions, formats, input, sampleRate, o.blockSize, o.settleMs, local))
+        return 1;
+
+    float diff = 0.0f;
+    for (int c = 0; c < channels; ++c)
+        for (int i = 0; i < local.getNumSamples(); ++i)
+            diff = juce::jmax (diff, std::abs (local.getSample (c, i) - remote.getSample (c, i)));
+
+    if (juce::exactlyEqual (diff, 0.0f))
+    {
+        say ("Server and local processing: bit-identical");
+        return 0;
+    }
+
+    const auto localFile = o.out.getSiblingFile (o.out.getFileNameWithoutExtension() + ".local.wav");
+    writeWav (localFile, local, sampleRate);
+    say ("Server and local processing differ: max abs difference " + juce::String (diff, 9)
+         + " (local result in " + localFile.getFileName() + ")"
+         + (o.realtime ? "; expected in real time when blocks were late or lost" : ""));
+    return o.realtime ? 0 : 1;
+}
+
+//==============================================================================
+/** --engine: the WAV through ClientEngine, in host buffers, as a DAW would. */
+int runEngine (const Options& o, const juce::AudioBuffer<float>& input, double sampleRate,
+               const juce::OwnedArray<juce::PluginDescription>& descriptions,
+               juce::AudioPluginFormatManager& formats)
+{
+    const int channels = input.getNumChannels();
+    const int length = input.getNumSamples();
+
+    client::ClientEngine engine ("fxmenet-wavclient --engine");
+    client::ClientEngine::Settings settings;
+    settings.blockSize = o.blockSize;
+    settings.budgetBlocks = o.budgetBlocks;
+    engine.prepare (sampleRate, o.hostBlock, channels, channels, settings);
+
+    for (int i = 0; i < descriptions.size(); ++i)
+        engine.addSlot ((std::uint32_t) descriptions[i]->uniqueId, descriptions[i]->name,
+                        descriptions[i]->manufacturerName, i);
+
+    engine.connectTo (o.host, o.port);
+    say ("Engine: N " + juce::String (o.blockSize) + ", budget " + juce::String (o.budgetBlocks)
+         + " blocks, host buffers " + (o.randomBlocks ? "of random sizes up to " : "of ") + juce::String (o.hostBlock));
+
+    // Connected, and every slot answered.
+    const auto deadline = juce::Time::getMillisecondCounter() + 60000;
+    juce::String lastStatus;
+    for (;;)
+    {
+        const auto text = engine.getStatusText();
+        if (text != lastStatus)
+            say ("  " + (lastStatus = text));
+
+        bool settled = engine.getStatus() == client::ClientEngine::Status::ready;
+        for (auto& s : engine.getSlots())
+            settled = settled && (s.loaded || s.error.isNotEmpty());
+        if (settled)
+            break;
+        if (juce::Time::getMillisecondCounter() > deadline)
+        {
+            fail ("the engine did not get ready in 60 s");
+            return 1;
+        }
+        juce::Thread::sleep (50);
+    }
+
+    bool allLoaded = true;
+    for (auto& s : engine.getSlots())
+    {
+        say ("  slot " + juce::String ((int) s.slotId) + ": " + s.name
+             + (s.loaded ? ", " + juce::String ((int) s.info.params.size()) + " parameters, latency "
+                           + juce::String (s.info.latency)
+                         : ", not loaded: " + s.error));
+        allLoaded = allLoaded && s.loaded;
+    }
+    if (! allLoaded)
+        return 1;
+
+    if (o.settleMs > 0)
+        juce::Thread::sleep (o.settleMs);
+
+    // Input padded with silence: the output runs `latency` samples behind.
+    const int maxLatency = client::BlockStream::latencyFor (o.blockSize, o.hostBlock, o.budgetBlocks, false);
+    // Whole host buffers: a shorter last one would rightly switch an aligned
+    // stream to the larger latency, at the very end.
+    const int total = (length + maxLatency + o.hostBlock) / o.hostBlock * o.hostBlock;
+    juce::AudioBuffer<float> padded (channels, total), output (channels, total);
+    padded.clear();
+    output.clear();
+    for (int c = 0; c < channels; ++c)
+        padded.copyFrom (c, 0, input, c, 0, length);
+
+    std::mt19937 rng (2026);
+    std::uniform_int_distribution<int> pick (1, o.hostBlock);
+    std::vector<const float*> in ((std::size_t) channels);
+    std::vector<float*> out ((std::size_t) channels);
+
+    const auto t0 = juce::Time::getMillisecondCounterHiRes();
+    int callbacks = 0, latency = 0;
+    bool latencyChanged = false;   // reported once
+    for (int pos = 0; pos < total;)
+    {
+        // Random sizes start with an odd one, so the latency settles at once.
+        int size = o.randomBlocks ? (callbacks == 0 ? 1 : pick (rng)) : o.hostBlock;
+        size = juce::jmin (size, total - pos);
+
+        if (o.realtime)
+        {
+            const auto due = t0 + 1000.0 * pos / sampleRate;
+            const auto now = juce::Time::getMillisecondCounterHiRes();
+            if (due > now)
+                juce::Thread::sleep ((int) (due - now));
+        }
+
+        for (int c = 0; c < channels; ++c)
+        {
+            in[(std::size_t) c] = padded.getReadPointer (c, pos);
+            out[(std::size_t) c] = output.getWritePointer (c, pos);
+        }
+        engine.process (in.data(), out.data(), size, ! o.realtime, false, nullptr);
+        if (callbacks == 0)
+            latency = engine.getStreamLatency();   // what the output is aligned to from the start
+        else if (engine.getStreamLatency() != latency && ! latencyChanged)
+        {
+            latencyChanged = true;
+            say ("  latency changed after " + juce::String (pos) + " samples: "
+                 + juce::String (latency) + " -> " + juce::String (engine.getStreamLatency()));
+        }
+        pos += size;
+        ++callbacks;
+    }
+    const auto elapsed = juce::Time::getMillisecondCounterHiRes() - t0;
+
+    juce::AudioBuffer<float> remote (channels, length);
+    for (int c = 0; c < channels; ++c)
+        remote.copyFrom (c, 0, output, c, latency, length);
+
+    const auto& st = engine.getStatistics();
+    say ("Streamed " + juce::String (1000.0 * length / sampleRate, 1) + " ms of audio in "
+         + juce::String (elapsed, 1) + " ms (" + (o.realtime ? "real time" : "offline") + "), "
+         + juce::String (callbacks) + " host buffers");
+    say ("  blocks sent " + juce::String ((juce::int64) st.sent.load()) + ", replies "
+         + juce::String ((juce::int64) st.received.load()) + ", refused (late or duplicate) "
+         + juce::String ((juce::int64) st.refused.load()) + ", retries " + juce::String ((juce::int64) st.retries.load())
+         + ", concealed " + juce::String ((juce::int64) engine.getConcealedCount())
+         + ", offline timeouts " + juce::String ((juce::int64) st.offlineTimeouts.load()));
+    say ("  round trip last " + juce::String (st.lastRttMicros.load() / 1000.0, 3) + " ms, max "
+         + juce::String (st.maxRttMicros.load() / 1000.0, 3) + " ms; control ping "
+         + juce::String (engine.getControlRttMicros() / 1000.0, 3) + " ms");
+    say ("  latency: stream " + juce::String (latency) + " samples + chain " + juce::String (st.chainLatency.load())
+         + " = " + juce::String (engine.getLatency()) + " reported to the host");
+
+    if (! writeWav (o.out, remote, sampleRate))
+    {
+        fail ("cannot write " + o.out.getFullPathName());
+        return 1;
+    }
+    say ("Wrote " + o.out.getFullPathName());
+
+    if (! o.realtime && st.offlineTimeouts.load() > 0)
+        return 1;
+    return compareWithLocal (o, descriptions, formats, input, sampleRate, remote);
+}
+
+//==============================================================================
 int discoverServers()
 {
     say ("Broadcasting FXMENET_DISCOVER on UDP " + juce::String (discovery::defaultPort) + "...");
@@ -549,6 +743,9 @@ int run (const Options& o)
         chainChannels = juce::jmax (chainChannels, found[0]->numInputChannels, found[0]->numOutputChannels);
         descriptions.add (new juce::PluginDescription (*found[0]));
     }
+
+    if (o.engine)
+        return runEngine (o, *input, sampleRate, descriptions, formats);
 
     // Control: HELLO, CONFIGURE, the slots.
     auto connection = ControlConnection::connect (o.host, o.port, 3000);
@@ -675,31 +872,7 @@ int run (const Options& o)
 
     if (! complete)
         return 1;
-    if (! o.compare)
-        return 0;
-
-    // The same chain, locally.
-    juce::AudioBuffer<float> local (channels, input->getNumSamples());
-    if (! processLocally (descriptions, formats, *input, sampleRate, o.blockSize, o.settleMs, local))
-        return 1;
-
-    float diff = 0.0f;
-    for (int c = 0; c < channels; ++c)
-        for (int i = 0; i < local.getNumSamples(); ++i)
-            diff = juce::jmax (diff, std::abs (local.getSample (c, i) - remote.getSample (c, i)));
-
-    if (juce::exactlyEqual (diff, 0.0f))
-    {
-        say ("Server and local processing: bit-identical");
-        return 0;
-    }
-
-    const auto localFile = o.out.getSiblingFile (o.out.getFileNameWithoutExtension() + ".local.wav");
-    writeWav (localFile, local, sampleRate);
-    say ("Server and local processing differ: max abs difference " + juce::String (diff, 9)
-         + " (local result in " + localFile.getFileName() + ")"
-         + (o.realtime ? "; expected in real time when blocks were late or lost" : ""));
-    return o.realtime ? 0 : 1;
+    return compareWithLocal (o, descriptions, formats, *input, sampleRate, remote);
 }
 
 } // namespace
@@ -721,6 +894,7 @@ int main (int argc, char* argv[])
         std::cerr << error << "\nusage: fxmenet-wavclient --in in.wav --out out.wav --plugin a.vst3 [--plugin b.vst3]...\n"
                      "                         [--server host[:port]] [--block N] [--realtime] [--budget D]\n"
                      "                         [--settle ms] [--no-compare] [--telemetry]\n"
+                     "                         [--engine [--host-block N] [--random-blocks]]\n"
                      "       fxmenet-wavclient --discover" << std::endl;
 
     juce::DeletedAtShutdown::deleteAll();

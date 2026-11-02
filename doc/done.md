@@ -4,6 +4,14 @@ Newest first. Numbers are those of `todo.md`.
 
 ## 2026-11-02
 
+- 7a and 7b pass: `FxmeNetClientTests`, and `fxmenet-wavclient --engine`
+  bit-identical with local processing for host buffers of 512, 128, 100 and
+  random sizes offline, and 512 in real time with nothing concealed (round
+  trip under 0.6 ms on loopback). First run showed a wavclient bug, not an
+  engine one: a shorter last host buffer switched aligned streams to the
+  larger latency at the end, and the output was realigned with that final
+  latency; now whole buffers, latency taken after the first.
+
 - 6f: out-of-process scan, cache, ABI and sha256 in the catalog, offline
   blocks, peer following: built and tested (committed). 6g (two machines)
   and 13 (mDNS) postponed.
@@ -14,6 +22,12 @@ Newest first. Numbers are those of `todo.md`.
   amended to `D*N + B - N` (blocks multiples of N) or `D*N + B + N - 1`.
   Concealment holds the last sample and ramps it down (a lazily filled
   jitter buffer has nothing left to fade out when a reply is missing).
+- 7b (written): `AudioLink` (one session's UDP audio, offline retries,
+  statistics), `ClientEngine` (client-authoritative chain, connection thread
+  with resume, rebuild and reconnection, hazard-pointer link for the audio
+  thread, dry path when not connected or bypassed), `fxmenet-wavclient
+  --engine [--host-block N] [--random-blocks]`. Checked: syntax with JUCE's
+  warning flags and `-Wshadow`.
 
 - 6e: telemetry, `PARAM_CHANGED` and discovery pass (committed).
 - 6f (written, not yet built): out-of-process plugin scan with a cache,

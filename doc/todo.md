@@ -25,16 +25,9 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
      offline and `--realtime`.
 13. Later, optional: mDNS publishing (`_fxmenet._tcp`) for system browsers.
 7. Phase 3: FxmeNetPlugin tier 0, in four steps, each tested before the next:
-   - 7a (written): the client's audio-thread core, JUCE-free
-     (`Common/FxmeNet/client`: BlockStream, ReplyRing) and its test
-     `FxmeNetClientTests`. Build and run it.
-   - 7b. The client engine (JUCE, no plugin yet): the control connection
-     thread (HELLO with resume, CONFIGURE, chain rebuild, requests, PING,
-     reconnect every 2 s), the audio link (UDP socket, sends from the audio
-     thread, receive thread into the ReplyRing, offline wait and retries,
-     statistics, chain latency), the chain model (slots, states, parameter
-     infos). Tested by a new `fxmenet-wavclient --engine` mode that drives
-     it like a DAW (host blocks of any size), compared with local processing.
+   - 7b, remaining: a server restart in the middle of a long `--realtime`
+     `--engine` run (the engine should reconnect and rebuild the chain, dry
+     audio meanwhile).
    - 7c. FxmeNetPlugin: processor (buses up to 64 channels, channel masks,
      bypass and disconnection as dry delayed by the latency, latency
      reporting, offline mode), state (chain and slot states fetched with

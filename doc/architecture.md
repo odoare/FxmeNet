@@ -20,9 +20,10 @@ Common/                 shared by server and client, header-only:
   FxmeNet/control/      ControlFrame.h (frames, types, binary payloads, FrameAssembler;
                         JUCE-free), ControlMessages.h (JSON messages, juce::JSON),
                         ControlConnection.h (one TCP connection, juce::StreamingSocket)
-  FxmeNet/client/       the client's audio-thread core, JUCE-free: BlockStream
-                        (re-blocking, latency, jitter buffer, concealment),
-                        ReplyRing (replies from the receive thread)
+  FxmeNet/client/       the client: BlockStream (re-blocking, latency, jitter
+                        buffer, concealment) and ReplyRing, JUCE-free; AudioLink
+                        (one session's UDP audio) and ClientEngine (chain,
+                        connection thread, audio entry point), JUCE
   tests/                FxmeNetProtocolTests and FxmeNetClientTests (no JUCE),
                         FxmeNetTransportTests (loopback UDP), FxmeNetControlTests
                         (JSON, loopback TCP)
@@ -103,6 +104,39 @@ than that, too far ahead, or duplicated, so a slot being read is never
 written; a seqlock check on the tag would still turn a broken assumption
 into a missing block, never a torn one. Channels arrive by the reply's
 output mask (bit c into channel c, missing ones silent).
+
+`AudioLink` is one session's audio path: its own UDP socket, sends from the
+audio thread (the enabled input channels encoded into a buffer reserved
+once), and a receive thread putting replies into a `ReplyRing`. Its first
+datagram, a keep-alive, is sent by the connection thread: JUCE resolves and
+caches the server's address on a socket's first write, so the audio thread
+never waits on a lookup, and the server learns where to send telemetry. The
+last request of each block in flight is kept for offline retries: offline,
+`fetch` waits for the reply, re-sending every 50 ms, up to 5 s. Statistics
+(sent, replies, refused, retries, round trip, chain latency) live in the
+engine and survive links.
+
+`ClientEngine` is FxmeNetPlugin minus its GUI and DAW glue. The chain is the
+client's (`SlotModel`: identity, last known state, bypass, parameter values
+set since that state, and what the server answered). A connection thread
+connects, says HELLO (resuming the previous session if there is one), sends
+CONFIGURE (always: it restarts the server's block numbering), opens a new
+`AudioLink`, then rebuilds the chain on the server (CHAIN_CLEAR, SLOT_ADD
+with each state, bypass, the parameter values set since) unless the session
+was resumed and nothing changed; it then reads the control channel and
+pings every second, and reconnects every 2 s after a failure. Chain edits
+made while connected are sent at once and their answers update the model;
+made while not connected (or when a send fails) they mark the chain dirty,
+and the connection thread rebuilds it. `refreshStates` fetches every slot's
+state (STATE_GET) so the model can be saved, dropping the parameter values
+the new states already include.
+
+On the audio thread, `process` runs the `BlockStream` with the current link,
+taken through a hazard pointer: the connection thread swaps links
+atomically and deletes the old one only once the audio thread has let go of
+it. A new link restarts the stream at block 0. With no link (connecting,
+reconfiguring) or when bypassed, blocks are played dry through the same
+FIFO, so the output keeps the same latency.
 ## fxmenet-server (Server/)
 
 `fxmenet-server [--name NAME] [--control-port 54322] [--udp-port 54321]
@@ -211,6 +245,12 @@ FxmeNet-aware slot, counts the frames received while streaming and decodes
 the last one with the slot's schema; the `PARAM_CHANGED` batches that
 arrived are counted too. `--discover` alone lists the servers answering a
 broadcast.
+
+`--engine` runs the same test through `ClientEngine`, as FxmeNetPlugin will:
+the file is fed in host buffers of `--host-block` samples (512), or of random
+sizes up to that with `--random-blocks`, offline or paced in real time
+(`--realtime`); the output is realigned by the stream latency the engine
+reports, then compared with local processing in N-sample blocks as above.
 
 ## GainPan (Examples/GainPan)
 
