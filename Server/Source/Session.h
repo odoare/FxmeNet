@@ -39,7 +39,8 @@ namespace fxmenet::server
 
 class Server;
 
-class Session : public std::enable_shared_from_this<Session>
+class Session : public std::enable_shared_from_this<Session>,
+                private juce::Timer
 {
 public:
     Session (Server& owner, std::uint32_t id, std::uint64_t token,
@@ -78,7 +79,14 @@ private:
     void onConnectionClosed (int generation);
     void detach();
 
+    /** The session's timer, at its telemetry rate: one telemetry frame per
+        slot whose editor is open, and the parameters plugins changed. */
+    void timerCallback() override;
+    void pumpTelemetry();
+    void flushParamChanges();
+
     void handleConfigure (const control::Frame&);
+    void handleTelemetryActive (const control::Frame&);
     void handleSlotAdd (const control::Frame&);
     void handleParamSet (const control::Frame&);
     void handleState (const control::Frame&);
@@ -105,6 +113,14 @@ private:
     std::unique_ptr<wire::Reassembler> reassembler;
 
     std::uint64_t lastProcessed = 0;
+
+    // Telemetry and parameter changes, message thread.
+    const juce::DatagramSocket& udp;
+    wire::Fragmenter telemetryFragmenter;
+    std::uint32_t telemetryMessageId = 1;
+    std::vector<std::uint8_t> telemetryFrame, telemetryBody;
+    std::vector<control::ParamChange> paramChanges;
+    std::uint64_t telemetrySent = 0, paramChangesSent = 0;
 
     JUCE_DECLARE_NON_COPYABLE (Session)
 };

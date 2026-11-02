@@ -73,7 +73,8 @@ a stream cannot be resynchronised.
 ## fxmenet-server (Server/)
 
 `fxmenet-server [--name NAME] [--control-port 54322] [--udp-port 54321]
-[--plugin-path DIR]... [--no-default-paths]`. Links only the GUI-free JUCE
+[--discovery-port 54320] [--no-discovery] [--plugin-path DIR]...
+[--no-default-paths]`. Links only the GUI-free JUCE
 modules (`juce_audio_processors_headless`, `juce_core`, `juce_events`).
 
 Threads:
@@ -113,8 +114,26 @@ the client's address resolved once (`UdpPeer`): JUCE's
 `DatagramSocket::write` caches one destination without a lock, which would
 race between sessions and resolve the address on almost every datagram.
 
-Limits of this first version (doc/todo.md): in-process plugin scan; no
-telemetry pump or discovery yet; `PARAM_CHANGED` not sent; a session's UDP
+**Telemetry and parameter changes.** Each session has a timer on the
+message thread at its telemetry rate (CONFIGURE, default 30 Hz). For each
+slot whose editor is open (`TELEMETRY_ACTIVE`, which also calls the
+plugin's `setTelemetryActive`), it reads a frame through `INetPlugin` and
+sends it as a telemetry message to the client's UDP address, fragmented
+like any message. Running on the message thread keeps it from racing with
+chain edits (slots are only touched there); a plugin blocking that thread
+pauses telemetry, not audio. The same timer sends `PARAM_CHANGED`: each
+slot's `ParamWatcher` listens to every parameter and, since it may be
+called on any thread (the audio thread included), only sets per-parameter
+atomics, which the timer collects into one batch. The watcher is created
+after the slot's initial state is loaded, so that state is not echoed back.
+
+**Discovery.** A thread on UDP 54320 answers `FXMENET_DISCOVER` broadcasts
+with `FXMENET_ANNOUNCE` (name, OS, version, ports, session count), using
+`Common/FxmeNet/control/Discovery.h`, shared with clients. A second server
+on the same machine cannot bind the port and runs without it. mDNS is not
+implemented yet.
+
+Limits (doc/todo.md 6f): in-process plugin scan; no mDNS; a session's UDP
 peer is fixed at its first datagram; `setNonRealtime` is not forwarded to
 the plugins for offline blocks; catalog `sha256` empty and `fxmenetAbi`
 unknown until a slot is loaded.
@@ -138,7 +157,11 @@ It reports round-trip times, retries or late and lost blocks, the chain
 latency and the server's processing time, writes the result, then processes
 the same blocks locally through the same plugins (same empty play head,
 same settling) and compares. A difference is written next to the output as
-`<out>.local.wav`.
+`<out>.local.wav`. `--telemetry` switches telemetry on for every
+FxmeNet-aware slot, counts the frames received while streaming and decodes
+the last one with the slot's schema; the `PARAM_CHANGED` batches that
+arrived are counted too. `--discover` alone lists the servers answering a
+broadcast.
 
 ## GainPan (Examples/GainPan)
 

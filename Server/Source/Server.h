@@ -25,6 +25,8 @@
 #include "ServerConfig.h"
 #include "Session.h"
 
+#include <FxmeNet/control/Discovery.h>
+
 #include <map>
 #include <memory>
 #include <mutex>
@@ -55,6 +57,7 @@ public:
 private:
     class AcceptThread;
     class UdpThread;
+    class DiscoveryThread;
 
     void timerCallback() override;
 
@@ -73,6 +76,7 @@ private:
     juce::ThreadPool handshakes { juce::ThreadPoolOptions{}.withNumberOfThreads (2) };
     std::unique_ptr<AcceptThread> acceptThread;
     std::unique_ptr<UdpThread> udpThread;
+    std::unique_ptr<DiscoveryThread> discoveryThread;
     int statsTick = 0;
 
     JUCE_DECLARE_WEAK_REFERENCEABLE (Server)

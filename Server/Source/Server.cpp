@@ -84,6 +84,49 @@ private:
 };
 
 //==============================================================================
+/** Answers FXMENET_DISCOVER broadcasts with an FXMENET_ANNOUNCE. */
+class Server::DiscoveryThread : public juce::Thread
+{
+public:
+    explicit DiscoveryThread (Server& s) : juce::Thread ("FxmeNet discovery"), server (s), socket (true) {}
+
+    bool open (int port)   { return socket.bindToPort (port); }
+
+    void run() override
+    {
+        char buffer[2048];
+        while (! threadShouldExit())
+        {
+            if (socket.waitUntilReady (true, 200) != 1)
+                continue;
+
+            juce::String host;
+            int port = 0;
+            const int n = socket.read (buffer, (int) sizeof (buffer), false, host, port);
+            if (n <= 0 || ! discovery::isDiscover (juce::JSON::parse (juce::String::fromUTF8 (buffer, n))))
+                continue;
+
+            discovery::Announce a;
+            a.name = server.config.name;
+            a.os = juce::SystemStats::getOperatingSystemName();
+            a.version = FXMENET_VERSION;
+            a.controlPort = server.config.controlPort;
+            a.udpPort = server.config.udpPort;
+            {
+                const std::lock_guard<std::mutex> lock (server.sessionsLock);
+                a.sessions = (int) server.sessions.size();
+            }
+            const auto reply = a.toJson();
+            socket.write (host, port, reply.toRawUTF8(), (int) reply.getNumBytesAsUTF8());
+        }
+    }
+
+private:
+    Server& server;
+    juce::DatagramSocket socket;
+};
+
+//==============================================================================
 Server::Server (const ServerConfig& c) : config (c) {}
 
 Server::~Server()
@@ -113,10 +156,26 @@ bool Server::start()
     acceptThread->startThread();
     udpThread = std::make_unique<UdpThread> (*this);
     udpThread->startThread (juce::Thread::Priority::high);
+    if (config.discovery)
+    {
+        auto d = std::make_unique<DiscoveryThread> (*this);
+        if (d->open (config.discoveryPort))
+        {
+            discoveryThread = std::move (d);
+            discoveryThread->startThread();
+        }
+        else
+        {
+            log ("warning: cannot bind the discovery port " + juce::String (config.discoveryPort)
+                 + " (another server on this machine?): clients must give this server's address");
+        }
+    }
+
     startTimer (1000);
 
     log ("listening: control TCP " + juce::String (config.controlPort)
-         + ", audio UDP " + juce::String (config.udpPort));
+         + ", audio UDP " + juce::String (config.udpPort)
+         + (discoveryThread != nullptr ? ", discovery UDP " + juce::String (config.discoveryPort) : juce::String()));
     return true;
 }
 
@@ -137,6 +196,12 @@ void Server::stop()
     {
         udpThread->stopThread (2000);
         udpThread.reset();
+    }
+
+    if (discoveryThread != nullptr)
+    {
+        discoveryThread->stopThread (2000);
+        discoveryThread.reset();
     }
 
     std::map<std::uint32_t, std::shared_ptr<Session>> closing;

@@ -65,12 +65,16 @@ private:
 Session::Session (Server& owner, std::uint32_t id, std::uint64_t token,
                   PluginCatalog& pluginCatalog, const juce::DatagramSocket& udpSocket)
     : server (owner), sessionId (id), sessionToken (token), catalog (pluginCatalog),
-      worker (chain, udpSocket)
+      worker (chain, udpSocket), udp (udpSocket)
 {
+    telemetryFrame.resize (1 << 16);
+    telemetryBody.reserve (1 << 16);
+    startTimerHz (config.telemetryHz);
 }
 
 Session::~Session()
 {
+    stopTimer();
     detach();
     worker.stop();
     chain.clear();   // instances destroyed here, on the message thread
@@ -134,7 +138,73 @@ juce::String Session::describeActivity()
          + ", queue full " + juce::String ((juce::int64) s.queueFull.load())
          + ", process " + juce::String ((int) s.lastProcessMicros.load())
          + " us (max " + juce::String ((int) s.maxProcessMicros.load()) + ")"
-         + ", chain latency " + juce::String (chain.getLatency());
+         + ", chain latency " + juce::String (chain.getLatency())
+         + ", telemetry frames " + juce::String ((juce::int64) telemetrySent)
+         + ", parameter changes " + juce::String ((juce::int64) paramChangesSent);
+}
+
+//==============================================================================
+void Session::timerCallback()
+{
+    pumpTelemetry();
+    flushParamChanges();
+}
+
+void Session::pumpTelemetry()
+{
+    const auto* peer = worker.getPeer();
+    if (peer == nullptr)
+        return;   // no datagram from the client yet: nowhere to send
+
+    chain.forEachSlot ([this, peer] (Chain::Slot& s)
+    {
+        if (! s.telemetryActive || s.net == nullptr)
+            return;
+
+        int n = s.net->readTelemetry (telemetryFrame.data(), (std::int32_t) telemetryFrame.size());
+        if (n < 0)
+        {
+            telemetryFrame.resize ((std::size_t) -n);   // the frame is kept by the plugin until read
+            n = s.net->readTelemetry (telemetryFrame.data(), (std::int32_t) telemetryFrame.size());
+        }
+        if (n <= 0)
+            return;
+
+        telemetryBody.clear();
+        wire::ByteWriter w (telemetryBody);
+        wire::writeTelemetry (w, s.slotId, s.telemetryFrame++, telemetryFrame.data(), (std::size_t) n);
+
+        wire::DatagramHeader h;
+        h.kind = wire::Kind::telemetry;
+        h.sessionId = sessionId;
+        h.token = sessionToken;
+        h.messageId = telemetryMessageId++;
+        telemetryFragmenter.split (h, telemetryBody.data(), telemetryBody.size(),
+                                   [this, peer] (const std::uint8_t* d, std::size_t size)
+                                   {
+                                       return peer->send (udp, d, size);
+                                   });
+        ++telemetrySent;
+    });
+}
+
+void Session::flushParamChanges()
+{
+    if (connection == nullptr)
+        return;
+
+    paramChanges.clear();
+    chain.forEachSlot ([this] (Chain::Slot& s)
+    {
+        if (s.watcher != nullptr)
+            s.watcher->collect (s.slotId, paramChanges);
+    });
+
+    if (! paramChanges.empty())
+    {
+        connection->sendBinary (Type::paramChanged, 0, encode (paramChanges));
+        paramChangesSent += paramChanges.size();
+    }
 }
 
 //==============================================================================
@@ -207,7 +277,7 @@ void Session::handleFrame (const Frame& f, int gen)
             break;
 
         case Type::telemetryActive:
-            ack (f);   // telemetry: step 2 of the server (doc/todo.md 6c)
+            handleTelemetryActive (f);
             break;
 
         case Type::bye:
@@ -250,11 +320,29 @@ void Session::handleConfigure (const Frame& f)
     config = c;
     configured = true;
     worker.start (config, sessionId, sessionToken);
+    telemetryFragmenter = wire::Fragmenter ((std::size_t) config.datagramBudget);
+    startTimerHz (config.telemetryHz);
 
     log ("session " + juce::String ((int) sessionId) + ": " + juce::String (c.sampleRate) + " Hz, block "
          + juce::String (c.blockSize) + ", " + juce::String (c.numInputs) + " in / "
          + juce::String (c.numOutputs) + " out");
     ack (f);
+}
+
+void Session::handleTelemetryActive (const Frame& f)
+{
+    control::SlotValue v;
+    if (! decode (f.payload, v))
+        return fail (f, ErrorMessage::badRequest, "malformed TELEMETRY_ACTIVE");
+
+    auto* slot = chain.findSlot (v.slotId);
+    if (slot == nullptr)
+        return fail (f, ErrorMessage::noSuchSlot, "no slot " + juce::String ((int) v.slotId));
+
+    slot->telemetryActive = v.value != 0;
+    if (slot->net != nullptr)
+        slot->net->setTelemetryActive (v.value != 0 ? 1 : 0);
+    ack (f);   // also for a plugin with no telemetry: there is simply nothing to send
 }
 
 void Session::handleSlotAdd (const Frame& f)

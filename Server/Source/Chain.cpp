@@ -28,8 +28,41 @@ void SessionPlayHead::set (const wire::Transport& t, double sampleRate)
 }
 
 //==============================================================================
+ParamWatcher::ParamWatcher (juce::AudioPluginInstance& i)
+    : instance (i),
+      values ((std::size_t) i.getParameters().size()),
+      dirty ((std::size_t) i.getParameters().size())
+{
+    for (auto* p : instance.getParameters())
+        p->addListener (this);
+}
+
+ParamWatcher::~ParamWatcher()
+{
+    for (auto* p : instance.getParameters())
+        p->removeListener (this);
+}
+
+void ParamWatcher::parameterValueChanged (int index, float newValue)
+{
+    if (juce::isPositiveAndBelow (index, (int) values.size()))
+    {
+        values[(std::size_t) index].store (newValue);
+        dirty[(std::size_t) index].store (true);
+    }
+}
+
+void ParamWatcher::collect (std::uint32_t slotId, std::vector<control::ParamChange>& out)
+{
+    for (size_t i = 0; i < dirty.size(); ++i)
+        if (dirty[i].exchange (false))
+            out.push_back ({ slotId, (std::uint32_t) i, values[i].load() });
+}
+
+//==============================================================================
 Chain::Slot::~Slot()
 {
+    watcher.reset();   // stop listening before the instance goes
     if (net != nullptr)
         net->release();
     if (instance != nullptr)
@@ -109,6 +142,7 @@ juce::String Chain::addSlot (std::uint32_t slotId, int position,
     }
 
     slot->instance = std::move (instance);
+    slot->watcher = std::make_unique<ParamWatcher> (*slot->instance);   // after the state is loaded: no echo of it
     position = juce::jlimit (0, (int) slots.size(), position);
     slots.insert (slots.begin() + position, std::move (slot));
     publish();

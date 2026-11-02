@@ -48,6 +48,27 @@ private:
     PositionInfo info;
 };
 
+/** Notes the parameters a plugin changes itself, for PARAM_CHANGED. The
+    listener may be called on any thread, the audio thread included, so it
+    only sets atomics; the message thread collects them. */
+class ParamWatcher : private juce::AudioProcessorParameter::Listener
+{
+public:
+    explicit ParamWatcher (juce::AudioPluginInstance&);
+    ~ParamWatcher() override;
+
+    /** Message thread: appends the parameters changed since the last call. */
+    void collect (std::uint32_t slotId, std::vector<control::ParamChange>& out);
+
+private:
+    void parameterValueChanged (int index, float newValue) override;
+    void parameterGestureChanged (int, bool) override {}
+
+    juce::AudioPluginInstance& instance;
+    std::vector<std::atomic<float>> values;
+    std::vector<std::atomic<bool>> dirty;
+};
+
 class Chain
 {
 public:
@@ -58,6 +79,11 @@ public:
         fxme::net::INetPlugin* net = nullptr;   ///< nullptr: not FxmeNet-aware
         std::atomic<bool> bypassed { false };
         int numChannels = 2;                     ///< max of the instance's inputs and outputs
+
+        // Message thread only.
+        std::unique_ptr<ParamWatcher> watcher;
+        bool telemetryActive = false;            ///< the client's editor for it is open
+        std::uint32_t telemetryFrame = 0;
 
         ~Slot();
     };
@@ -88,6 +114,14 @@ public:
     Slot* findSlot (std::uint32_t slotId) const;
 
     bool hasSlot (std::uint32_t slotId) const   { return findSlot (slotId) != nullptr; }
+
+    /** Calls fn (Slot&) for each slot, in chain order. */
+    template <typename Function>
+    void forEachSlot (Function&& fn) const
+    {
+        for (auto& s : slots)
+            fn (*s);
+    }
 
     SessionPlayHead& getPlayHead() noexcept     { return playHead; }
 

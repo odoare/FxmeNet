@@ -23,7 +23,13 @@
     Usage:
       fxmenet-wavclient --in in.wav --out out.wav --plugin a.vst3 [--plugin b.vst3]...
                         [--server host[:port]] [--block N] [--realtime] [--budget D]
-                        [--settle ms] [--no-compare]
+                        [--settle ms] [--no-compare] [--telemetry]
+      fxmenet-wavclient --discover
+
+    --telemetry switches telemetry on for every FxmeNet-aware slot (as an
+    open editor would), counts the frames received while streaming and
+    decodes the last one with the slot's schema. --discover broadcasts
+    FXMENET_DISCOVER and lists the servers that answer.
 
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-FXME-Commercial
@@ -34,9 +40,11 @@
 #include <juce_audio_processors_headless/juce_audio_processors_headless.h>
 
 #include <FxmeNet/control/ControlConnection.h>
+#include <FxmeNet/control/Discovery.h>
 #include <FxmeNet/transport/UdpTransport.h>
 
 #include <iostream>
+#include <map>
 
 namespace
 {
@@ -61,6 +69,8 @@ struct Options
     int budgetBlocks = 2;
     int settleMs = 1000;
     bool compare = true;
+    bool telemetry = false;
+    bool discover = false;
 
     bool parse (const juce::StringArray& args, juce::String& error)
     {
@@ -84,12 +94,16 @@ struct Options
             else if (a == "--settle" && hasValue)    settleMs = args[++i].getIntValue();
             else if (a == "--realtime")              realtime = true;
             else if (a == "--no-compare")            compare = false;
+            else if (a == "--telemetry")             telemetry = true;
+            else if (a == "--discover")              discover = true;
             else
             {
                 error = "unknown or incomplete argument: " + a;
                 return false;
             }
         }
+        if (discover)
+            return true;
         if (in == juce::File() || out == juce::File() || plugins.isEmpty())
             error = "--in, --out and at least one --plugin are required";
         else if (blockSize < 16 || blockSize > 4096)
@@ -174,6 +188,79 @@ bool requestJson (ControlConnection& c, Type type, std::uint32_t id, const juce:
 }
 
 //==============================================================================
+//==============================================================================
+/** What arrived on a slot's telemetry, and the names to decode it with. */
+struct SlotTelemetry
+{
+    std::map<std::uint32_t, juce::String> names;   ///< channel id -> name, from the schema
+    int frames = 0;
+    std::size_t bytes = 0;
+    std::vector<std::uint8_t> last;
+
+    void readSchema (const juce::MemoryBlock& schema)
+    {
+        wire::ByteReader r ((const std::uint8_t*) schema.getData(), schema.getSize());
+        if (r.u32() != fxme::net::schemaMagic || r.u16() != fxme::net::codecVersion)
+            return;
+        for (int i = 0, count = r.u16(); i < count && r.ok(); ++i)
+        {
+            const auto id = r.u32();
+            r.u8();
+            const auto len = r.u8();
+            if (const auto* name = r.take (len))
+                names[id] = juce::String::fromUTF8 ((const char*) name, len);
+        }
+    }
+
+    /** The last frame, channel by channel. */
+    juce::String describeLast() const
+    {
+        wire::ByteReader r (last.data(), last.size());
+        if (r.u32() != fxme::net::frameMagic || r.u16() != fxme::net::codecVersion)
+            return "(no frame)";
+
+        juce::StringArray parts;
+        for (int i = 0, count = r.u16(); i < count && r.ok(); ++i)
+        {
+            const auto id = r.u32();
+            const auto kind = (fxme::net::ChannelKind) r.u8();
+            r.skip (3);
+            const auto size = r.u32();
+            const auto* payload = r.take (size);
+            if (payload == nullptr)
+                break;
+
+            const auto it = names.find (id);
+            const auto name = it != names.end() ? it->second : juce::String::toHexString ((int) id);
+            wire::ByteReader p (payload, size);
+            auto db = [] (float g) { return juce::String (juce::Decibels::gainToDecibels (g), 1) + " dB"; };
+
+            switch (kind)
+            {
+                case fxme::net::ChannelKind::meter:
+                {
+                    const float rms = p.f32(), peak = p.f32();
+                    parts.add (name + " rms " + db (rms) + " peak " + db (peak));
+                    break;
+                }
+                case fxme::net::ChannelKind::value:
+                case fxme::net::ChannelKind::scalar:
+                case fxme::net::ChannelKind::peak:
+                    parts.add (name + " " + juce::String (p.f32(), 3));
+                    break;
+                case fxme::net::ChannelKind::tap:
+                    p.u64();
+                    parts.add (name + " " + juce::String ((int) p.u32()) + " samples");
+                    break;
+                default:
+                    parts.add (name + " (kind " + juce::String ((int) kind) + ")");
+                    break;
+            }
+        }
+        return parts.joinIntoString (", ");
+    }
+};
+
 /** RTT statistics in milliseconds. */
 struct Rtt
 {
@@ -201,9 +288,9 @@ class Streamer
 {
 public:
     Streamer (UdpTransport& t, const juce::AudioBuffer<float>& source, int numBlocks, int blockSizeIn,
-              juce::AudioBuffer<float>& destination)
+              juce::AudioBuffer<float>& destination, std::map<std::uint32_t, SlotTelemetry>& telemetryBySlot)
         : transport (t), input (source), blocks (numBlocks), n (blockSizeIn), output (destination),
-          channels (source.getNumChannels())
+          channels (source.getNumChannels()), telemetry (telemetryBySlot)
     {
         scratch.assign ((std::size_t) channels, std::vector<float> ((std::size_t) n));
         for (auto& ch : scratch)
@@ -300,6 +387,19 @@ private:
         if (! transport.receive (m, timeoutMs))
             return false;
 
+        if (m.kind == wire::Kind::telemetry)
+        {
+            wire::TelemetryView t;
+            if (wire::readTelemetry (m.body, m.size, t))
+            {
+                auto& slot = telemetry[t.slotId];
+                ++slot.frames;
+                slot.bytes += t.size;
+                slot.last.assign (t.codecFrame, t.codecFrame + t.size);
+            }
+            return true;
+        }
+
         wire::BlockView v;
         if (m.kind != wire::Kind::audioReply || ! wire::readBlock (m.body, m.size, true, m.flags, v))
             return true;
@@ -332,6 +432,7 @@ private:
     const int blocks, n;
     juce::AudioBuffer<float>& output;
     const int channels;
+    std::map<std::uint32_t, SlotTelemetry>& telemetry;
 
     std::vector<std::vector<float>> scratch;
     std::vector<const float*> pointers;
@@ -400,8 +501,23 @@ bool processLocally (const juce::OwnedArray<juce::PluginDescription>& descriptio
 }
 
 //==============================================================================
+int discoverServers()
+{
+    say ("Broadcasting FXMENET_DISCOVER on UDP " + juce::String (discovery::defaultPort) + "...");
+    const auto found = discovery::discover (1000);
+    for (auto& a : found)
+        say ("  \"" + a.name + "\" at " + a.host + ", control " + juce::String (a.controlPort) + ", audio "
+             + juce::String (a.udpPort) + ", " + a.os + ", fxmenet " + a.version + ", "
+             + juce::String (a.sessions) + " session(s)");
+    say (juce::String ((int) found.size()) + " server(s)");
+    return found.empty() ? 1 : 0;
+}
+
 int run (const Options& o)
 {
+    if (o.discover)
+        return discoverServers();
+
     double sampleRate = 0.0;
     auto input = readWav (o.in, sampleRate);
     if (input == nullptr)
@@ -466,6 +582,7 @@ int run (const Options& o)
     if (! requestJson (*connection, Type::configure, id++, config.toVar(), Type::configure, reply))
         return 1;
 
+    std::map<std::uint32_t, SlotTelemetry> telemetry;
     for (int i = 0; i < descriptions.size(); ++i)
     {
         const auto* d = descriptions[i];
@@ -481,6 +598,14 @@ int run (const Options& o)
         say ("  slot " + juce::String ((int) ready.slotId) + ": " + d->name + ", "
              + juce::String ((int) ready.params.size()) + " parameters, latency " + juce::String (ready.latency)
              + (ready.fxmenetAbi > 0 ? ", FxmeNet-aware (ABI " + juce::String (ready.fxmenetAbi) + ")" : ""));
+
+        if (o.telemetry && ready.fxmenetAbi > 0)
+        {
+            telemetry[ready.slotId].readSchema (ready.telemetrySchema);
+            if (! request (*connection, Type::telemetryActive, id++, 0, encode (control::SlotValue { ready.slotId, 1 }),
+                           Type::telemetryActive, reply))
+                return 1;
+        }
     }
 
     if (o.settleMs > 0)
@@ -501,7 +626,7 @@ int run (const Options& o)
 
     juce::AudioBuffer<float> remote (channels, input->getNumSamples());
     remote.clear();
-    Streamer streamer (transport, *input, numBlocks, o.blockSize, remote);
+    Streamer streamer (transport, *input, numBlocks, o.blockSize, remote, telemetry);
 
     const auto t0 = juce::Time::getMillisecondCounterHiRes();
     bool complete = true;
@@ -510,6 +635,12 @@ int run (const Options& o)
     else
         complete = streamer.runOffline();
     const auto elapsed = juce::Time::getMillisecondCounterHiRes() - t0;
+
+    // Parameter changes the plugins made themselves arrived meanwhile on the
+    // control connection, unread: count them.
+    int paramBatches = 0;
+    for (Frame f; connection->read (f, 100) == ControlConnection::ReadResult::frame;)
+        paramBatches += f.type == Type::paramChanged ? 1 : 0;
 
     connection->sendEmpty (Type::bye);
 
@@ -526,6 +657,14 @@ int run (const Options& o)
     say ("  chain latency " + juce::String (streamer.chainLatency) + " samples, server processing "
          + juce::String (streamer.getReceivedCount() > 0 ? streamer.processMicrosSum / streamer.getReceivedCount() : 0.0, 1)
          + " us per block on average");
+
+    for (auto& [slotId, t] : telemetry)
+        say ("  telemetry, slot " + juce::String ((int) slotId) + ": " + juce::String (t.frames) + " frames ("
+             + juce::String (t.frames / juce::jmax (0.001, elapsed / 1000.0), 1) + " per second), "
+             + juce::String (t.frames > 0 ? (int) (t.bytes / (std::size_t) t.frames) : 0) + " bytes each; last: "
+             + t.describeLast());
+    if (paramBatches > 0)
+        say ("  PARAM_CHANGED batches received: " + juce::String (paramBatches));
 
     if (! writeWav (o.out, remote, sampleRate))
     {
@@ -581,7 +720,8 @@ int main (int argc, char* argv[])
     else
         std::cerr << error << "\nusage: fxmenet-wavclient --in in.wav --out out.wav --plugin a.vst3 [--plugin b.vst3]...\n"
                      "                         [--server host[:port]] [--block N] [--realtime] [--budget D]\n"
-                     "                         [--settle ms] [--no-compare]" << std::endl;
+                     "                         [--settle ms] [--no-compare] [--telemetry]\n"
+                     "       fxmenet-wavclient --discover" << std::endl;
 
     juce::DeletedAtShutdown::deleteAll();
     juce::MessageManager::deleteInstance();

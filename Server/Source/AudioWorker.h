@@ -69,6 +69,9 @@ public:
     void setPeer (const UdpPeer& peerToReplyTo);
     bool hasPeer() const noexcept   { return peerSet.load(); }
 
+    /** The client's address once known (fixed afterwards), else nullptr. */
+    const UdpPeer* getPeer() const noexcept   { return peerSet.load() ? &peer : nullptr; }
+
     /** UDP thread: queues a complete request (copied). False when the queue
         is full or the request is too big for the session's format. */
     bool enqueue (std::uint16_t flags, const std::uint8_t* body, std::size_t size);

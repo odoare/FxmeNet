@@ -4,10 +4,20 @@ Newest first. Numbers are those of `todo.md`.
 
 ## 2026-11-02
 
+- 6e (written, not yet built): server step 2. Telemetry pump and
+  `PARAM_CHANGED` on a per-session timer (message thread), `ParamWatcher`
+  with atomics only, discovery responder (broadcast) with the shared
+  `Common/FxmeNet/control/Discovery.h`, options `--discovery-port` and
+  `--no-discovery`. `fxmenet-wavclient` gains `--telemetry` and
+  `--discover`. Checked: syntax with strict warnings.
+
 - 6c step 1: `fxmenet-server` builds and runs (scan, listening, clean stop).
   Binary named `fxmenet-server` with `OUTPUT_NAME` (juce_add_console_app
   ignores `PRODUCT_NAME` for the file).
-- 6d (written, not yet built): `Tools/WavClient`, the end-to-end test.
+- 6d: `fxmenet-wavclient` builds and passes on loopback: offline runs
+  bit-identical with local processing (Compressor, Compressor + Equalizer,
+  Dede), real-time run without late or lost blocks. Not yet run between two
+  machines.
 
 - 6b: control channel tests pass (committed).
 - 6c step 1 (written, not yet built): `fxmenet-server` in `Server/`:
