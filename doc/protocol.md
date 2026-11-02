@@ -124,9 +124,6 @@ two blocks; a slot's processing never stops for another slot's edit.
 `aarch64-linux`, `MacOS`, `x86_64-win`, `arm64-win`); `sha256` is the hash of
 the binary in the server's own folder.
 
-```
-```
-
 A plugin's identity between machines is (`uid`, `name`, `vendor`). `uid` is
 JUCE's `PluginDescription::uniqueId` for VST3: a 32-bit hash of the class id,
 normalised so it is the same on every OS (amended 2026-11-02: JUCE's hosting
@@ -147,15 +144,21 @@ editor and the automation pool; values always travel normalised.
 ### 5.1 Blocks and latency
 
 The session runs at a fixed block size N (`CONFIGURE`, default 128). The
-client re-blocks the DAW's buffers into N-sample blocks through FIFOs, sends
-block k as soon as it is full, and plays block k's reply D blocks later
-(D = latency budget in blocks, default 2, user-selectable). It reports to
-the DAW:
+client re-blocks the DAW's buffers into N-sample blocks, sends block k as
+soon as it is full, and plays its reply back after a fixed latency, which
+gives every reply at least D blocks of time (D = latency budget in blocks,
+default 2, user-selectable). With B the DAW's largest block, it reports:
 
 ```
-latency = D * N  +  (N if the DAW's block size is not a multiple of N, else 0)
+latency = D * N + B - N        when the DAW's blocks are multiples of N
+          D * N + B + N - 1    otherwise
         + chain latency (from the latest audio reply)
 ```
+
+(amended 2026-11-02: the first draft's `D * N (+ N)` left a reply no time at
+all when B > N, and less than D blocks when B is not a multiple of N.) A DAW
+whose blocks stop being multiples of N midway switches the client to the
+second formula once, with a latency change.
 
 The server has no clock: it processes a block when its request arrives.
 

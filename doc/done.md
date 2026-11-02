@@ -4,6 +4,17 @@ Newest first. Numbers are those of `todo.md`.
 
 ## 2026-11-02
 
+- 6f: out-of-process scan, cache, ABI and sha256 in the catalog, offline
+  blocks, peer following: built and tested (committed). 6g (two machines)
+  and 13 (mDNS) postponed.
+- 7a (written): client audio-thread core, `BlockStream` and `ReplyRing`, and
+  `FxmeNetClientTests` (962 checks, compiled and run standalone with g++,
+  all pass). Found while writing it: the latency formula of protocol.md
+  section 5.1 gave a reply no time when the host block is larger than N;
+  amended to `D*N + B - N` (blocks multiples of N) or `D*N + B + N - 1`.
+  Concealment holds the last sample and ramps it down (a lazily filled
+  jitter buffer has nothing left to fade out when a reply is missing).
+
 - 6e: telemetry, `PARAM_CHANGED` and discovery pass (committed).
 - 6f (written, not yet built): out-of-process plugin scan with a cache,
   catalog sha256 and FxmeNet ABI, `setNonRealtime` from the offline flag,

@@ -20,8 +20,12 @@ Common/                 shared by server and client, header-only:
   FxmeNet/control/      ControlFrame.h (frames, types, binary payloads, FrameAssembler;
                         JUCE-free), ControlMessages.h (JSON messages, juce::JSON),
                         ControlConnection.h (one TCP connection, juce::StreamingSocket)
-  tests/                FxmeNetProtocolTests (no JUCE), FxmeNetTransportTests (loopback
-                        UDP), FxmeNetControlTests (JSON, loopback TCP)
+  FxmeNet/client/       the client's audio-thread core, JUCE-free: BlockStream
+                        (re-blocking, latency, jitter buffer, concealment),
+                        ReplyRing (replies from the receive thread)
+  tests/                FxmeNetProtocolTests and FxmeNetClientTests (no JUCE),
+                        FxmeNetTransportTests (loopback UDP), FxmeNetControlTests
+                        (JSON, loopback TCP)
 Server/Source/          fxmenet-server: Main (options, signals, message loop),
                         Server (listener, handshakes, UDP routing, orphans),
                         Session (control handling), Chain (slots, snapshots),
@@ -70,6 +74,35 @@ unknown ones. `ControlConnection` sends from any thread (a lock keeps frames
 whole) and reads from one, with a timeout; a corrupt length closes it, since
 a stream cannot be resynchronised.
 
+
+## Client core (Common/FxmeNet/client)
+
+The part of FxmeNetPlugin that runs on the DAW's audio thread, kept JUCE-free
+so it is tested exhaustively without a host or a network
+(`FxmeNetClientTests`).
+
+`BlockStream` cuts the host's buffers into the session's N-sample blocks
+and hands each full block to the network (`blockReady`, with the offset of
+its end in the callback, for transport and MIDI). Output is a FIFO
+prefilled with `latency` samples of silence and topped up one block at a
+time (`fetchBlock`) only when the host needs the samples, so each reply has
+as long as possible to arrive. The latency (protocol.md section 5.1) is
+`D*N + B - N` while the host's blocks are multiples of N, `D*N + B + N - 1`
+otherwise (B its largest block), which gives every reply at least D*N
+samples of time; the test checks that bound, and that the output is the
+input delayed by exactly the latency, for fixed, odd and random host block
+sizes. Losing the alignment midway adds the difference once. A missing reply
+is concealed: the last sample played is held and ramped to zero over 64
+samples, then silence, and the next block fades in over 64 samples. Buffers
+larger than the announced maximum are processed in pieces.
+
+`ReplyRing` holds the replies between the receive thread and the audio
+thread: block k in slot k mod 64, a tag per slot. The audio thread publishes
+the next block it will read, and the receive thread refuses replies older
+than that, too far ahead, or duplicated, so a slot being read is never
+written; a seqlock check on the tag would still turn a broken assumption
+into a missing block, never a torn one. Channels arrive by the reply's
+output mask (bit c into channel c, missing ones silent).
 ## fxmenet-server (Server/)
 
 `fxmenet-server [--name NAME] [--control-port 54322] [--udp-port 54321]

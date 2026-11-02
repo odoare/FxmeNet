@@ -16,6 +16,15 @@ target_compile_options(FxmeNetProtocolTests PRIVATE
     $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra>)
 add_test(NAME FxmeNetProtocolTests COMMAND FxmeNetProtocolTests)
 
+# The client's audio-thread core (re-blocking, latency, jitter buffer,
+# concealment, reply ring), without JUCE.
+add_executable(FxmeNetClientTests tests/ClientTests.cpp)
+target_link_libraries(FxmeNetClientTests PRIVATE FxmeNetProtocol)
+target_compile_options(FxmeNetClientTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4>
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra>)
+add_test(NAME FxmeNetClientTests COMMAND FxmeNetClientTests)
+
 # UdpTransport over the loopback interface (juce_core only).
 juce_add_console_app(FxmeNetTransportTests PRODUCT_NAME "FxmeNetTransportTests")
 target_sources(FxmeNetTransportTests PRIVATE tests/TransportTests.cpp)

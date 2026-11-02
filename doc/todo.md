@@ -21,14 +21,28 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
      Compressor + Equalizer, Dede, AmbiRR2 with a 16-channel file), expected
      bit-identical; then `--realtime` runs for round-trip times and late
      blocks, on loopback and between two machines.
-   - 6f (written): build and check the out-of-process scan (first start
-     examines every plugin, the second takes them from the cache; GainPan
-     listed as FxmeNet-aware), and that the wavclient tests still pass.
    - 6g. Not done yet, needs two machines: the wavclient runs between them,
      offline and `--realtime`.
 13. Later, optional: mDNS publishing (`_fxmenet._tcp`) for system browsers.
-7. Phase 3: FxmeNetPlugin tier 0, parameter pool with learn mapping, channel
-   enable/disable UI.
+7. Phase 3: FxmeNetPlugin tier 0, in four steps, each tested before the next:
+   - 7a (written): the client's audio-thread core, JUCE-free
+     (`Common/FxmeNet/client`: BlockStream, ReplyRing) and its test
+     `FxmeNetClientTests`. Build and run it.
+   - 7b. The client engine (JUCE, no plugin yet): the control connection
+     thread (HELLO with resume, CONFIGURE, chain rebuild, requests, PING,
+     reconnect every 2 s), the audio link (UDP socket, sends from the audio
+     thread, receive thread into the ReplyRing, offline wait and retries,
+     statistics, chain latency), the chain model (slots, states, parameter
+     infos). Tested by a new `fxmenet-wavclient --engine` mode that drives
+     it like a DAW (host blocks of any size), compared with local processing.
+   - 7c. FxmeNetPlugin: processor (buses up to 64 channels, channel masks,
+     bypass and disconnection as dry delayed by the latency, latency
+     reporting, offline mode), state (chain and slot states fetched with
+     `STATE_GET`), the 256-parameter pool and its mapping. Minimal editor.
+   - 7d. The editor: connection header (discovered servers, manual address,
+     ping, statistics), chain strip (add, reorder, bypass, remove), plugin
+     browser from the catalog, generic parameter view, learn mapping and
+     mapping list, channel enable/disable grid.
 8. Phase 4: shadow editors and telemetry; port Compressor and Equalizer.
 9. Phase 5: hardening, measurements, CI.
 10. Phase 6: plugin distribution.

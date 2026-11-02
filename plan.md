@@ -203,7 +203,9 @@ look-and-feel singletons). Hence:
    concealment silence.
 4. **Latency.** The server has no audio device and no clock: it processes a
    block when one arrives. Reported latency = network delay (D blocks, default
-   2, at a fixed internal block size) + sum of the chain's own latencies.
+   2, at a fixed internal block size, plus the DAW's block size minus one
+   block for re-blocking; protocol.md section 5.1) + sum of the chain's own
+   latencies.
    Every chain edit can change it, which makes some DAWs re-sync PDC with a
    glitch. Live monitoring through FxmeNet will feel the extra 3 to 6 ms.
 5. **Crash isolation.** One crashing plugin takes down every session on a
