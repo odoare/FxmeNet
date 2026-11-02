@@ -5,10 +5,9 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
 
 ## Phase 0: spikes
 
-2. Spike 2: custom interface through `VST3ClientExtensions::queryIAudioProcessor`
-   on a patched Compressor, reached from the host with
-   `getVST3Client()->getIComponentPtr()->queryInterface`. Linux first, then
-   Windows and macOS.
+2. Spike 2, remaining: the side channel works on Linux (Phase 1); run the
+   loopback harness on Windows and macOS (the `INetPlugin` layout and
+   `__stdcall` convention are the part to confirm there).
 3. Spike 3: a minimal JUCE plugin hosting a VST3 and embedding its editor,
    in Reaper on Linux (nested XEmbed).
 4. Read AudioGridder (MIT): jitter buffer, PDC, offline render, parameter
@@ -19,9 +18,6 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
 
 ## Phase 1 onwards
 
-5. Phase 1: `TelemetryRegistry` / `TelemetryCodec` in FxmeTools core, the
-   `VuMeter` and tap additions, `NetBridge`, `Examples/GainPan`, loopback
-   harness.
 6. Phase 2: protocol (with transport, MIDI, latency changes, channel masks),
    `fxmenet-server`, command-line test client.
 7. Phase 3: FxmeNetPlugin tier 0, parameter pool with learn mapping, channel

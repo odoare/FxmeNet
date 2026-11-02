@@ -19,6 +19,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # -DFXME_USE_SIBLINGS=OFF.
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Dependencies.cmake)
 
+# ── The FxmeNet howto plugin (gain, balance, meters; FxmeNet-aware) ───────────
+add_subdirectory(Examples/GainPan)
+
+# ── Phase 1 harness: source and mirror of one plugin, telemetry in memory ─────
+add_subdirectory(Tools/Loopback)
+
 # ── Phase 0 spikes (throwaway test programs, see doc/todo.md) ─────────────────
 option(FXMENET_BUILD_SPIKES "Build the Phase 0 spike programs" ON)
 if(FXMENET_BUILD_SPIKES)
