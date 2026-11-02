@@ -24,6 +24,9 @@ enable_testing()
 # ── Shared code: wire protocol, audio transports, their tests ─────────────────
 add_subdirectory(Common)
 
+# ── fxmenet-server ───────────────────────────────────────────────────────────
+add_subdirectory(Server)
+
 # ── The FxmeNet howto plugin (gain, balance, meters; FxmeNet-aware) ───────────
 add_subdirectory(Examples/GainPan)
 

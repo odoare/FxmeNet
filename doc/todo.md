@@ -17,13 +17,16 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
 ## Phase 1 onwards
 
 6. Phase 2, remaining:
-   - 6b. Build and run `FxmeNetProtocolTests` (now with control frames) and
-     `FxmeNetControlTests` (written).
-   - 6c. `fxmenet-server`: control server, session routing on one UDP
-     socket, reply cache, chain engine (VST3 slots, lock-free swaps),
-     message loop, telemetry pump, discovery responder.
+   - 6c. `fxmenet-server` step 1 written (sessions, chain, audio). Build;
+     it is exercised by 6d.
    - 6d. Command-line test client: a WAV through a chain on the server,
      compared with local processing (bit-identical).
+   - 6e. Server step 2: telemetry pump (per-slot frames at the session's
+     rate for open editors), `PARAM_CHANGED`, discovery responder
+     (broadcast and mDNS).
+   - 6f. Server limits to lift later: out-of-process plugin scan, catalog
+     sha256 and ABI, `setNonRealtime` for offline blocks, UDP peer change on
+     resume.
 7. Phase 3: FxmeNetPlugin tier 0, parameter pool with learn mapping, channel
    enable/disable UI.
 8. Phase 4: shadow editors and telemetry; port Compressor and Equalizer.

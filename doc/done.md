@@ -4,6 +4,14 @@ Newest first. Numbers are those of `todo.md`.
 
 ## 2026-11-02
 
+- 6b: control channel tests pass (committed).
+- 6c step 1 (written, not yet built): `fxmenet-server` in `Server/`:
+  catalog scan, control handshake with resume, sessions, chain with
+  lock-free snapshot swaps, per-session audio thread with ordering, offline
+  hold, reply cache, `UdpPeer` sends. Checked: syntax of every source with
+  strict warnings, configure. Protocol completed: acknowledgements (an empty
+  frame of the request's type) and `STATE_GET`'s payload.
+
 - 6a: protocol and transport tests pass (committed).
 - 6b (written, not yet built): the control channel in
   `Common/FxmeNet/control/` (frames and binary payloads JUCE-free, JSON

@@ -99,10 +99,16 @@ state and parameter batches are binary.
 | 30 | `PARAM_SET` | client | binary: count, then (slotId u32, index u32, normalised value f32) |
 | 31 | `PARAM_CHANGED` | server | same layout: changes the plugin made itself |
 | 32 | `STATE_SET` | client | binary: slotId, state blob |
-| 33 | `STATE_GET` / 34 `STATE` | client / server | slotId / slotId + blob |
+| 33 | `STATE_GET` / 34 `STATE` | client / server | as `STATE_SET`, with an empty blob / slotId + blob |
 | 40 | `TELEMETRY_ACTIVE` | client | binary: slotId, u8 on (the slot's editor opened or closed) |
 
-`SLOT_READY` answers `SLOT_ADD`, `ERROR` answers anything that failed. Chain
+`SLOT_READY` answers `SLOT_ADD`, `PLUGIN_LIST` answers `LIST_PLUGINS`,
+`STATE` answers `STATE_GET`, `PONG` answers `PING`, and `ERROR` answers
+anything that failed. Every other request (`CONFIGURE`, `SLOT_REMOVE`,
+`SLOT_MOVE`, `SLOT_BYPASS`, `CHAIN_CLEAR`, `STATE_SET`, `TELEMETRY_ACTIVE`)
+is acknowledged on success by a frame of its own type with an empty payload
+and the same `requestId`. `PARAM_SET` is never acknowledged (a stream of
+changes); a failed one gets an `ERROR`. Chain
 edits are applied by the server off the audio thread and swapped in between
 two blocks; a slot's processing never stops for another slot's edit.
 

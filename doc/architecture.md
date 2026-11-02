@@ -22,6 +22,11 @@ Common/                 shared by server and client, header-only:
                         ControlConnection.h (one TCP connection, juce::StreamingSocket)
   tests/                FxmeNetProtocolTests (no JUCE), FxmeNetTransportTests (loopback
                         UDP), FxmeNetControlTests (JSON, loopback TCP)
+Server/Source/          fxmenet-server: Main (options, signals, message loop),
+                        Server (listener, handshakes, UDP routing, orphans),
+                        Session (control handling), Chain (slots, snapshots),
+                        AudioWorker (ordering, reply cache, processing),
+                        PluginCatalog, UdpPeer, Log
 Examples/GainPan/       FxmeNetGainPan: gain, balance, stereo in/out meters, the
                         full FX-Mechanics shell; the FxmeNet-aware howto plugin
 Tools/Loopback/         FxmeNetLoopback: Phase 1 harness, source and mirror of one
@@ -33,8 +38,8 @@ doc/                    this file, todo.md, done.md; protocol.md (the wire
                         protocol, draft); audiogridder-notes.md
 ```
 
-Planned targets (not yet present): `fxmenet-server` (Server/),
-`FxmeNetPlugin` (Plugin/), the shared protocol code (Common/). The
+Planned targets (not yet present): `FxmeNetPlugin` (Plugin/), the
+command-line test client. The
 plugin-side classes live in FxmeTools, not here: `net/TelemetryCodec.h`,
 `net/TelemetryRegistry.h`, `net/NetAbi.h` in core, `net/NetBridge.h` in the
 module, documented in FxmeTools `doc/fxmenet-howto.md`.
@@ -63,6 +68,55 @@ uids as hex strings, keeping defaults for missing fields and ignoring
 unknown ones. `ControlConnection` sends from any thread (a lock keeps frames
 whole) and reads from one, with a timeout; a corrupt length closes it, since
 a stream cannot be resynchronised.
+
+## fxmenet-server (Server/)
+
+`fxmenet-server [--name NAME] [--control-port 54322] [--udp-port 54321]
+[--plugin-path DIR]... [--no-default-paths]`. Links only the GUI-free JUCE
+modules (`juce_audio_processors_headless`, `juce_core`, `juce_events`).
+
+Threads:
+
+- **Main thread = JUCE message thread**, running the dispatch loop until
+  SIGINT/SIGTERM (a 10 Hz timer watches a flag the signal handler sets).
+  Every plugin instance is created, configured and destroyed here, and
+  plugins get their timers and async updates.
+- **Accept thread** on the control port; each new connection's HELLO is read
+  on a 2-thread pool (5 s timeout), then `Server::onHello` on the message
+  thread creates a session or resumes an orphan (same id and token).
+- **One reader thread per control connection**, posting each frame to the
+  message thread (`Session::handleFrame`), tagged with a generation number
+  so frames of a replaced connection are ignored.
+- **One UDP thread** for the shared socket: parses the datagram header,
+  finds the session by id under `sessionsLock`, checks the token, and calls
+  `Session::onDatagram`, which reassembles and queues complete requests.
+- **One audio thread per session** (`AudioWorker`, real-time priority when
+  the OS allows it): takes requests from a lock-free queue (16 entries,
+  preallocated from CONFIGURE), orders them (protocol.md 5.4: a real-time gap
+  is skipped, an offline one is held up to 5 s; anything older is answered
+  from the 32-reply cache or dropped), processes the chain and replies.
+  Nothing allocates, locks or logs there; counters in atomics are logged
+  every 10 s by the message thread.
+
+Chain edits never stop the audio: the message thread publishes an immutable
+snapshot of the slot list through an atomic pointer; the audio thread
+announces the snapshot it uses in a second atomic (a hazard pointer) and
+re-checks it is still current; a replaced snapshot is freed once the audio
+thread has let go of it, so a removed plugin is destroyed on the message
+thread. Each slot processes a view of the 64-channel work buffer with as
+many channels as it has buses. Roles: an FxmeNet-aware plugin is set to
+`source` before `prepareToPlay`.
+
+Replies leave from the shared socket with `::sendto` on its raw handle and
+the client's address resolved once (`UdpPeer`): JUCE's
+`DatagramSocket::write` caches one destination without a lock, which would
+race between sessions and resolve the address on almost every datagram.
+
+Limits of this first version (doc/todo.md): in-process plugin scan; no
+telemetry pump or discovery yet; `PARAM_CHANGED` not sent; a session's UDP
+peer is fixed at its first datagram; `setNonRealtime` is not forwarded to
+the plugins for offline blocks; catalog `sha256` empty and `fxmenetAbi`
+unknown until a slot is loaded.
 
 ## GainPan (Examples/GainPan)
 
