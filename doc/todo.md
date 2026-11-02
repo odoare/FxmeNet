@@ -17,10 +17,10 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
 ## Phase 1 onwards
 
 6. Phase 2, remaining:
-   - 6c. `fxmenet-server` step 1 written (sessions, chain, audio). Build;
-     it is exercised by 6d.
-   - 6d. Command-line test client: a WAV through a chain on the server,
-     compared with local processing (bit-identical).
+   - 6d. `fxmenet-wavclient` (written): build, then offline runs (Compressor,
+     Compressor + Equalizer, Dede, AmbiRR2 with a 16-channel file), expected
+     bit-identical; then `--realtime` runs for round-trip times and late
+     blocks, on loopback and between two machines.
    - 6e. Server step 2: telemetry pump (per-slot frames at the session's
      rate for open editors), `PARAM_CHANGED`, discovery responder
      (broadcast and mDNS).

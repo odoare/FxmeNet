@@ -3,6 +3,8 @@
 # see plan.md Phase 0 results).
 
 juce_add_console_app(FxmeNetServer PRODUCT_NAME "fxmenet-server")
+# juce_add_console_app ignores PRODUCT_NAME for the file name.
+set_target_properties(FxmeNetServer PROPERTIES OUTPUT_NAME "fxmenet-server")
 
 target_sources(FxmeNetServer PRIVATE
     Source/Main.cpp

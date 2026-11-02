@@ -31,6 +31,8 @@ Examples/GainPan/       FxmeNetGainPan: gain, balance, stereo in/out meters, the
                         full FX-Mechanics shell; the FxmeNet-aware howto plugin
 Tools/Loopback/         FxmeNetLoopback: Phase 1 harness, source and mirror of one
                         plugin in one process, telemetry pumped in memory
+Tools/WavClient/        fxmenet-wavclient: Phase 2 end-to-end test, a WAV through a
+                        chain on the server, compared with local processing
 Spikes/                 Phase 0 throwaway programs (FXMENET_BUILD_SPIKES, ON for now)
   HeadlessHost/         spike 1: GUI-free VST3 hosting, WAV through a plugin,
                         state round trip
@@ -38,8 +40,7 @@ doc/                    this file, todo.md, done.md; protocol.md (the wire
                         protocol, draft); audiogridder-notes.md
 ```
 
-Planned targets (not yet present): `FxmeNetPlugin` (Plugin/), the
-command-line test client. The
+Planned target (not yet present): `FxmeNetPlugin` (Plugin/). The
 plugin-side classes live in FxmeTools, not here: `net/TelemetryCodec.h`,
 `net/TelemetryRegistry.h`, `net/NetAbi.h` in core, `net/NetBridge.h` in the
 module, documented in FxmeTools `doc/fxmenet-howto.md`.
@@ -117,6 +118,27 @@ telemetry pump or discovery yet; `PARAM_CHANGED` not sent; a session's UDP
 peer is fixed at its first datagram; `setNonRealtime` is not forwarded to
 the plugins for offline blocks; catalog `sha256` empty and `fxmenetAbi`
 unknown until a slot is loaded.
+
+## fxmenet-wavclient (Tools/WavClient)
+
+`fxmenet-wavclient --in in.wav --out out.wav --plugin a.vst3 [--plugin
+b.vst3]... [--server host[:port]] [--block N] [--realtime] [--budget D]
+[--settle ms] [--no-compare]`. Reads each plugin's identity (uid, name,
+vendor) from its local copy, opens a session (HELLO, CONFIGURE with the
+file's channels and the chain's widest bus, one SLOT_ADD per plugin), waits
+`--settle` ms (1000) for the server's plugins to settle, then streams the
+file in blocks over `UdpTransport`:
+
+- offline (default): each block waits for its reply, re-sent every 50 ms
+  with the retry flag, 5 s at most;
+- `--realtime`: blocks leave at the audio rate; replies later than `--budget`
+  blocks (2) count as late, missing ones as lost.
+
+It reports round-trip times, retries or late and lost blocks, the chain
+latency and the server's processing time, writes the result, then processes
+the same blocks locally through the same plugins (same empty play head,
+same settling) and compares. A difference is written next to the output as
+`<out>.local.wav`.
 
 ## GainPan (Examples/GainPan)
 

@@ -33,6 +33,9 @@ add_subdirectory(Examples/GainPan)
 # ── Phase 1 harness: source and mirror of one plugin, telemetry in memory ─────
 add_subdirectory(Tools/Loopback)
 
+# ── Phase 2 end-to-end test: a WAV through a chain on the server ──────────────
+add_subdirectory(Tools/WavClient)
+
 # ── Phase 0 spikes (throwaway test programs, see doc/todo.md) ─────────────────
 option(FXMENET_BUILD_SPIKES "Build the Phase 0 spike programs" ON)
 if(FXMENET_BUILD_SPIKES)

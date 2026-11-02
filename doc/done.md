@@ -4,6 +4,11 @@ Newest first. Numbers are those of `todo.md`.
 
 ## 2026-11-02
 
+- 6c step 1: `fxmenet-server` builds and runs (scan, listening, clean stop).
+  Binary named `fxmenet-server` with `OUTPUT_NAME` (juce_add_console_app
+  ignores `PRODUCT_NAME` for the file).
+- 6d (written, not yet built): `Tools/WavClient`, the end-to-end test.
+
 - 6b: control channel tests pass (committed).
 - 6c step 1 (written, not yet built): `fxmenet-server` in `Server/`:
   catalog scan, control handshake with resume, sessions, chain with
