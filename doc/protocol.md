@@ -90,7 +90,7 @@ state and parameter batches are binary.
 | 7 | `BYE` | either | none |
 | 10 | `LIST_PLUGINS` | client | none |
 | 11 | `PLUGIN_LIST` | server | JSON: entries (section 4.3) |
-| 20 | `SLOT_ADD` | client | binary: slotId, position, VST3 class id (16 bytes), state blob (length + bytes, may be empty) |
+| 20 | `SLOT_ADD` | client | binary: slotId, position, plugin uid (u32), name, vendor, state blob (u32 length + bytes, may be empty) |
 | 21 | `SLOT_READY` | server | JSON: slotId, latency, channel layout, parameters (section 4.4), telemetry schema (base64 of the `TelemetryCodec` schema), FxmeNet ABI version or null |
 | 22 | `SLOT_REMOVE` | client | binary: slotId |
 | 23 | `SLOT_MOVE` | client | binary: slotId, new position |
@@ -109,14 +109,18 @@ two blocks; a slot's processing never stops for another slot's edit.
 ### 4.3 Plugin catalog entry
 
 ```json
-{ "classId": "37711c6c...", "name": "FxmeCompressor", "vendor": "FX-Mechanics",
+{ "uid": "1668ba35", "name": "FxmeCompressor", "vendor": "FX-Mechanics",
   "version": "0.5.0", "category": "Fx|Dynamics", "sha256": "...",
   "inputs": 2, "outputs": 2, "fxmenetAbi": 1, "platforms": ["x86_64-linux"] }
 ```
 
-`classId` is the VST3 class id, the only identity used to match plugins
-between machines (never JUCE's identifier string, which hashes the file path).
-`fxmenetAbi` is null for a plugin that does not answer `INetPlugin`.
+A plugin's identity between machines is (`uid`, `name`, `vendor`). `uid` is
+JUCE's `PluginDescription::uniqueId` for VST3: a 32-bit hash of the class id,
+normalised so it is the same on every OS (amended 2026-11-02: JUCE's hosting
+API does not expose the 16-byte class id itself). Never JUCE's identifier
+string, which also hashes the file path. `version` and `sha256` decide tier 2
+compatibility (section 2.4 of the plan). `fxmenetAbi` is null for a plugin
+that does not answer `INetPlugin`.
 
 ### 4.4 Parameters (in `SLOT_READY`)
 

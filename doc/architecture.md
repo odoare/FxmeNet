@@ -17,7 +17,11 @@ Common/                 shared by server and client, header-only:
                         bodies), Fragmentation.h (Fragmenter, Reassembler); JUCE-free
   FxmeNet/transport/    AudioTransport.h (the interface, JUCE-free),
                         UdpTransport.h (juce::DatagramSocket, one session)
-  tests/                FxmeNetProtocolTests (no JUCE), FxmeNetTransportTests (loopback UDP)
+  FxmeNet/control/      ControlFrame.h (frames, types, binary payloads, FrameAssembler;
+                        JUCE-free), ControlMessages.h (JSON messages, juce::JSON),
+                        ControlConnection.h (one TCP connection, juce::StreamingSocket)
+  tests/                FxmeNetProtocolTests (no JUCE), FxmeNetTransportTests (loopback
+                        UDP), FxmeNetControlTests (JSON, loopback TCP)
 Examples/GainPan/       FxmeNetGainPan: gain, balance, stereo in/out meters, the
                         full FX-Mechanics shell; the FxmeNet-aware howto plugin
 Tools/Loopback/         FxmeNetLoopback: Phase 1 harness, source and mirror of one
@@ -51,6 +55,14 @@ rest of the code sends and receives whole messages only. `UdpTransport` is
 the client's side (one peer, one session); the server will share one socket
 among its sessions and route datagrams by session id, reusing `Fragmenter`
 and `Reassembler`.
+
+The control channel (protocol.md section 4) follows the same split. Frames
+and binary payloads are JUCE-free; the JSON messages are structs with
+`toVar` / `fromVar` over `juce::JSON`, carrying 64-bit values and plugin
+uids as hex strings, keeping defaults for missing fields and ignoring
+unknown ones. `ControlConnection` sends from any thread (a lock keeps frames
+whole) and reads from one, with a timeout; a corrupt length closes it, since
+a stream cannot be resynchronised.
 
 ## GainPan (Examples/GainPan)
 

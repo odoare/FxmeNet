@@ -12,6 +12,7 @@
   ------------------------------------------------------------------------------
 */
 
+#include <FxmeNet/control/ControlFrame.h>
 #include <FxmeNet/protocol/Fragmentation.h>
 #include <FxmeNet/protocol/Wire.h>
 
@@ -328,6 +329,91 @@ int main()
             CHECK (feed (r, { Bytes (40, 0xab) }).empty());
             CHECK (feed (r, { Bytes (pieces[0].begin(), pieces[0].begin() + 20) }).empty());
             CHECK (r.getStatistics().malformed >= 4);
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    std::printf ("Control frames\n");
+    {
+        using namespace fxmenet::control;
+
+        SlotAdd add;
+        add.slotId = 3;
+        add.position = 1;
+        add.uid = 0x1668ba35;
+        add.name = "FxmeCompressor";
+        add.vendor = "FX-Mechanics";
+        add.state.assign (100000, 0x5a);
+
+        std::vector<ParamChange> params { { 3, 7, 0.25f }, { 4, 0, 1.0f } };
+        SlotState st { 3, { 1, 2, 3 } };
+
+        Bytes stream;
+        writeFrame (stream, Type::hello, flagJson, 1, (const std::uint8_t*) "{}", 2);
+        const auto addBytes = encode (add);
+        writeFrame (stream, Type::slotAdd, 0, 2, addBytes.data(), addBytes.size());
+        const auto paramBytes = encode (params);
+        writeFrame (stream, Type::paramSet, 0, 0, paramBytes.data(), paramBytes.size());
+        const auto stateBytes = encode (st);
+        writeFrame (stream, Type::stateSet, 0, 3, stateBytes.data(), stateBytes.size());
+        writeFrame (stream, Type::bye, 0, 0, nullptr, 0);
+
+        // The same frames whatever the read boundaries: one byte at a time,
+        // then in chunks of 1000.
+        for (std::size_t chunk : { std::size_t (1), std::size_t (1000) })
+        {
+            FrameAssembler a;
+            std::vector<Frame> frames;
+            for (std::size_t i = 0; i < stream.size(); i += chunk)
+            {
+                a.append (stream.data() + i, std::min (chunk, stream.size() - i));
+                Frame f;
+                while (a.next (f) == FrameAssembler::Result::frame)
+                    frames.push_back (f);
+            }
+            CHECK (frames.size() == 5);
+            if (frames.size() != 5)
+                continue;
+
+            CHECK (frames[0].type == Type::hello && frames[0].isJson() && frames[0].requestId == 1);
+            CHECK (frames[4].type == Type::bye && frames[4].payload.empty());
+
+            SlotAdd got;
+            CHECK (frames[1].type == Type::slotAdd && decode (frames[1].payload, got));
+            CHECK (got.slotId == 3 && got.position == 1 && got.uid == 0x1668ba35);
+            CHECK (got.name == "FxmeCompressor" && got.vendor == "FX-Mechanics" && got.state == add.state);
+
+            std::vector<ParamChange> gotParams;
+            CHECK (decode (frames[2].payload, gotParams) && gotParams.size() == 2);
+            CHECK (gotParams.size() == 2 && gotParams[1].slotId == 4 && gotParams[0].value == 0.25f);
+
+            SlotState gotState;
+            CHECK (decode (frames[3].payload, gotState) && gotState.slotId == 3 && gotState.state == st.state);
+        }
+
+        // Corrupt lengths: below 8, over the limit.
+        {
+            FrameAssembler a (1024);
+            const std::uint8_t tooShort[] = { 3, 0, 0, 0, 1, 0 };
+            a.append (tooShort, sizeof (tooShort));
+            Frame f;
+            CHECK (a.next (f) == FrameAssembler::Result::corrupt);
+
+            FrameAssembler b (1024);
+            Bytes big, payload (2000, 0);
+            writeFrame (big, Type::stateSet, 0, 0, payload.data(), payload.size());   // 2008 > 1024
+            b.append (big.data(), 16);
+            CHECK (b.next (f) == FrameAssembler::Result::corrupt);
+        }
+
+        // Truncated payloads are refused.
+        {
+            SlotAdd bad;
+            Bytes cut (addBytes.begin(), addBytes.begin() + 20);
+            CHECK (! decode (cut, bad));
+            std::vector<ParamChange> badParams;
+            Bytes lying { 255, 255, 0, 0 };   // 65535 changes, no data
+            CHECK (! decode (lying, badParams));
         }
     }
 

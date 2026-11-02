@@ -28,3 +28,16 @@ target_link_libraries(FxmeNetTransportTests
         juce::juce_recommended_config_flags
         juce::juce_recommended_warning_flags)
 add_test(NAME FxmeNetTransportTests COMMAND FxmeNetTransportTests)
+
+# The control channel: JSON messages and a TCP exchange on loopback.
+juce_add_console_app(FxmeNetControlTests PRODUCT_NAME "FxmeNetControlTests")
+target_sources(FxmeNetControlTests PRIVATE tests/ControlTests.cpp)
+target_compile_definitions(FxmeNetControlTests PRIVATE JUCE_USE_CURL=0 JUCE_WEB_BROWSER=0)
+target_link_libraries(FxmeNetControlTests
+    PRIVATE
+        FxmeNetProtocol
+        juce::juce_core
+    PUBLIC
+        juce::juce_recommended_config_flags
+        juce::juce_recommended_warning_flags)
+add_test(NAME FxmeNetControlTests COMMAND FxmeNetControlTests)

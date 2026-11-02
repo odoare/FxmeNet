@@ -17,10 +17,8 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
 ## Phase 1 onwards
 
 6. Phase 2, remaining:
-   - 6a. Build and run `FxmeNetProtocolTests` and `FxmeNetTransportTests`
-     (written).
-   - 6b. Control channel: TCP framing, the messages of protocol.md 4.2 (JSON
-     and binary), `Common/FxmeNet/control/`.
+   - 6b. Build and run `FxmeNetProtocolTests` (now with control frames) and
+     `FxmeNetControlTests` (written).
    - 6c. `fxmenet-server`: control server, session routing on one UDP
      socket, reply cache, chain engine (VST3 slots, lock-free swaps),
      message loop, telemetry pump, discovery responder.

@@ -4,6 +4,16 @@ Newest first. Numbers are those of `todo.md`.
 
 ## 2026-11-02
 
+- 6a: protocol and transport tests pass (committed).
+- 6b (written, not yet built): the control channel in
+  `Common/FxmeNet/control/` (frames and binary payloads JUCE-free, JSON
+  messages, `ControlConnection`), frame tests added to
+  `FxmeNetProtocolTests`, new `FxmeNetControlTests` (JSON round trips, TCP
+  exchange with a 1 MB state). Protocol amended: plugins are identified by
+  JUCE's VST3 `uniqueId` (a 32-bit hash of the normalised class id) plus name
+  and vendor, because JUCE's hosting API does not expose the 16-byte class
+  id.
+
 - Protocol reviewed, no changes. 6 (part, written, not yet built):
   `Common/` with the wire format (`Wire.h`), fragmentation
   (`Fragmentation.h`), `AudioTransport` and `UdpTransport`, and two test
