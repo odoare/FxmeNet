@@ -6,7 +6,7 @@
 
         fxmenet-server [--name NAME] [--control-port N] [--udp-port N]
                        [--discovery-port N] [--no-discovery]
-                       [--plugin-path DIR]... [--no-default-paths]
+                       [--plugin-path DIR]... [--no-default-paths] [--rescan]
 
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-FXME-Commercial
@@ -29,6 +29,7 @@ struct ServerConfig
     bool discovery = true;
     juce::StringArray pluginPaths;      ///< searched in addition to the VST3 defaults
     bool useDefaultPaths = true;
+    bool rescan = false;                ///< ignore the plugin cache
 
     /** Seconds a session survives its control connection dropping, so a
         client can resume it (protocol.md section 8). */
@@ -49,6 +50,7 @@ struct ServerConfig
             else if (a == "--no-discovery")                discovery = false;
             else if (a == "--plugin-path" && hasValue)     pluginPaths.add (args[++i]);
             else if (a == "--no-default-paths")            useDefaultPaths = false;
+            else if (a == "--rescan")                      rescan = true;
             else
             {
                 error = "unknown or incomplete argument: " + a;
@@ -69,7 +71,7 @@ struct ServerConfig
     {
         return "usage: fxmenet-server [--name NAME] [--control-port N (54322)] [--udp-port N (54321)]\n"
                "                      [--discovery-port N (54320)] [--no-discovery]\n"
-               "                      [--plugin-path DIR]... [--no-default-paths]";
+               "                      [--plugin-path DIR]... [--no-default-paths] [--rescan]";
     }
 };
 

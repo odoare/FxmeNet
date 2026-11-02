@@ -2,14 +2,17 @@
   ------------------------------------------------------------------------------
     PluginCatalog.h
 
-    The VST3 plugins the server can load: scanned once at startup on the
-    message thread, listed to clients (PLUGIN_LIST), and looked up by the
-    identity protocol.md section 4.3 defines (uid, name, vendor).
+    The VST3 plugins the server can load: found at startup, listed to clients
+    (PLUGIN_LIST), and looked up by the identity protocol.md section 4.3
+    defines (uid, name, vendor).
 
-    Version 1 limits, noted in doc/todo.md: the scan runs in-process (a
-    plugin crashing while scanned takes the server down), and the catalog
-    leaves sha256 empty and fxmenetAbi at 0 (unknown) until a slot is loaded,
-    when SLOT_READY reports the real ABI.
+    Each plugin file is examined in a child process (`fxmenet-server
+    --scan-plugin FILE`, see scanOnePlugin), so a plugin that crashes or hangs
+    while loaded is skipped instead of taking the server down. The child also
+    instantiates the plugin once to read its FxmeNet ABI version, and hashes
+    the plugin's binary for this platform (sha256). Results are cached by
+    file, size and modification time, so only new or changed plugins are
+    examined again; --rescan ignores the cache.
 
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-FXME-Commercial
@@ -30,11 +33,18 @@ namespace fxmenet::server
 class PluginCatalog
 {
 public:
+    struct Entry
+    {
+        juce::PluginDescription description;
+        int fxmenetAbi = 0;        ///< 0: not FxmeNet-aware
+        juce::String sha256;       ///< of the binary for this platform
+    };
+
     PluginCatalog();
 
-    /** Scans the default VST3 locations (unless told not to) and `extraPaths`.
-        Message thread. Returns the number of plugins found. */
-    int scan (const juce::StringArray& extraPaths, bool useDefaultPaths);
+    /** Finds the plugins in the default VST3 locations (unless told not to)
+        and `extraPaths`. Message thread. Returns how many were found. */
+    int scan (const juce::StringArray& extraPaths, bool useDefaultPaths, bool ignoreCache);
 
     std::vector<control::PluginEntry> getEntries() const;
 
@@ -48,9 +58,23 @@ public:
                                                                double sampleRate, int blockSize,
                                                                juce::String& error);
 
+    /** The child process's work: examines one plugin file and prints the
+        result on stdout between markers. Returns the process exit code. */
+    static int scanOnePlugin (const juce::String& file);
+
+    /** The folder of a VST3 bundle holding this platform's binary
+        ("x86_64-linux", "MacOS", "x86_64-win"...): also the platform name
+        given in the catalog. */
+    static juce::String bundlePlatformFolder();
+
 private:
+    /** Examines one file in a child process; false when it failed or hung. */
+    bool scanInChild (const juce::String& file, juce::Array<Entry>& results) const;
+
+    static juce::File getCacheFile();
+
     juce::AudioPluginFormatManager formats;
-    juce::OwnedArray<juce::PluginDescription> plugins;
+    juce::Array<Entry> entries;
 
     JUCE_DECLARE_NON_COPYABLE (PluginCatalog)
 };

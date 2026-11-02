@@ -219,12 +219,7 @@ void Session::onDatagram (const std::uint8_t* data, std::size_t size,
     if (! reassembler->add (data, size, m))
         return;
 
-    if (! worker.hasPeer())
-    {
-        UdpPeer peer;
-        if (peer.resolve (senderHost, senderPort))
-            worker.setPeer (peer);
-    }
+    worker.updatePeer (senderHost, senderPort);
 
     if (m.header.kind == wire::Kind::audioRequest)
         worker.enqueue (m.header.flags, m.body, m.size);

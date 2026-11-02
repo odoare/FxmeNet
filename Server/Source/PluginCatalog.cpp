@@ -10,22 +10,33 @@
 #include "PluginCatalog.h"
 #include "Log.h"
 
+#include <FxmeTools/net/NetAbi.h>
+
+#include <juce_cryptography/juce_cryptography.h>
+
+#include <iostream>
+#include <map>
+
 namespace fxmenet::server
 {
 
 namespace
 {
-    juce::String platformName()
+    const juce::String beginMarker = "FXMENET-SCAN-BEGIN";
+    const juce::String endMarker   = "FXMENET-SCAN-END";
+    constexpr int childTimeoutMs   = 30000;
+
+    /** The file holding this platform's code: the plugin file itself, or
+        the binary inside a VST3 bundle. */
+    juce::File pluginBinary (const juce::File& plugin)
     {
-       #if JUCE_LINUX
-        return "x86_64-linux";   // the server's own platform; arm64 builds will say so later
-       #elif JUCE_MAC
-        return "macos";
-       #elif JUCE_WINDOWS
-        return "x86_64-win";
-       #else
-        return "unknown";
-       #endif
+        if (plugin.existsAsFile())
+            return plugin;
+
+        auto folder = plugin.getChildFile ("Contents").getChildFile (PluginCatalog::bundlePlatformFolder());
+        auto files = folder.findChildFiles (juce::File::findFiles, false);
+        files.sort();
+        return files.isEmpty() ? juce::File() : files.getFirst();
     }
 }
 
@@ -34,9 +45,137 @@ PluginCatalog::PluginCatalog()
     formats.addFormat (std::make_unique<juce::VST3PluginFormatHeadless>());
 }
 
-int PluginCatalog::scan (const juce::StringArray& extraPaths, bool useDefaultPaths)
+juce::String PluginCatalog::bundlePlatformFolder()
 {
-    plugins.clear();
+   #if JUCE_MAC
+    return "MacOS";
+   #elif JUCE_WINDOWS
+    #if JUCE_ARM
+     return "arm64-win";
+    #else
+     return "x86_64-win";
+    #endif
+   #else
+    #if JUCE_ARM
+     return "aarch64-linux";
+    #else
+     return "x86_64-linux";
+    #endif
+   #endif
+}
+
+juce::File PluginCatalog::getCacheFile()
+{
+    auto base = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory);
+   #if JUCE_MAC
+    base = base.getChildFile ("Application Support");
+   #endif
+    return base.getChildFile ("FX-Mechanics").getChildFile ("fxmenet-server-plugins.xml");
+}
+
+//==============================================================================
+int PluginCatalog::scanOnePlugin (const juce::String& file)
+{
+    juce::AudioPluginFormatManager manager;
+    manager.addFormat (std::make_unique<juce::VST3PluginFormatHeadless>());
+
+    juce::OwnedArray<juce::PluginDescription> found;
+    for (auto* format : manager.getFormats())
+        if (format->fileMightContainThisPluginType (file))
+            format->findAllTypesForFile (found, file);
+
+    const auto binary = pluginBinary (juce::File (file));
+    const auto sha256 = binary.existsAsFile() ? juce::SHA256 (binary).toHexString() : juce::String();
+
+    juce::XmlElement root ("FxmeNetScan");
+    for (auto* d : found)
+    {
+        int abi = 0;
+        juce::String error;
+        if (auto instance = manager.createPluginInstance (*d, 48000.0, 512, error))
+        {
+            if (auto* vst3 = instance->getVST3Client())
+                if (auto* net = fxme::net::queryNetPlugin (vst3->getIComponentPtr()))
+                {
+                    abi = (int) net->getAbiVersion();
+                    net->release();
+                }
+        }
+
+        auto xml = d->createXml();
+        xml->setAttribute ("fxmenetAbi", abi);
+        xml->setAttribute ("sha256", sha256);
+        root.addChildElement (xml.release());
+    }
+
+    // Between markers: a plugin printing on stdout must not corrupt the result.
+    std::cout << beginMarker << "\n"
+              << root.toString (juce::XmlElement::TextFormat().singleLine().withoutHeader())
+              << "\n" << endMarker << std::endl;
+    return 0;
+}
+
+bool PluginCatalog::scanInChild (const juce::String& file, juce::Array<Entry>& results) const
+{
+    const auto exe = juce::File::getSpecialLocation (juce::File::currentExecutableFile).getFullPathName();
+    juce::ChildProcess child;
+    if (! child.start (juce::StringArray { exe, "--scan-plugin", file }, juce::ChildProcess::wantStdOut))
+    {
+        log ("  cannot start a scan process for " + file);
+        return false;
+    }
+
+    // The result is a few kB, well within a pipe's buffer, so the child
+    // never blocks writing it before we read.
+    if (! child.waitForProcessToFinish (childTimeoutMs))
+    {
+        child.kill();
+        log ("  skipped " + file + ": hung for " + juce::String (childTimeoutMs / 1000) + " s while loaded");
+        return false;
+    }
+
+    const auto output = child.readAllProcessOutput();
+    const auto text = output.fromFirstOccurrenceOf (beginMarker, false, false)
+                            .upToFirstOccurrenceOf (endMarker, false, false).trim();
+    auto xml = juce::parseXML (text);
+    if (! output.contains (endMarker) || xml == nullptr || ! xml->hasTagName ("FxmeNetScan"))
+    {
+        log ("  skipped " + file + ": crashed while loaded (exit code "
+             + juce::String ((int) child.getExitCode()) + ")");
+        return false;
+    }
+
+    for (auto* e : xml->getChildIterator())
+    {
+        Entry entry;
+        if (entry.description.loadFromXml (*e))
+        {
+            entry.fxmenetAbi = e->getIntAttribute ("fxmenetAbi");
+            entry.sha256 = e->getStringAttribute ("sha256");
+            results.add (entry);
+        }
+    }
+    return true;
+}
+
+//==============================================================================
+int PluginCatalog::scan (const juce::StringArray& extraPaths, bool useDefaultPaths, bool ignoreCache)
+{
+    entries.clear();
+
+    // The cache: one FILE element per plugin file, with the binary's size
+    // and date, and its PLUGIN elements (or failed="1").
+    std::unique_ptr<juce::XmlElement> oldCache;
+    if (! ignoreCache)
+        oldCache = juce::parseXML (getCacheFile());
+    std::map<juce::String, const juce::XmlElement*> cached;
+    if (oldCache != nullptr && oldCache->hasTagName ("FxmeNetPluginCache"))
+        for (auto* f : oldCache->getChildWithTagNameIterator ("FILE"))
+            cached[f->getStringAttribute ("path")] = f;
+
+    juce::XmlElement newCache ("FxmeNetPluginCache");
+    newCache.setAttribute ("version", 1);
+    int examined = 0, fromCache = 0, failed = 0;
 
     for (auto* format : formats.getFormats())
     {
@@ -47,56 +186,114 @@ int PluginCatalog::scan (const juce::StringArray& extraPaths, bool useDefaultPat
             path.add (juce::File::getCurrentWorkingDirectory().getChildFile (p));
 
         log ("scanning " + format->getName() + " in " + path.toString());
-        const auto files = format->searchPathsForPlugins (path, true, false);
 
-        for (auto& file : files)
+        for (auto& file : format->searchPathsForPlugins (path, true, false))
         {
-            juce::OwnedArray<juce::PluginDescription> found;
-            format->findAllTypesForFile (found, file);
-            for (auto* d : found)
+            const auto binary = pluginBinary (juce::File (file));
+            const auto size = binary.getSize();
+            const auto modified = binary.getLastModificationTime().toMilliseconds();
+
+            auto* record = newCache.createNewChildElement ("FILE");
+            record->setAttribute ("path", file);
+            record->setAttribute ("size", juce::String (size));
+            record->setAttribute ("modified", juce::String (modified));
+
+            juce::Array<Entry> results;
+            bool ok = true;
+            const auto it = cached.find (file);
+            if (it != cached.end()
+                && it->second->getStringAttribute ("size") == juce::String (size)
+                && it->second->getStringAttribute ("modified") == juce::String (modified))
             {
-                if (d->isInstrument)
+                ++fromCache;
+                ok = ! it->second->getBoolAttribute ("failed");
+                for (auto* e : it->second->getChildWithTagNameIterator ("PLUGIN"))
+                {
+                    Entry entry;
+                    if (entry.description.loadFromXml (*e))
+                    {
+                        entry.fxmenetAbi = e->getIntAttribute ("fxmenetAbi");
+                        entry.sha256 = e->getStringAttribute ("sha256");
+                        results.add (entry);
+                    }
+                }
+            }
+            else
+            {
+                ++examined;
+                ok = scanInChild (file, results);
+            }
+
+            if (! ok)
+            {
+                ++failed;
+                record->setAttribute ("failed", true);
+                continue;
+            }
+
+            for (auto& entry : results)
+            {
+                auto xml = entry.description.createXml();
+                xml->setAttribute ("fxmenetAbi", entry.fxmenetAbi);
+                xml->setAttribute ("sha256", entry.sha256);
+                record->addChildElement (xml.release());
+
+                const auto& d = entry.description;
+                if (d.isInstrument)
                     continue;   // FxmeNet hosts effects
-                if (find ((std::uint32_t) d->uniqueId, d->name, d->manufacturerName) != nullptr)
+                if (find ((std::uint32_t) d.uniqueId, d.name, d.manufacturerName) != nullptr)
                     continue;   // the same plugin in two folders: the first wins
-                log ("  " + d->name + " " + d->version + " (" + d->manufacturerName + "), uid "
-                     + juce::String::toHexString (d->uniqueId).paddedLeft ('0', 8));
-                plugins.add (new juce::PluginDescription (*d));
+                log ("  " + d.name + " " + d.version + " (" + d.manufacturerName + "), uid "
+                     + juce::String::toHexString (d.uniqueId).paddedLeft ('0', 8)
+                     + (entry.fxmenetAbi > 0 ? ", FxmeNet-aware" : ""));
+                entries.add (entry);
             }
         }
     }
 
-    log (juce::String (plugins.size()) + " plugins");
-    return plugins.size();
+    const auto cacheFile = getCacheFile();
+    cacheFile.getParentDirectory().createDirectory();
+    if (! newCache.writeTo (cacheFile))
+        log ("warning: cannot write the plugin cache " + cacheFile.getFullPathName());
+
+    log (juce::String (entries.size()) + " plugins (" + juce::String (examined) + " examined, "
+         + juce::String (fromCache) + " from the cache, " + juce::String (failed) + " failed)");
+    return entries.size();
 }
 
 std::vector<control::PluginEntry> PluginCatalog::getEntries() const
 {
-    std::vector<control::PluginEntry> entries;
-    for (auto* d : plugins)
+    std::vector<control::PluginEntry> out;
+    for (auto& entry : entries)
     {
+        const auto& d = entry.description;
         control::PluginEntry e;
-        e.uid = (std::uint32_t) d->uniqueId;
-        e.name = d->name;
-        e.vendor = d->manufacturerName;
-        e.version = d->version;
-        e.category = d->category;
-        e.inputs = d->numInputChannels;
-        e.outputs = d->numOutputChannels;
-        e.platforms.add (platformName());
-        entries.push_back (e);
+        e.uid = (std::uint32_t) d.uniqueId;
+        e.name = d.name;
+        e.vendor = d.manufacturerName;
+        e.version = d.version;
+        e.category = d.category;
+        e.sha256 = entry.sha256;
+        e.inputs = d.numInputChannels;
+        e.outputs = d.numOutputChannels;
+        e.fxmenetAbi = entry.fxmenetAbi;
+        e.platforms.add (bundlePlatformFolder());
+        out.push_back (e);
     }
-    return entries;
+    return out;
 }
 
 const juce::PluginDescription* PluginCatalog::find (std::uint32_t uid, const juce::String& name,
                                                     const juce::String& vendor) const
 {
-    for (auto* d : plugins)
-        if ((std::uint32_t) d->uniqueId == uid
-            && (name.isEmpty() || d->name == name)
-            && (vendor.isEmpty() || d->manufacturerName == vendor))
-            return d;
+    for (auto& entry : entries)
+    {
+        const auto& d = entry.description;
+        if ((std::uint32_t) d.uniqueId == uid
+            && (name.isEmpty() || d.name == name)
+            && (vendor.isEmpty() || d.manufacturerName == vendor))
+            return &d;
+    }
     return nullptr;
 }
 

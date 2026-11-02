@@ -49,6 +49,16 @@ int main (int argc, char* argv[])
     for (int i = 1; i < argc; ++i)
         args.add (juce::CharPointer_UTF8 (argv[i]));
 
+    // The child process of an out-of-process plugin scan (PluginCatalog).
+    if (args.size() == 2 && args[0] == "--scan-plugin")
+    {
+        juce::MessageManager::getInstance();
+        const int code = fxmenet::server::PluginCatalog::scanOnePlugin (args[1]);
+        juce::DeletedAtShutdown::deleteAll();
+        juce::MessageManager::deleteInstance();
+        return code;
+    }
+
     fxmenet::server::ServerConfig config;
     juce::String error;
     if (args.contains ("--help") || ! config.parse (args, error))

@@ -21,12 +21,12 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
      Compressor + Equalizer, Dede, AmbiRR2 with a 16-channel file), expected
      bit-identical; then `--realtime` runs for round-trip times and late
      blocks, on loopback and between two machines.
-   - 6e. Server step 2 (written): build, then `--discover`, and
-     `--telemetry --realtime` with GainPan (about 30 frames per second of
-     104 bytes, meters in dB that follow the input).
-   - 6f. Server limits to lift later: out-of-process plugin scan, mDNS,
-     catalog sha256 and ABI, `setNonRealtime` for offline blocks, UDP peer
-     change on resume.
+   - 6f (written): build and check the out-of-process scan (first start
+     examines every plugin, the second takes them from the cache; GainPan
+     listed as FxmeNet-aware), and that the wavclient tests still pass.
+   - 6g. Not done yet, needs two machines: the wavclient runs between them,
+     offline and `--realtime`.
+13. Later, optional: mDNS publishing (`_fxmenet._tcp`) for system browsers.
 7. Phase 3: FxmeNetPlugin tier 0, parameter pool with learn mapping, channel
    enable/disable UI.
 8. Phase 4: shadow editors and telemetry; port Compressor and Equalizer.

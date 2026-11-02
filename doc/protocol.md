@@ -120,6 +120,13 @@ two blocks; a slot's processing never stops for another slot's edit.
   "inputs": 2, "outputs": 2, "fxmenetAbi": 1, "platforms": ["x86_64-linux"] }
 ```
 
+`platforms` uses the folder names of a VST3 bundle (`x86_64-linux`,
+`aarch64-linux`, `MacOS`, `x86_64-win`, `arm64-win`); `sha256` is the hash of
+the binary in the server's own folder.
+
+```
+```
+
 A plugin's identity between machines is (`uid`, `name`, `vendor`). `uid` is
 JUCE's `PluginDescription::uniqueId` for VST3: a 32-bit hash of the class id,
 normalised so it is the same on every OS (amended 2026-11-02: JUCE's hosting
@@ -224,7 +231,10 @@ fragments).
 - **Broadcast:** the client sends `{"cmd":"FXMENET_DISCOVER","version":1}` to
   255.255.255.255:54320; each server answers by unicast with
   `{"cmd":"FXMENET_ANNOUNCE","name","os","version","controlPort","udpPort","sessions","cpuLoad"}`.
-- **mDNS / DNS-SD:** `_fxmenet._tcp`, TXT records with the same fields.
+- **mDNS / DNS-SD:** not in version 1 (decided 2026-11-02). mDNS is
+  link-local like the broadcast, so it finds no server the broadcast misses,
+  and it needs Avahi or Bonjour on every platform. Possible later as
+  `_fxmenet._tcp` with the same fields in TXT records, for system browsers.
 - **Manual:** host or IP and port typed in the client, remembered.
 
 ## 8. Reconnection and state

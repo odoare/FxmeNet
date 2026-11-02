@@ -230,7 +230,7 @@ void Chain::publish()
 }
 
 //==============================================================================
-void Chain::process (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
+void Chain::process (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi, bool offline)
 {
     // Hazard pointer: announce the snapshot, then check it is still current,
     // so publish() cannot free it between the two.
@@ -249,6 +249,8 @@ void Chain::process (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
         for (auto& slot : s->slots)
         {
             auto& instance = *slot->instance;
+            if (instance.isNonRealtime() != offline)
+                instance.setNonRealtime (offline);
             const int n = juce::jmin (slot->numChannels, buffer.getNumChannels());
             juce::AudioBuffer<float> view (buffer.getArrayOfWritePointers(), n, buffer.getNumSamples());
 

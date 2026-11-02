@@ -4,6 +4,13 @@ Newest first. Numbers are those of `todo.md`.
 
 ## 2026-11-02
 
+- 6e: telemetry, `PARAM_CHANGED` and discovery pass (committed).
+- 6f (written, not yet built): out-of-process plugin scan with a cache,
+  catalog sha256 and FxmeNet ABI, `setNonRealtime` from the offline flag,
+  the client's UDP address followed across a resume. mDNS dropped from
+  version 1 (protocol.md section 7), kept as optional item 13. Checked:
+  syntax of every server source, configure.
+
 - 6e (written, not yet built): server step 2. Telemetry pump and
   `PARAM_CHANGED` on a per-session timer (message thread), `ParamWatcher`
   with atomics only, discovery responder (broadcast) with the shared

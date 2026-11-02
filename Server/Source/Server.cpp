@@ -139,7 +139,7 @@ bool Server::start()
     log ("fxmenet-server " FXMENET_VERSION " \"" + config.name + "\" on "
          + juce::SystemStats::getOperatingSystemName());
 
-    catalog.scan (config.pluginPaths, config.useDefaultPaths);
+    catalog.scan (config.pluginPaths, config.useDefaultPaths, config.rescan);
 
     if (! listener.createListener (config.controlPort))
     {

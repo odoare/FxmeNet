@@ -83,12 +83,21 @@ void AudioWorker::stop()
     stopThread (2000);
 }
 
-void AudioWorker::setPeer (const UdpPeer& p)
+void AudioWorker::updatePeer (const juce::String& host, int port)
 {
-    if (! peerSet.load())
+    const int current = activePeer.load();
+    if (current >= 0 && peers[(std::size_t) current].getPort() == port && peers[(std::size_t) current].getHost() == host)
+        return;
+
+    const auto now = juce::Time::getMillisecondCounter();
+    if (current >= 0 && now - lastPeerChange < 1000)
+        return;
+
+    const int next = current < 0 ? 0 : 1 - current;
+    if (peers[(std::size_t) next].resolve (host, port))
     {
-        peer = p;
-        peerSet.store (true);
+        activePeer.store (next);
+        lastPeerChange = now;
     }
 }
 
@@ -178,7 +187,7 @@ void AudioWorker::handle (const Entry& e)
     if (block > expected)
         stats.lostBlocks.fetch_add (block - expected);
 
-    processBlock (v);
+    processBlock (v, e.flags);
     expected = block + 1;
     drainHeld();
 }
@@ -228,7 +237,7 @@ void AudioWorker::drainHeld()
             h.used = false;
             wire::BlockView v;
             if (wire::readBlock (h.entry.body.data(), h.entry.size, false, h.entry.flags, v))
-                processBlock (v);
+                processBlock (v, h.entry.flags);
             expected = h.block + 1;
             progressed = true;
         }
@@ -256,7 +265,7 @@ void AudioWorker::releaseStaleHeld()
 }
 
 //==============================================================================
-void AudioWorker::processBlock (const wire::BlockView& v)
+void AudioWorker::processBlock (const wire::BlockView& v, std::uint16_t flags)
 {
     const auto t0 = juce::Time::getHighResolutionTicks();
     const int n = config.blockSize;
@@ -281,7 +290,7 @@ void AudioWorker::processBlock (const wire::BlockView& v)
     if (v.info.hasTransport)
         chain.getPlayHead().set (v.info.transport, config.sampleRate);
 
-    chain.process (work, midi);
+    chain.process (work, midi, (flags & wire::requestFlags::offline) != 0);
 
     // Reply, written straight into its cache slot.
     auto& k = cache[(std::size_t) (v.info.block % cacheSize)];
@@ -321,7 +330,8 @@ void AudioWorker::processBlock (const wire::BlockView& v)
 
 void AudioWorker::send (const std::vector<std::uint8_t>& body)
 {
-    if (! peerSet.load())
+    const auto* peer = getPeer();
+    if (peer == nullptr)
         return;
 
     wire::DatagramHeader h;
@@ -330,9 +340,9 @@ void AudioWorker::send (const std::vector<std::uint8_t>& body)
     h.token = token;
     h.messageId = nextMessageId++;
 
-    const bool ok = fragmenter.split (h, body.data(), body.size(), [this] (const std::uint8_t* d, std::size_t size)
+    const bool ok = fragmenter.split (h, body.data(), body.size(), [this, peer] (const std::uint8_t* d, std::size_t size)
     {
-        return peer.send (socket, d, size);
+        return peer->send (socket, d, size);
     });
     if (! ok)
         stats.sendErrors.fetch_add (1);

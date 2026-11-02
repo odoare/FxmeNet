@@ -65,12 +65,19 @@ public:
 
     bool isRunning() const      { return isThreadRunning(); }
 
-    /** UDP thread: the client's address, before its first request. */
-    void setPeer (const UdpPeer& peerToReplyTo);
-    bool hasPeer() const noexcept   { return peerSet.load(); }
+    /** UDP thread, on every datagram of the session: follows the client's
+        address. A change (a client reconnecting with a new socket after a
+        resume) is taken at most once a second; the address is double
+        buffered, and a sender holds it only for one sendto, so switching
+        never touches the one in use. */
+    void updatePeer (const juce::String& host, int port);
 
-    /** The client's address once known (fixed afterwards), else nullptr. */
-    const UdpPeer* getPeer() const noexcept   { return peerSet.load() ? &peer : nullptr; }
+    /** The client's current address, or nullptr before its first datagram. */
+    const UdpPeer* getPeer() const noexcept
+    {
+        const int i = activePeer.load();
+        return i < 0 ? nullptr : &peers[(std::size_t) i];
+    }
 
     /** UDP thread: queues a complete request (copied). False when the queue
         is full or the request is too big for the session's format. */
@@ -111,7 +118,7 @@ private:
 
     void run() override;
     void handle (const Entry&);
-    void processBlock (const wire::BlockView&);
+    void processBlock (const wire::BlockView&, std::uint16_t flags);
     void send (const std::vector<std::uint8_t>& body);
     void drainHeld();
     void releaseStaleHeld();
@@ -123,8 +130,9 @@ private:
     std::uint32_t sessionId = 0;
     std::uint64_t token = 0;
 
-    UdpPeer peer;
-    std::atomic<bool> peerSet { false };
+    std::array<UdpPeer, 2> peers;
+    std::atomic<int> activePeer { -1 };
+    juce::uint32 lastPeerChange = 0;   // UDP thread
 
     juce::AbstractFifo fifo { queueSize };
     std::array<Entry, queueSize> queue;

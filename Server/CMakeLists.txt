@@ -32,6 +32,7 @@ target_link_libraries(FxmeNetServer
         FxmeCore
         juce::juce_audio_processors_headless
         juce::juce_core
+        juce::juce_cryptography
         juce::juce_events
     PUBLIC
         juce::juce_recommended_config_flags

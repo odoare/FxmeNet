@@ -74,7 +74,19 @@ a stream cannot be resynchronised.
 
 `fxmenet-server [--name NAME] [--control-port 54322] [--udp-port 54321]
 [--discovery-port 54320] [--no-discovery] [--plugin-path DIR]...
-[--no-default-paths]`. Links only the GUI-free JUCE
+[--no-default-paths] [--rescan]`.
+
+**Plugin catalog.** Each VST3 file is examined in a child process,
+`fxmenet-server --scan-plugin FILE` (30 s timeout), which prints its
+descriptions between markers, each with the plugin's FxmeNet ABI (it
+instantiates the plugin once) and the sha256 of the binary for this
+platform inside the bundle (`Contents/x86_64-linux/...`, `MacOS`,
+`x86_64-win`). A plugin crashing or hanging while loaded is logged and
+skipped. Results go to a cache (`FX-Mechanics/fxmenet-server-plugins.xml`
+in the user's configuration folder) keyed by path, binary size and date, so
+only new or changed plugins are examined at the next start; a failed file
+stays skipped until it changes; `--rescan` ignores the cache. The catalog's
+`platforms` uses the bundle folder names. Links only the GUI-free JUCE
 modules (`juce_audio_processors_headless`, `juce_core`, `juce_events`).
 
 Threads:
@@ -133,10 +145,14 @@ with `FXMENET_ANNOUNCE` (name, OS, version, ports, session count), using
 on the same machine cannot bind the port and runs without it. mDNS is not
 implemented yet.
 
-Limits (doc/todo.md 6f): in-process plugin scan; no mDNS; a session's UDP
-peer is fixed at its first datagram; `setNonRealtime` is not forwarded to
-the plugins for offline blocks; catalog `sha256` empty and `fxmenetAbi`
-unknown until a slot is loaded.
+**Offline blocks.** The request's offline flag reaches the plugins:
+`Chain::process` calls `setNonRealtime` when it changes, which JUCE's VST3
+host turns into the process mode of that very call.
+
+**The client's address** follows the session: every datagram passes its
+sender to `AudioWorker::updatePeer`, which switches to a new address (a
+client back with a new socket after a resume) at most once a second. The
+address is double buffered and a sender holds it for one `sendto` only.
 
 ## fxmenet-wavclient (Tools/WavClient)
 
