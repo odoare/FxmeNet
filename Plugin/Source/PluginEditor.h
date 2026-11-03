@@ -2,11 +2,11 @@
   ------------------------------------------------------------------------------
     PluginEditor.h
 
-    FxmeNet's window, Phase 3 minimal version (7c): the FX-Mechanics top bar,
-    the server (found on the network or typed) with its status, the server's
-    plugins, the chain with its edit buttons, and one line of statistics.
-    The full editor (generic parameter view, learn mapping, channel grid,
-    stream settings) is step 7d.
+    FxmeNet's window: the FX-Mechanics top bar, the server (found on the
+    network or typed) with its status; on the left the server's plugins and
+    the chain with its edit buttons; on the right three tabs (Panels.h): the
+    selected slot's parameters, the automation mapping, the stream and
+    channel settings; one line of statistics at the bottom.
 
     Everything is read from the processor and its engine by a 10 Hz timer;
     nothing here touches the network itself, apart from the discovery
@@ -25,6 +25,7 @@
 
 #include "PluginProcessor.h"
 #include "AppSettings.h"
+#include "Panels.h"
 #include "Theme.h"
 
 class FxmeNetAudioProcessorEditor : public juce::AudioProcessorEditor,
@@ -88,6 +89,11 @@ private:
     juce::ListBox catalogList { "Server plugins", &catalogRows }, chainList { "Chain", &chainRows };
     juce::TextButton addButton { "Add" };
     juce::TextButton upButton { "Up" }, downButton { "Down" }, bypassButton { "Bypass" }, removeButton { "Remove" };
+
+    fxmenet::plugin::ParameterPanel parameterPanel { processor };
+    fxmenet::plugin::MappingPanel mappingPanel { processor };
+    fxmenet::plugin::SettingsPanel settingsPanel { processor };
+    juce::TabbedComponent tabs { juce::TabbedButtonBar::TabsAtTop };
 
     std::vector<fxmenet::control::PluginEntry> catalog;
     std::vector<fxmenet::client::SlotModel> slots;

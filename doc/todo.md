@@ -16,13 +16,8 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
 
 ## Phase 1 onwards
 
-6. Phase 2, remaining:
-   - 6d. `fxmenet-wavclient` (written): build, then offline runs (Compressor,
-     Compressor + Equalizer, Dede, AmbiRR2 with a 16-channel file), expected
-     bit-identical; then `--realtime` runs for round-trip times and late
-     blocks, on loopback and between two machines.
-   - 6g. Not done yet, needs two machines: the wavclient runs between them,
-     offline and `--realtime`.
+6. Phase 2, remaining: 6g, the wavclient runs between two machines (offline
+   and `--realtime`, also `--engine`); needs a second machine.
 14. Later, optional (user request 2026-11-03): local fallback. When no
     server answers (or on demand, an option per instance), process the chain
     locally with the client's own copies of the plugins. Builds on Phase 4,
@@ -35,14 +30,6 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     locally (dry, with a warning), and whether to switch back automatically
     when the server returns.
 13. Later, optional: mDNS publishing (`_fxmenet._tcp`) for system browsers.
-7. Phase 3: FxmeNetPlugin tier 0, in four steps, each tested before the next:
-   - 7b, remaining: a server restart in the middle of a long `--realtime`
-     `--engine` run (the engine should reconnect and rebuild the chain, dry
-     audio meanwhile).
-   - 7d. The editor: connection header (discovered servers, manual address,
-     ping, statistics), chain strip (add, reorder, bypass, remove), plugin
-     browser from the catalog, generic parameter view, learn mapping and
-     mapping list, channel enable/disable grid.
 8. Phase 4: shadow editors and telemetry; port Compressor and Equalizer.
 9. Phase 5: hardening, measurements, CI.
 10. Phase 6: plugin distribution.

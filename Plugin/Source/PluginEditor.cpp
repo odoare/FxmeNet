@@ -112,6 +112,14 @@ FxmeNetAudioProcessorEditor::FxmeNetAudioProcessorEditor (FxmeNetAudioProcessor&
         addAndMakeVisible (*b);
     }
 
+    // Tabs.
+    tabs.setTabBarDepth (26);
+    tabs.setOutline (0);
+    tabs.addTab ("Parameters", theme::panel, &parameterPanel, false);
+    tabs.addTab ("Mapping", theme::panel, &mappingPanel, false);
+    tabs.addTab ("Stream & channels", theme::panel, &settingsPanel, false);
+    addAndMakeVisible (tabs);
+
     setSize (theme::width, theme::height);
     timerCallback();
     startTimerHz (10);
@@ -130,6 +138,8 @@ void FxmeNetAudioProcessorEditor::timerCallback()
 
     const auto status = engine.getStatus();
     statusLine = engine.getStatusText();
+    if (status == ClientEngine::Status::ready && engine.getServerOs().isNotEmpty())
+        statusLine << " (" << engine.getServerOs() << ")";
     statusColour = status == ClientEngine::Status::ready  ? theme::accent
                  : status == ClientEngine::Status::idle   ? theme::dimText
                                                           : theme::warning;
@@ -146,6 +156,11 @@ void FxmeNetAudioProcessorEditor::timerCallback()
 
     refreshCatalog();
     refreshChain();
+
+    const int row = chainList.getSelectedRow();
+    parameterPanel.refresh (juce::isPositiveAndBelow (row, (int) slots.size()) ? &slots[(std::size_t) row] : nullptr);
+    mappingPanel.refresh();
+    settingsPanel.refresh();
     repaint (statusArea);
     repaint (statsArea);
 }
@@ -172,7 +187,7 @@ void FxmeNetAudioProcessorEditor::refreshCatalog()
 
 void FxmeNetAudioProcessorEditor::refreshChain()
 {
-    slots = processor.getEngine().getSlots();
+    slots = processor.getEngine().getSlotInfos();
     juce::String signature;
     for (auto& s : slots)
         signature << (int) s.slotId << (s.loaded ? "L" : "-") << (s.bypassed ? "B" : "-") << s.error << ";";
@@ -319,20 +334,23 @@ void FxmeNetAudioProcessorEditor::resized()
     area.removeFromBottom (6);
     area.removeFromTop (10);
 
-    // Catalog on the left, chain on the right.
-    auto left = area.removeFromLeft ((area.getWidth() - 14) / 2);
+    // Server plugins above the chain on the left, the tabs on the right.
+    auto left = area.removeFromLeft (330);
     area.removeFromLeft (14);
-    auto right = area;
+    tabs.setBounds (area);
 
-    catalogTitle = left.removeFromTop (18);
-    addButton.setBounds (left.removeFromBottom (26).removeFromRight (80));
+    auto top = left.removeFromTop ((left.getHeight() - 10) / 2);
+    left.removeFromTop (10);
+
+    catalogTitle = top.removeFromTop (18);
+    addButton.setBounds (top.removeFromBottom (26).removeFromRight (80));
+    top.removeFromBottom (6);
+    catalogList.setBounds (top);
+
+    chainTitle = left.removeFromTop (18);
+    auto buttons = left.removeFromBottom (26);
     left.removeFromBottom (6);
-    catalogList.setBounds (left);
-
-    chainTitle = right.removeFromTop (18);
-    auto buttons = right.removeFromBottom (26);
-    right.removeFromBottom (6);
-    chainList.setBounds (right);
+    chainList.setBounds (left);
     const int w = (buttons.getWidth() - 3 * 6) / 4;
     for (auto* b : { &upButton, &downButton, &bypassButton, &removeButton })
     {

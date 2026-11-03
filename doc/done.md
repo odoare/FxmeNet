@@ -4,6 +4,21 @@ Newest first. Numbers are those of `todo.md`.
 
 ## 2026-11-03
 
+- 7 (Phase 3) complete: 7d passes in Reaper (parameter view, learn and
+  manual mapping, Mapping tab, N / D with the latency, channel toggles).
+  Phase 3's exit criterion met: in Reaper, a chain on the server is
+  automated, saved, reloaded, bounced offline, and survives a server
+  restart.
+- 7d (written): editor with three tabs (`Panels.h/.cpp`): Parameters (one
+  row per slot parameter with slider, value text, pool entry, Learn,
+  Map / Unmap), Mapping (list, Unmap, Unmap all, learn status), Stream &
+  channels (N, D, latency, channel toggles). Processor: mapping API
+  (`mapPool`, `mapToFreePool`, `unmapPool`, `findPoolFor`), learn, slot
+  parameter edits through the pool with gestures, stream settings
+  get / set. Engine: `getSlotInfos` (no state blobs for displays),
+  `currentValue`, values kept across a state refresh, server OS. Checked:
+  syntax of the plugin sources and the wavclient.
+
 - 7c complete: DAW bypass (dry, no timing jump) and server restart while
   playing (dry meanwhile, then processed again) pass in Reaper; this also
   closes the 7b restart check.

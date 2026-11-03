@@ -27,6 +27,7 @@ juce_add_plugin(FxmeNetPlugin
 target_sources(FxmeNetPlugin PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
+    Source/Panels.cpp
 )
 
 target_include_directories(FxmeNetPlugin PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Source)

@@ -84,9 +84,10 @@ public:
     /** How many pool parameters are mapped. */
     int getNumMapped() const;
 
-    static constexpr int stateVersion = 1;
+    //==============================================================================
+    // Stream settings: N, D and the channel masks (bit c: channel c sent, or
+    // received). Changing them reconfigures the session (a moment of dry audio).
 
-private:
     struct StreamSettings
     {
         int blockSize = 128, budgetBlocks = 2;
@@ -99,6 +100,53 @@ private:
         }
     };
 
+    StreamSettings getStreamSettings() const;
+    void setStreamSettings (const StreamSettings&);
+
+    /** The host block size and channel counts last prepared (0 before). */
+    int getPreparedBlockSize() const;
+    int getPreparedInputs() const;
+    int getPreparedOutputs() const;
+
+    //==============================================================================
+    // The pool mapping (ParameterPool.h).
+
+    using Mapping = fxmenet::plugin::Mapping;
+
+    Mapping getMapping (int poolIndex) const;
+    fxmenet::plugin::PoolParameter& getPoolParameter (int poolIndex)   { return *pool[(std::size_t) poolIndex]; }
+
+    /** The pool entry mapped to a slot parameter, or -1. */
+    int findPoolFor (Mapping target) const;
+
+    /** Maps pool entry `poolIndex` to `target`: whatever the entry pointed to
+        is dropped, and so is any other entry pointing to `target` (one pool
+        entry per slot parameter). The entry takes the parameter's name and
+        current value. */
+    void mapPool (int poolIndex, Mapping target);
+    void unmapPool (int poolIndex);
+
+    /** Maps `target` to the first free pool entry; its index, or -1 when
+        the pool is full. */
+    int mapToFreePool (Mapping target);
+
+    /** Learn: the next pool parameter the DAW moves (automation, or its
+        generic controls) is mapped to `target`. */
+    void startLearn (Mapping target);
+    void cancelLearn();
+    Mapping getLearnTarget() const     { return learnTarget; }
+
+    /** A slot parameter set from the editor: through its pool entry when it
+        has one (so the DAW records it), else straight to the server. The
+        gesture calls frame a drag, for the DAW's automation. */
+    void setSlotParameter (Mapping target, float value);
+    void beginSlotParameterGesture (Mapping target);
+    void endSlotParameterGesture (Mapping target);
+
+    static constexpr int stateVersion = 1;
+
+private:
+
     void process (juce::AudioBuffer<float>&, bool bypassed);
     void timerCallback() override;
 
@@ -109,6 +157,12 @@ private:
     void sendDirtyParameters();
     void applyServerParameterChanges();
     void followChain();
+
+    /** With mappingLock held: names a mapped entry after its parameter;
+        returns the parameter's current value (or -1 if not found). */
+    float describeMapped (int poolIndex, const std::vector<fxmenet::client::SlotModel>& slots);
+
+    Mapping learnTarget;   ///< message thread; slotId 0: not learning
 
     std::array<fxmenet::plugin::PoolParameter*, fxmenet::plugin::poolSize> pool {};
 

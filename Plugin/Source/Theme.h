@@ -29,7 +29,7 @@ namespace fxmenet::plugin::theme
     inline const juce::Colour selection  { 0xff2e3a33 };
 
     constexpr int topBarHeight = 34;
-    constexpr int width        = 720;
-    constexpr int height       = 460 + topBarHeight;
+    constexpr int width        = 960;
+    constexpr int height       = 580 + topBarHeight;
     constexpr int rowHeight    = 22;
 }

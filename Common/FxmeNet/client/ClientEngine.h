@@ -177,6 +177,7 @@ public:
     Status getStatus() const noexcept            { return status.load(); }
     juce::String getStatusText() const           { const std::lock_guard<std::mutex> l (lock); return statusText; }
     juce::String getServerName() const           { const std::lock_guard<std::mutex> l (lock); return serverName; }
+    juce::String getServerOs() const             { const std::lock_guard<std::mutex> l (lock); return serverOs; }
 
     /** The latency to report: re-blocking and network budget, plus the
         server chain's own. Any thread. */
@@ -190,6 +191,39 @@ public:
     // The chain. Not on the audio thread.
 
     std::vector<SlotModel> getSlots() const      { const std::lock_guard<std::mutex> l (lock); return slots; }
+
+    /** The slots without their state blobs (which can be large): for
+        displays polling often. */
+    std::vector<SlotModel> getSlotInfos() const
+    {
+        const std::lock_guard<std::mutex> l (lock);
+        std::vector<SlotModel> out;
+        out.reserve (slots.size());
+        for (auto& s : slots)
+        {
+            SlotModel copy;
+            copy.slotId = s.slotId;
+            copy.uid = s.uid;
+            copy.name = s.name;
+            copy.vendor = s.vendor;
+            copy.bypassed = s.bypassed;
+            copy.params = s.params;
+            copy.onServer = s.onServer;
+            copy.loaded = s.loaded;
+            copy.error = s.error;
+            copy.info = s.info;
+            out.push_back (std::move (copy));
+        }
+        return out;
+    }
+
+    /** A slot parameter's current value, normalised: the last one set or
+        reported, else the one SLOT_READY gave. */
+    static float currentValue (const SlotModel& s, const control::ParamInfo& p)
+    {
+        const auto it = s.params.find ((std::uint32_t) p.index);
+        return it != s.params.end() ? it->second.value : p.value;
+    }
 
     /** Adds a plugin at `position` (clamped); returns its slot id. */
     std::uint32_t addSlot (std::uint32_t uid, const juce::String& name, const juce::String& vendor,
@@ -352,7 +386,18 @@ public:
                     {
                         slot->state = std::move (s.state);
                         for (auto it = slot->params.begin(); it != slot->params.end();)
-                            it = it->second.seq <= seqAtRequest ? slot->params.erase (it) : std::next (it);
+                        {
+                            if (it->second.seq > seqAtRequest)
+                            {
+                                ++it;
+                                continue;
+                            }
+                            // In the state now; the value stays known for displays.
+                            for (auto& p : slot->info.params)
+                                if ((std::uint32_t) p.index == it->first)
+                                    p.value = it->second.value;
+                            it = slot->params.erase (it);
+                        }
                     }
                 }
                 else
@@ -637,6 +682,7 @@ private:
         {
             const std::lock_guard<std::mutex> l (lock);
             serverName = welcome.serverName;
+            serverOs = welcome.os;
         }
 
         if (! configure (hostName) || ! syncChain (welcome.resumed))
@@ -1071,7 +1117,7 @@ private:
     bool dirty = false;
     std::atomic<bool> ready { false };
     std::vector<control::PluginEntry> catalog;
-    juce::String statusText { "Not connected" }, serverName;
+    juce::String statusText { "Not connected" }, serverName, serverOs;
     std::atomic<Status> status { Status::idle };
 
     mutable std::mutex connectionLock;   ///< `connection` and `pending`

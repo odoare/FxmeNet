@@ -33,7 +33,7 @@ Server/Source/          fxmenet-server: Main (options, signals, message loop),
                         AudioWorker (ordering, reply cache, processing),
                         PluginCatalog, UdpPeer, Log
 Plugin/                 FxmeNetPlugin ("FxmeNet", VST3 and AU): the client in the DAW,
-                        processor, 256-parameter pool, minimal editor
+                        processor, 256-parameter pool, editor and its panels
 Examples/GainPan/       FxmeNetGainPan: gain, balance, stereo in/out meters, the
                         full FX-Mechanics shell; the FxmeNet-aware howto plugin
 Tools/Loopback/         FxmeNetLoopback: Phase 1 harness, source and mirror of one
@@ -297,8 +297,13 @@ The DAW glue around `ClientEngine`; product name "FxmeNet", VST3 and AU
   are not echoed back. When a slot first loads, its automatable parameters
   (bypass excepted) are mapped to the first free pool entries; the pool
   then shows the slot's current values (`SLOT_READY` carries them). A
-  removed slot frees its entries. The learn mapping and the mapping list are
-  step 7d.
+  removed slot frees its entries. Mapping by hand: `mapPool` (one pool
+  entry per slot parameter: mapping one drops the others), `mapToFreePool`,
+  `unmapPool`; learn: `startLearn (target)`, then the first pool parameter
+  whose value the DAW changes (any value other than the last one FxmeNet
+  set itself) is mapped to the target. A slot parameter moved in the editor
+  goes through its pool entry when it has one (with the drag as a change
+  gesture), so the DAW records it; otherwise straight to the server.
 - State, XML: server, stream settings, each slot (id, uid, name, vendor,
   bypass, state blob in base64, parameter values set since that state) and
   the mapping. `getStateInformation` first fetches the slots' states from the
@@ -306,12 +311,23 @@ The DAW glue around `ClientEngine`; product name "FxmeNet", VST3 and AU
   `setStateInformation` hands the chain to the engine, which rebuilds it on
   the server, restores the mapping as saved (no automatic mapping for those
   slots), and connects.
-- Editor (minimal, 7c): server field (typed, or picked from a discovery
-  broadcast run on a background thread), Connect, status; the server's
-  plugins (double-click or Add); the chain with Up, Down, Bypass, Remove;
-  one line of statistics (latency, round trip, concealed blocks, mapped
-  parameters). The last server is remembered machine-wide
-  (`FX-Mechanics/FxmeNet.settings`).
+- Editor: server field (typed, or picked from a discovery broadcast run on
+  a background thread), Connect, status with the server's OS; on the left
+  the server's plugins (double-click or Add) and the chain with Up, Down,
+  Bypass, Remove; on the right three tabs (`Panels.h`):
+  - Parameters: the selected slot's parameters, one row each: name and
+    unit, a slider (normalised, stepped ones snap; double-click for the
+    default), the value text (the step's name, else the normalised value:
+    the plugin's own texts are Phase 4, with its own editor), the pool
+    entry, Learn, Map / Unmap;
+  - Mapping: every mapped pool entry with its name and value, Unmap (multiple
+    selection), Unmap all, and the learn in progress with Cancel;
+  - Stream & channels: N and D, the latency they give (network and
+    re-blocking, then the chain's), one toggle per input and output channel.
+  One line of statistics at the bottom. Displays read the slots through
+  `ClientEngine::getSlotInfos` (no state blobs) and
+  `ClientEngine::currentValue`, which stays right across a state refresh.
+  The last server is remembered machine-wide (`FX-Mechanics/FxmeNet.settings`).
 
 ## GainPan (Examples/GainPan)
 

@@ -197,6 +197,7 @@ void FxmeNetAudioProcessor::timerCallback()
 void FxmeNetAudioProcessor::sendDirtyParameters()
 {
     std::vector<ParamChange> changes;
+    int learned = -1;
     {
         const std::lock_guard<std::mutex> l (mappingLock);
         for (int i = 0; i < poolSize; ++i)
@@ -206,7 +207,16 @@ void FxmeNetAudioProcessor::sendDirtyParameters()
                 continue;
             const auto m = mapping[(std::size_t) i];
             const float v = p->get();
-            if (! m.isMapped() || juce::exactlyEqual (v, lastSent[(std::size_t) i]))
+            if (juce::exactlyEqual (v, lastSent[(std::size_t) i]))
+                continue;   // our own echo (a value from the server, a sync)
+
+            // Learning: the first pool parameter the DAW moves gets the target.
+            if (learnTarget.isMapped() && learned < 0)
+            {
+                learned = i;
+                continue;
+            }
+            if (! m.isMapped())
                 continue;
             lastSent[(std::size_t) i] = v;
             changes.push_back ({ m.slotId, m.paramIndex, v });
@@ -214,6 +224,12 @@ void FxmeNetAudioProcessor::sendDirtyParameters()
     }
     if (! changes.empty())
         engine.setParameters (changes);
+
+    if (learned >= 0)
+    {
+        const auto target = std::exchange (learnTarget, Mapping {});
+        mapPool (learned, target);
+    }
 }
 
 void FxmeNetAudioProcessor::applyServerParameterChanges()
@@ -245,7 +261,7 @@ void FxmeNetAudioProcessor::applyServerParameterChanges()
     values taken from each slot once it is loaded. */
 void FxmeNetAudioProcessor::followChain()
 {
-    const auto slots = engine.getSlots();
+    const auto slots = engine.getSlotInfos();
 
     juce::String signature;
     for (auto& s : slots)
@@ -261,6 +277,9 @@ void FxmeNetAudioProcessor::followChain()
         if (s.loaded)
             loaded.insert (s.slotId);
     }
+
+    if (learnTarget.isMapped() && present.count (learnTarget.slotId) == 0)
+        learnTarget = {};   // its slot is gone
 
     bool infoChanged = false;
     std::vector<std::pair<int, float>> values;   // set outside the lock
@@ -369,6 +388,132 @@ int FxmeNetAudioProcessor::getNumMapped() const
     for (auto& m : mapping)
         n += m.isMapped() ? 1 : 0;
     return n;
+}
+
+//==============================================================================
+FxmeNetAudioProcessor::StreamSettings FxmeNetAudioProcessor::getStreamSettings() const
+{
+    const std::lock_guard<std::mutex> l (settingsLock);
+    return stream;
+}
+
+void FxmeNetAudioProcessor::setStreamSettings (const StreamSettings& s)
+{
+    applyStreamSettings (s);
+}
+
+int FxmeNetAudioProcessor::getPreparedBlockSize() const   { const std::lock_guard<std::mutex> l (settingsLock); return preparedBlock; }
+int FxmeNetAudioProcessor::getPreparedInputs() const      { const std::lock_guard<std::mutex> l (settingsLock); return preparedInputs; }
+int FxmeNetAudioProcessor::getPreparedOutputs() const     { const std::lock_guard<std::mutex> l (settingsLock); return preparedOutputs; }
+
+//==============================================================================
+Mapping FxmeNetAudioProcessor::getMapping (int poolIndex) const
+{
+    const std::lock_guard<std::mutex> l (mappingLock);
+    return juce::isPositiveAndBelow (poolIndex, poolSize) ? mapping[(std::size_t) poolIndex] : Mapping {};
+}
+
+int FxmeNetAudioProcessor::findPoolFor (Mapping target) const
+{
+    const std::lock_guard<std::mutex> l (mappingLock);
+    for (int i = 0; i < poolSize; ++i)
+        if (mapping[(std::size_t) i] == target)
+            return i;
+    return -1;
+}
+
+float FxmeNetAudioProcessor::describeMapped (int poolIndex, const std::vector<SlotModel>& slots)
+{
+    const auto m = mapping[(std::size_t) poolIndex];
+    for (auto& s : slots)
+        if (s.slotId == m.slotId && s.loaded)
+            for (auto& p : s.info.params)
+                if ((std::uint32_t) p.index == m.paramIndex)
+                {
+                    pool[(std::size_t) poolIndex]->describe (s.name, &p);
+                    return ClientEngine::currentValue (s, p);
+                }
+    pool[(std::size_t) poolIndex]->describe ({}, nullptr);   // named once its slot loads
+    return -1.0f;
+}
+
+void FxmeNetAudioProcessor::mapPool (int poolIndex, Mapping target)
+{
+    if (! juce::isPositiveAndBelow (poolIndex, poolSize) || ! target.isMapped())
+        return;
+
+    const auto slots = engine.getSlotInfos();
+    float value;
+    {
+        const std::lock_guard<std::mutex> l (mappingLock);
+        for (int j = 0; j < poolSize; ++j)
+            if (j != poolIndex && mapping[(std::size_t) j] == target)
+            {
+                mapping[(std::size_t) j] = {};
+                pool[(std::size_t) j]->describe ({}, nullptr);
+            }
+        mapping[(std::size_t) poolIndex] = target;
+        value = describeMapped (poolIndex, slots);
+    }
+
+    if (value >= 0.0f)
+    {
+        lastSent[(std::size_t) poolIndex] = value;   // shows the parameter's value, sends nothing
+        pool[(std::size_t) poolIndex]->setValueNotifyingHost (value);
+    }
+    updateHostDisplay (ChangeDetails().withParameterInfoChanged (true));
+}
+
+void FxmeNetAudioProcessor::unmapPool (int poolIndex)
+{
+    if (! juce::isPositiveAndBelow (poolIndex, poolSize))
+        return;
+    {
+        const std::lock_guard<std::mutex> l (mappingLock);
+        mapping[(std::size_t) poolIndex] = {};
+        pool[(std::size_t) poolIndex]->describe ({}, nullptr);
+    }
+    updateHostDisplay (ChangeDetails().withParameterInfoChanged (true));
+}
+
+int FxmeNetAudioProcessor::mapToFreePool (Mapping target)
+{
+    if (const int existing = findPoolFor (target); existing >= 0)
+        return existing;
+
+    int free = -1;
+    {
+        const std::lock_guard<std::mutex> l (mappingLock);
+        for (int i = 0; i < poolSize && free < 0; ++i)
+            if (! mapping[(std::size_t) i].isMapped())
+                free = i;
+    }
+    if (free >= 0)
+        mapPool (free, target);
+    return free;
+}
+
+void FxmeNetAudioProcessor::startLearn (Mapping target)   { learnTarget = target; }
+void FxmeNetAudioProcessor::cancelLearn()                 { learnTarget = {}; }
+
+void FxmeNetAudioProcessor::setSlotParameter (Mapping target, float value)
+{
+    if (const int i = findPoolFor (target); i >= 0)
+        pool[(std::size_t) i]->setValueNotifyingHost (value);   // sent by the timer, recorded by the DAW
+    else
+        engine.setParameter (target.slotId, target.paramIndex, value);
+}
+
+void FxmeNetAudioProcessor::beginSlotParameterGesture (Mapping target)
+{
+    if (const int i = findPoolFor (target); i >= 0)
+        pool[(std::size_t) i]->beginChangeGesture();
+}
+
+void FxmeNetAudioProcessor::endSlotParameterGesture (Mapping target)
+{
+    if (const int i = findPoolFor (target); i >= 0)
+        pool[(std::size_t) i]->endChangeGesture();
 }
 
 //==============================================================================
