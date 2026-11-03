@@ -23,15 +23,22 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
      blocks, on loopback and between two machines.
    - 6g. Not done yet, needs two machines: the wavclient runs between them,
      offline and `--realtime`.
+14. Later, optional (user request 2026-11-03): local fallback. When no
+    server answers (or on demand, an option per instance), process the chain
+    locally with the client's own copies of the plugins. Builds on Phase 4,
+    which already scans the client's plugins and loads local copies (as
+    mirrors) matched by uid, version and hash: fallback switches them to the
+    local role. Points to settle: keep the reported latency unchanged (the
+    local output delayed by the same amount, so the DAW's compensation does
+    not jump), move each slot's state across both ways (the client already
+    holds it), a crossfade at the switch, what to do with plugins missing
+    locally (dry, with a warning), and whether to switch back automatically
+    when the server returns.
 13. Later, optional: mDNS publishing (`_fxmenet._tcp`) for system browsers.
 7. Phase 3: FxmeNetPlugin tier 0, in four steps, each tested before the next:
    - 7b, remaining: a server restart in the middle of a long `--realtime`
      `--engine` run (the engine should reconnect and rebuild the chain, dry
      audio meanwhile).
-   - 7c. FxmeNetPlugin: processor (buses up to 64 channels, channel masks,
-     bypass and disconnection as dry delayed by the latency, latency
-     reporting, offline mode), state (chain and slot states fetched with
-     `STATE_GET`), the 256-parameter pool and its mapping. Minimal editor.
    - 7d. The editor: connection header (discovered servers, manual address,
      ping, statistics), chain strip (add, reorder, bypass, remove), plugin
      browser from the catalog, generic parameter view, learn mapping and

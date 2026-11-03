@@ -16,9 +16,18 @@
     on a name lookup; that keep-alive also tells the server where to send
     telemetry before any audio flows. fetch() reads block k's reply; offline
     it waits for it, re-sending the request with the retry flag every 50 ms,
-    for up to 5 s.
+    for up to 5 s. In real time it waits too, but only until a deadline the
+    engine sets per host callback (a fraction of the callback's duration):
+    hosts that render ahead, like Reaper's anticipative FX processing, call
+    the plugin in bursts much faster than real time, so a block can be
+    needed long before its latency has elapsed in wall-clock time.
 
     The last requests are kept (one per block in flight) for those retries.
+
+    Block numbers on the wire only ever increase within a link (the server
+    drops anything older than what it expects): when the engine restarts its
+    stream at block 0 on the same link (the host prepared again), rebase()
+    makes stream block k go out as a number past everything sent so far.
 
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-FXME-Commercial
@@ -45,6 +54,7 @@ struct AudioStatistics
 {
     std::atomic<std::uint64_t> sent { 0 }, retries { 0 }, received { 0 }, refused { 0 }, telemetry { 0 };
     std::atomic<std::uint64_t> offlineTimeouts { 0 };
+    std::atomic<std::uint64_t> rescued { 0 };   ///< replies late for their block but caught by the real-time wait
     std::atomic<std::uint32_t> lastRttMicros { 0 }, maxRttMicros { 0 };
     std::atomic<std::uint32_t> processMicros { 0 };
     std::atomic<int> chainLatency { 0 };   ///< from the latest reply
@@ -122,8 +132,11 @@ public:
 
     /** Sends block k (`block` has numInputs channels of N samples).
         `transportInfo` may be null. */
-    void send (std::uint64_t k, const float* const* block, const wire::Transport* transportInfo, bool offline)
+    void send (std::uint64_t streamBlock, const float* const* block, const wire::Transport* transportInfo, bool offline)
     {
+        const auto k = base + streamBlock;
+        nextWire = juce::jmax (nextWire, k + 1);
+
         int count = 0;
         for (int c = 0; c < settings.numInputs && c < wire::maxChannels; ++c)
             if ((inputMask & (std::uint64_t (1) << c)) != 0)
@@ -151,9 +164,29 @@ public:
     }
 
     /** Block k's reply into `dest` (numOutputs x N); false when missing.
-        Offline, waits for it (retries every 50 ms, up to 5 s). */
-    bool fetch (std::uint64_t k, float* const* dest, bool offline)
+        Offline, waits for it (retries every 50 ms, up to 5 s). In real time,
+        waits until `deadlineTicks` (juce::Time high-resolution ticks; 0: no
+        wait). */
+    bool fetch (std::uint64_t streamBlock, float* const* dest, bool offline, juce::int64 deadlineTicks)
     {
+        const auto k = base + streamBlock;
+        if (! offline && deadlineTicks > 0 && ! ring.has (k))
+        {
+            const auto ticksPerMs = juce::Time::getHighResolutionTicksPerSecond() / 1000;
+            for (;;)
+            {
+                const auto left = deadlineTicks - juce::Time::getHighResolutionTicks();
+                if (ring.has (k) || left <= 0)
+                    break;
+                if (left >= ticksPerMs)
+                    replyArrived.wait ((int) (left / ticksPerMs));
+                else
+                    juce::Thread::yield();   // under a millisecond: no timed wait that short
+            }
+            if (ring.has (k))
+                stats.rescued.fetch_add (1, std::memory_order_relaxed);
+        }
+
         if (offline && ! ring.has (k))
         {
             const auto start = juce::Time::getMillisecondCounter();
@@ -179,7 +212,15 @@ public:
 
     /** Block k will not be read from this link (played dry): lets later
         replies in. */
-    void skip (std::uint64_t k) noexcept     { ring.setNextRead (k + 1); }
+    void skip (std::uint64_t streamBlock) noexcept     { ring.setNextRead (base + streamBlock + 1); }
+
+    /** The engine's stream restarted at block 0: its blocks continue the
+        numbering on the wire, and older replies are refused. */
+    void rebase() noexcept
+    {
+        base = nextWire;
+        ring.setNextRead (base);
+    }
 
 private:
     struct Request
@@ -244,6 +285,7 @@ private:
 
     const Settings settings;
     AudioStatistics& stats;
+    std::uint64_t base = 0, nextWire = 0;   // audio thread
     int n = 128, slots = 64;
     std::uint64_t inputMask = 0;
 

@@ -27,6 +27,9 @@ add_subdirectory(Common)
 # ── fxmenet-server ───────────────────────────────────────────────────────────
 add_subdirectory(Server)
 
+# ── FxmeNetPlugin: the client in the DAW ──────────────────────────────────────
+add_subdirectory(Plugin)
+
 # ── The FxmeNet howto plugin (gain, balance, meters; FxmeNet-aware) ───────────
 add_subdirectory(Examples/GainPan)
 

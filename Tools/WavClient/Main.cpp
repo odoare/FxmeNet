@@ -675,6 +675,7 @@ int runEngine (const Options& o, const juce::AudioBuffer<float>& input, double s
          + juce::String ((juce::int64) st.received.load()) + ", refused (late or duplicate) "
          + juce::String ((juce::int64) st.refused.load()) + ", retries " + juce::String ((juce::int64) st.retries.load())
          + ", concealed " + juce::String ((juce::int64) engine.getConcealedCount())
+         + ", rescued by waiting " + juce::String ((juce::int64) st.rescued.load())
          + ", offline timeouts " + juce::String ((juce::int64) st.offlineTimeouts.load()));
     say ("  round trip last " + juce::String (st.lastRttMicros.load() / 1000.0, 3) + " ms, max "
          + juce::String (st.maxRttMicros.load() / 1000.0, 3) + " ms; control ping "

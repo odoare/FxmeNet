@@ -301,6 +301,7 @@ struct ParamInfo
     int index = 0;
     juce::String paramId, name, label, group;
     float defaultValue = 0.0f;
+    float value = 0.0f;   ///< current, normalised (absent from older servers: the default)
     int numSteps = 0;   ///< 0: continuous
     bool automatable = true, isBypass = false;
     juce::StringArray stepTexts;   ///< for stepped parameters, up to 32
@@ -314,6 +315,7 @@ struct ParamInfo
         o->setProperty ("label", label);
         o->setProperty ("group", group);
         o->setProperty ("default", defaultValue);
+        o->setProperty ("value", value);
         o->setProperty ("steps", numSteps);
         o->setProperty ("automatable", automatable);
         o->setProperty ("bypass", isBypass);
@@ -331,6 +333,7 @@ struct ParamInfo
         p.label = v["label"].toString();
         p.group = v["group"].toString();
         p.defaultValue = (float) (double) json::get (v, "default", 0.0);
+        p.value = (float) (double) json::get (v, "value", p.defaultValue);
         p.numSteps = json::get (v, "steps", 0);
         p.automatable = (bool) json::get (v, "automatable", true);
         p.isBypass = (bool) json::get (v, "bypass", false);

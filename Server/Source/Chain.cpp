@@ -282,6 +282,7 @@ std::vector<control::ParamInfo> describeParameters (juce::AudioPluginInstance& i
         i.name = p->getName (256);
         i.label = p->getLabel();
         i.defaultValue = p->getDefaultValue();
+        i.value = p->getValue();
         i.automatable = p->isAutomatable();
         i.isBypass = p == bypass;
 

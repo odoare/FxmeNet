@@ -2,7 +2,50 @@
 
 Newest first. Numbers are those of `todo.md`.
 
+## 2026-11-03
+
+- 7c complete: DAW bypass (dry, no timing jump) and server restart while
+  playing (dry meanwhile, then processed again) pass in Reaper; this also
+  closes the 7b restart check.
+- Offline render passes in Reaper after the fix below: identical to the
+  local render from the first sample, no stale blocks.
+- Offline render in Reaper: the beginning differed from a local render and
+  the server counted "stale" blocks. Cause: Reaper calls `prepareToPlay` at
+  the start and end of each render; the engine restarted its stream at
+  block 0 on the session still running (the server dropped those blocks as
+  older than expected), then reconfigured, playing dry meanwhile, which an
+  offline render races through. Fixed: a prepare makes the current link
+  unusable at once (generation counter) until a CONFIGURE that saw it is
+  done; offline, the audio thread waits for the new session (5 s at most
+  per episode); `AudioLink::rebase` keeps wire numbers increasing across
+  stream restarts. Every prepare still re-sends CONFIGURE, so the server's
+  plugins are re-prepared like local ones. Checked: syntax.
+
+- 7c passes in Reaper after the fixes below: no lost or concealed blocks,
+  automation of pool parameters, session save and restore, and a null test
+  (network chain against the same chain local, one polarity inverted)
+  gives silence, so the reported latency is exact.
+- 7c first run in Reaper: chopped sound. Server log: every lost block was
+  "queue full" (the request queue held 15 blocks); Reaper's anticipative FX
+  processing calls the plugin in bursts up to 200 ms ahead, which also left
+  the client's replies no wall-clock time. Fixed: the server queue holds
+  half a second of blocks (sized at CONFIGURE, the UDP thread kept out
+  meanwhile); in real time the client waits for a missing reply up to a
+  quarter of the callback's duration (`rescued` in the statistics);
+  protocol.md 5.4 amended. Checked: syntax.
+
 ## 2026-11-02
+
+- 7c (written): FxmeNetPlugin (`Plugin/`): buses up to 64 channels,
+  transport and offline flag to the engine, bypass as delayed dry, latency
+  reporting, 256-parameter pool with automatic mapping of newly loaded
+  slots and echo-free two-way values, XML state (chain with states fetched
+  from the server, mapping, server, stream settings), minimal editor.
+  Engine: `setParameters` (one `PARAM_SET` per batch), values set while
+  disconnected re-sent on resume. Protocol: parameter `value` in
+  `SLOT_READY` (section 4.4), server and control test updated. Checked:
+  syntax of the plugin, server `Chain.cpp`, control test and wavclient
+  with JUCE's warning flags.
 
 - 7a and 7b pass: `FxmeNetClientTests`, and `fxmenet-wavclient --engine`
   bit-identical with local processing for host buffers of 512, 128, 100 and

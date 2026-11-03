@@ -84,6 +84,10 @@ public:
     static constexpr int reconnectMs = 2000;
     static constexpr int pingMs = 1000;
 
+    /** In real time, how long a callback may wait for missing replies, as a
+        fraction of its own duration (see AudioLink::fetch). */
+    static constexpr double realtimeWaitFraction = 0.25;
+
     struct Settings
     {
         int blockSize = 128;       ///< N
@@ -117,7 +121,12 @@ public:
 
     //==============================================================================
     /** The host's audio settings. With the audio stopped (prepareToPlay).
-        Allocates; reconfigures the session when connected. */
+        Allocates, and reconfigures the session: CONFIGURE re-prepares the
+        server's plugins, as the host re-prepares local ones (at the start of
+        a render, typically), and a new link follows. The current link is
+        unusable from here on (the audio thread plays dry, or waits when
+        offline) until a CONFIGURE that saw this prepare is done: the stream
+        never restarts on a session the server is still running. */
     void prepare (double sampleRate, int maxHostBlock, int numInputs, int numOutputs, const Settings& s)
     {
         {
@@ -129,6 +138,7 @@ public:
             settings = s;
             settings.blockSize = juce::jlimit (16, 4096, s.blockSize);
             settings.budgetBlocks = juce::jlimit (1, 32, s.budgetBlocks);
+            ++prepareGeneration;   // the current link is out of date
             reconfigureRequested = true;
         }
 
@@ -154,6 +164,7 @@ public:
                 return;
             targetHost = hostName;
             targetPort = port;
+            connectionWanted = hostName.isNotEmpty();
             ++targetVersion;
         }
         if (! isThreadRunning())
@@ -259,17 +270,23 @@ public:
     /** A parameter of a slot, normalised. Not on the audio thread. */
     void setParameter (std::uint32_t slotId, std::uint32_t index, float value)
     {
+        setParameters ({ { slotId, index, value } });
+    }
+
+    /** Several parameter values, sent as one PARAM_SET. Not on the audio thread. */
+    void setParameters (const std::vector<control::ParamChange>& changes)
+    {
         const std::lock_guard<std::mutex> l (lock);
-        auto* s = find (slotId);
-        if (s == nullptr)
-            return;
-        s->params[index] = { value, ++paramSeq };
-        if (ready && s->onServer)
-        {
-            std::vector<control::ParamChange> one { { slotId, index, value } };
-            if (! sendFrame (control::Type::paramSet, 0, encode (one)))
-                dirty = true;
-        }
+        std::vector<control::ParamChange> toSend;
+        for (auto& c : changes)
+            if (auto* s = find (c.slotId))
+            {
+                s->params[c.index] = { c.value, ++paramSeq };
+                if (s->onServer)
+                    toSend.push_back (c);
+            }
+        if (ready && ! toSend.empty() && ! sendFrame (control::Type::paramSet, 0, encode (toSend)))
+            dirty = true;
     }
 
     /** Replaces the whole chain (a saved state being loaded); rebuilt on the
@@ -385,20 +402,57 @@ public:
         if (! prepared)
             return;
 
+        if (offline)
+            waitForSessionOffline();
+
         AudioLink* link = acquireLink();
         const auto generation = link != nullptr ? link->getGeneration() : 0u;
         if (generation != audioGeneration)
         {
-            stream.reset();   // a new session starts at block 0
+            stream.reset();          // back to block 0, the FIFO refilled with silence
+            if (link != nullptr)
+                link->rebase();      // same link: its numbering goes on
             audioGeneration = generation;
         }
 
-        Network network { *this, link, offline, bypassed, transport };
+        juce::int64 deadline = 0;
+        if (! offline && audioSampleRate > 0.0)
+            deadline = juce::Time::getHighResolutionTicks()
+                     + (juce::int64) (realtimeWaitFraction * numSamples / audioSampleRate
+                                      * (double) juce::Time::getHighResolutionTicksPerSecond());
+
+        Network network { *this, link, offline, bypassed, transport, deadline };
         stream.process (in, out, numSamples, network);
         releaseLink();
     }
 
 private:
+    //==============================================================================
+    /** Audio thread, offline only: a render must not run dry through the
+        moment a session is being set up or reconfigured, so wait for it, up
+        to offlineWaitMs per episode (a server that is gone costs one wait,
+        then the render goes on dry). */
+    void waitForSessionOffline()
+    {
+        auto sessionReady = [this]
+        {
+            return status.load() == Status::ready && published.load() != nullptr
+                && usableGeneration.load() == prepareGeneration.load();
+        };
+        if (sessionReady())
+        {
+            offlineWaitLeftMs = offlineWaitMs;
+            return;
+        }
+        if (! connectionWanted.load() || offlineWaitLeftMs <= 0)
+            return;
+
+        const auto start = juce::Time::getMillisecondCounter();
+        while (! sessionReady() && (int) (juce::Time::getMillisecondCounter() - start) < offlineWaitLeftMs)
+            juce::Thread::sleep (2);
+        offlineWaitLeftMs -= (int) (juce::Time::getMillisecondCounter() - start);
+    }
+
     //==============================================================================
     // Audio thread: BlockStream's network.
     struct Network
@@ -407,6 +461,7 @@ private:
         AudioLink* link;
         bool offline, bypassed;
         const wire::Transport* transport;
+        juce::int64 deadline;   ///< real time: how long missing replies may be waited for
 
         void blockReady (std::uint64_t k, const float* const* block, int endOffset)
         {
@@ -442,7 +497,7 @@ private:
             const int n = e.stream.getBlockSize();
             const auto slot = (std::size_t) (k % (std::uint64_t) e.maxInFlight);
             if (link != nullptr && ! bypassed && e.sentBlock[slot] == k + 1)
-                return link->fetch (k, dest, offline);
+                return link->fetch (k, dest, offline, deadline);
 
             if (link != nullptr)
                 link->skip (k);
@@ -460,8 +515,11 @@ private:
         }
     };
 
+    /** The link, or null when there is none or it predates the last prepare(). */
     AudioLink* acquireLink() noexcept
     {
+        if (usableGeneration.load() != prepareGeneration.load())
+            return nullptr;
         for (;;)
         {
             auto* p = published.load();
@@ -633,6 +691,7 @@ private:
             c.datagramBudget = settings.datagramBudget;
             ls.numInputs = host.numInputs;
             ls.numOutputs = host.numOutputs;
+            configuredGeneration = prepareGeneration.load();
         }
 
         control::Frame reply;
@@ -657,6 +716,7 @@ private:
             return false;
         }
         publishLink (std::move (link));
+        usableGeneration = configuredGeneration;   // usable unless prepared again meanwhile
         return true;
     }
 
@@ -671,6 +731,15 @@ private:
                 const std::lock_guard<std::mutex> l (lock);
                 if (resumed && ! dirty)
                 {
+                    // The server kept the chain; parameter values set while
+                    // disconnected are re-sent (idempotent).
+                    std::vector<control::ParamChange> changes;
+                    for (auto& slot : slots)
+                        if (slot.onServer)
+                            for (auto& [index, v] : slot.params)
+                                changes.push_back ({ slot.slotId, index, v.value });
+                    if (! changes.empty())
+                        sendFrame (control::Type::paramSet, 0, encode (changes));
                     ready = true;
                     return true;
                 }
@@ -1019,6 +1088,7 @@ private:
     juce::String lastError;
     std::uint32_t linkGeneration = 0;
     std::unique_ptr<AudioLink> ownedLink;
+    std::uint32_t configuredGeneration = 0;
 
     // Shared with the audio thread.
     std::atomic<AudioLink*> published { nullptr };
@@ -1026,6 +1096,8 @@ private:
     AudioStatistics stats;
     std::atomic<std::uint32_t> controlRttMicros { 0 };
     std::atomic<bool> prepared { false };
+    std::atomic<bool> connectionWanted { false };
+    std::atomic<std::uint32_t> prepareGeneration { 0 }, usableGeneration { 0 };
 
     // Audio thread (set up by prepare()).
     BlockStream stream;
@@ -1034,6 +1106,8 @@ private:
     std::vector<std::uint64_t> dryBlock, sentBlock;   ///< k + 1 per slot
     double audioSampleRate = 0.0;
     std::uint32_t audioGeneration = 0;
+    static constexpr int offlineWaitMs = 5000;
+    int offlineWaitLeftMs = offlineWaitMs;
 
     JUCE_DECLARE_NON_COPYABLE (ClientEngine)
 };

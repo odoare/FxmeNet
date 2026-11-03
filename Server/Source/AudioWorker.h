@@ -111,7 +111,10 @@ private:
         std::vector<std::uint8_t> body;
     };
 
-    static constexpr int queueSize = 16;
+    /** Queue length: half a second of blocks, so a host rendering ahead in
+        bursts (Reaper's anticipative FX processing) does not overflow it;
+        within 32 MB of reserved requests, and never under 16. */
+    static int queueLengthFor (const control::Configure&);
     static constexpr int holdSize = 16;
     static constexpr int cacheSize = 32;
     static constexpr std::uint32_t holdTimeoutMs = 5000;
@@ -134,8 +137,8 @@ private:
     std::atomic<int> activePeer { -1 };
     juce::uint32 lastPeerChange = 0;   // UDP thread
 
-    juce::AbstractFifo fifo { queueSize };
-    std::array<Entry, queueSize> queue;
+    juce::AbstractFifo fifo { 16 };   // resized by start()
+    std::vector<Entry> queue;
     juce::WaitableEvent wake;
 
     std::array<Held, holdSize> held;

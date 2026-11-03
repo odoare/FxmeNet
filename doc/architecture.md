@@ -32,6 +32,8 @@ Server/Source/          fxmenet-server: Main (options, signals, message loop),
                         Session (control handling), Chain (slots, snapshots),
                         AudioWorker (ordering, reply cache, processing),
                         PluginCatalog, UdpPeer, Log
+Plugin/                 FxmeNetPlugin ("FxmeNet", VST3 and AU): the client in the DAW,
+                        processor, 256-parameter pool, minimal editor
 Examples/GainPan/       FxmeNetGainPan: gain, balance, stereo in/out meters, the
                         full FX-Mechanics shell; the FxmeNet-aware howto plugin
 Tools/Loopback/         FxmeNetLoopback: Phase 1 harness, source and mirror of one
@@ -45,8 +47,7 @@ doc/                    this file, todo.md, done.md; protocol.md (the wire
                         protocol, draft); audiogridder-notes.md
 ```
 
-Planned target (not yet present): `FxmeNetPlugin` (Plugin/). The
-plugin-side classes live in FxmeTools, not here: `net/TelemetryCodec.h`,
+The plugin-side classes (for plugins hosted on the server) live in FxmeTools, not here: `net/TelemetryCodec.h`,
 `net/TelemetryRegistry.h`, `net/NetAbi.h` in core, `net/NetBridge.h` in the
 module, documented in FxmeTools `doc/fxmenet-howto.md`.
 
@@ -93,7 +94,7 @@ otherwise (B its largest block), which gives every reply at least D*N
 samples of time; the test checks that bound, and that the output is the
 input delayed by exactly the latency, for fixed, odd and random host block
 sizes. Losing the alignment midway adds the difference once. A missing reply
-is concealed: the last sample played is held and ramped to zero over 64
+is concealed (after `AudioLink`'s bounded wait, below): the last sample played is held and ramped to zero over 64
 samples, then silence, and the next block fades in over 64 samples. Buffers
 larger than the announced maximum are processed in pieces.
 
@@ -112,7 +113,12 @@ datagram, a keep-alive, is sent by the connection thread: JUCE resolves and
 caches the server's address on a socket's first write, so the audio thread
 never waits on a lookup, and the server learns where to send telemetry. The
 last request of each block in flight is kept for offline retries: offline,
-`fetch` waits for the reply, re-sending every 50 ms, up to 5 s. Statistics
+`fetch` waits for the reply, re-sending every 50 ms, up to 5 s. In real
+time it waits only until a deadline the engine sets for each host callback,
+a quarter of the callback's duration: a host rendering ahead in bursts
+(Reaper's anticipative FX processing) needs blocks long before their
+latency has elapsed in wall-clock time; the replies caught that way are
+counted (`rescued`). Statistics
 (sent, replies, refused, retries, round trip, chain latency) live in the
 engine and survive links.
 
@@ -137,6 +143,18 @@ atomically and deletes the old one only once the audio thread has let go of
 it. A new link restarts the stream at block 0. With no link (connecting,
 reconfiguring) or when bypassed, blocks are played dry through the same
 FIFO, so the output keeps the same latency.
+
+`prepare` (the host's `prepareToPlay`, which Reaper calls at the start and
+end of every render) always reconfigures: CONFIGURE re-prepares the server's
+plugins as the host re-prepares local ones, so a render starts from the same
+plugin state as a local render would. From the moment `prepare` returns, the
+current link is unusable (a prepare generation counter, compared with the
+generation the last CONFIGURE saw), so the audio thread never restarts its
+stream on a session the server is still running; it plays dry meanwhile,
+or, offline, waits for the new session (up to 5 s per episode, so a server
+that is gone costs one wait and the render then goes on dry). `AudioLink`
+also keeps its wire numbering increasing across stream restarts
+(`rebase`), as a second guard.
 ## fxmenet-server (Server/)
 
 `fxmenet-server [--name NAME] [--control-port 54322] [--udp-port 54321]
@@ -172,8 +190,9 @@ Threads:
   finds the session by id under `sessionsLock`, checks the token, and calls
   `Session::onDatagram`, which reassembles and queues complete requests.
 - **One audio thread per session** (`AudioWorker`, real-time priority when
-  the OS allows it): takes requests from a lock-free queue (16 entries,
-  preallocated from CONFIGURE), orders them (protocol.md 5.4: a real-time gap
+  the OS allows it): takes requests from a lock-free queue (half a second of
+  blocks, 16 to 2048 entries within 32 MB, sized and preallocated at
+  CONFIGURE while the session takes no datagram), orders them (protocol.md 5.4: a real-time gap
   is skipped, an offline one is held up to 5 s; anything older is answered
   from the 32-reply cache or dropped), processes the chain and replies.
   Nothing allocates, locks or logs there; counters in atomics are logged
@@ -251,6 +270,48 @@ the file is fed in host buffers of `--host-block` samples (512), or of random
 sizes up to that with `--random-blocks`, offline or paced in real time
 (`--realtime`); the output is realigned by the stream latency the engine
 reports, then compared with local processing in N-sample blocks as above.
+
+## FxmeNetPlugin (Plugin)
+
+The DAW glue around `ClientEngine`; product name "FxmeNet", VST3 and AU
+(CLAP once clap-juce-extensions is pinned).
+
+- Buses: one input and one output, 1 to 64 channels each, stereo by
+  default. The stream settings (block size N, budget D, input and output
+  masks) are part of the state; changing them re-prepares the engine with
+  the audio suspended (`suspendProcessing`), or not at all when unchanged.
+- `processBlock` gives the engine the buffers, the play head (bpm, ppq, time,
+  loop start, time signature, play / record / loop) and `isNonRealtime()`.
+  `processBlockBypassed` asks for dry audio, delayed by the same latency. A
+  layout the engine was not prepared for gives silence until the next
+  `prepareToPlay`.
+- A 50 Hz timer (message thread) reports the latency again when it changes,
+  asks for the server's catalog once per connection, and runs the pool.
+- The pool (`ParameterPool.h`): 256 `PoolParameter`s (`p001`..`p256`), each
+  idle or mapped to (slot, parameter index). A mapped one takes its name
+  ("FxmeCompressor: Ratio"), unit and step texts, and the host is told
+  (`updateHostDisplay` with parameter info changed). A value set by the DAW,
+  on any thread, only raises an atomic flag; the timer sends the changed
+  mapped values in one `PARAM_SET`. `PARAM_CHANGED` values from the server
+  are set on the pool parameters with the value remembered as sent, so they
+  are not echoed back. When a slot first loads, its automatable parameters
+  (bypass excepted) are mapped to the first free pool entries; the pool
+  then shows the slot's current values (`SLOT_READY` carries them). A
+  removed slot frees its entries. The learn mapping and the mapping list are
+  step 7d.
+- State, XML: server, stream settings, each slot (id, uid, name, vendor,
+  bypass, state blob in base64, parameter values set since that state) and
+  the mapping. `getStateInformation` first fetches the slots' states from the
+  server (2 s at most; otherwise the last known ones are saved).
+  `setStateInformation` hands the chain to the engine, which rebuilds it on
+  the server, restores the mapping as saved (no automatic mapping for those
+  slots), and connects.
+- Editor (minimal, 7c): server field (typed, or picked from a discovery
+  broadcast run on a background thread), Connect, status; the server's
+  plugins (double-click or Add); the chain with Up, Down, Bypass, Remove;
+  one line of statistics (latency, round trip, concealed blocks, mapped
+  parameters). The last server is remembered machine-wide
+  (`FX-Mechanics/FxmeNet.settings`).
 
 ## GainPan (Examples/GainPan)
 

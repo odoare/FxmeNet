@@ -39,6 +39,13 @@ std::size_t AudioWorker::maxRequestSize (const control::Configure& c)
          + (std::size_t) juce::jmax (c.numInputs, c.numOutputs) * (std::size_t) c.blockSize * 4;
 }
 
+int AudioWorker::queueLengthFor (const control::Configure& c)
+{
+    const auto halfSecond = (int) std::ceil (0.5 * c.sampleRate / juce::jmax (1, c.blockSize));
+    const auto byMemory = (int) ((32u << 20) / juce::jmax<std::size_t> (1, maxRequestSize (c)));
+    return juce::jmax (16, juce::jmin (halfSecond, byMemory, 2048));
+}
+
 void AudioWorker::start (const control::Configure& c, std::uint32_t session, std::uint64_t sessionToken)
 {
     jassert (! isThreadRunning());
@@ -49,7 +56,12 @@ void AudioWorker::start (const control::Configure& c, std::uint32_t session, std
     const auto requestBytes = maxRequestSize (config);
     const auto replyBytes = requestBytes;   // same bound: outputs are as wide as inputs at most here
 
+    // The UDP thread does not enqueue meanwhile: the session has no
+    // reassembler while it reconfigures.
+    const int length = queueLengthFor (config);
+    fifo.setTotalSize (length + 1);   // AbstractFifo holds one less than its size
     fifo.reset();
+    queue.resize ((std::size_t) (length + 1));
     for (auto& e : queue)
         e.body.reserve (requestBytes);
     for (auto& h : held)

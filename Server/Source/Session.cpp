@@ -305,16 +305,21 @@ void Session::handleConfigure (const Frame& f)
         || c.telemetryHz < 1 || c.telemetryHz > 120)
         return fail (f, ErrorMessage::badRequest, "configuration out of range");
 
+    {
+        // No datagram reaches the worker while it is stopped and resized.
+        const std::lock_guard<std::mutex> lock (udpLock);
+        reassembler.reset();
+    }
     worker.stop();
     chain.prepare (c.sampleRate, c.blockSize);
+    config = c;
+    configured = true;
+    worker.start (config, sessionId, sessionToken);
     {
         const std::lock_guard<std::mutex> lock (udpLock);
         reassembler = std::make_unique<wire::Reassembler> ((std::size_t) c.datagramBudget,
                                                            AudioWorker::maxRequestSize (c));
     }
-    config = c;
-    configured = true;
-    worker.start (config, sessionId, sessionToken);
     telemetryFragmenter = wire::Fragmenter ((std::size_t) config.datagramBudget);
     startTimerHz (config.telemetryHz);
 

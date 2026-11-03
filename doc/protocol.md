@@ -134,8 +134,9 @@ that does not answer `INetPlugin`.
 
 ### 4.4 Parameters (in `SLOT_READY`)
 
-Per parameter: index, VST3 parameter id, name, label, default (normalised),
-number of steps (0 = continuous), automatable, bypass, group path, and the
+Per parameter: index, VST3 parameter id, name, label, default and current
+value (normalised; `value` added 2026-11-02, a reader missing it takes the
+default), number of steps (0 = continuous), automatable, bypass, group path, and the
 text of up to 32 sample values for stepped ones. Enough for the tier 0 generic
 editor and the automation pool; values always travel normalised.
 
@@ -201,9 +202,14 @@ u16 midiBytes
 - **Real time (offline flag clear):** a request older than the last block
   processed is answered from the cache, or dropped if not cached. A gap (block
   k+1 arrives, k never did) is not waited for: k+1 is processed, k is lost.
-  The client never waits on the audio thread: a reply missing when its block
-  is due is replaced by silence with a short fade (64 samples), counted and
-  shown; a reply arriving after that is discarded.
+  A reply missing when its block is due is waited for, but only until a
+  deadline set per host callback (a quarter of the callback's duration):
+  hosts that render ahead (Reaper's anticipative FX processing) call the
+  plugin in bursts faster than real time, so a block can be needed before
+  its latency has elapsed in wall-clock time (amended 2026-11-03; the first
+  draft never waited). After the deadline the block is replaced by silence
+  with short ramps (64 samples), counted and shown; a reply arriving after
+  that is discarded.
 - **Offline (flag set, the DAW's `isNonRealtime()`):** the client's audio
   thread waits for the reply, re-sending the request with the retry flag every
   50 ms, giving up after 5 s (then silence and an error shown). The server

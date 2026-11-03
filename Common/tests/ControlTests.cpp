@@ -161,6 +161,7 @@ int main()
         pi.paramId = "ratio";
         pi.name = "Ratio";
         pi.defaultValue = 0.25f;
+        pi.value = 0.75f;
         pi.numSteps = 3;
         pi.stepTexts.addArray ({ "1:1", "2:1", "4:1" });
         s.params.push_back (pi);
@@ -174,6 +175,7 @@ int main()
         {
             CHECK (s2.params[0].paramId == "ratio" && s2.params[0].numSteps == 3);
             CHECK (juce::exactlyEqual (s2.params[0].defaultValue, 0.25f));
+            CHECK (juce::exactlyEqual (s2.params[0].value, 0.75f));
             CHECK (s2.params[0].stepTexts.size() == 3 && s2.params[0].automatable);
         }
         CHECK (s2.telemetrySchema == s.telemetrySchema);
@@ -184,6 +186,11 @@ int main()
         extra.getDynamicObject()->setProperty ("someFutureField", "x");
         const auto c3 = Configure::fromVar (extra);
         CHECK (c3.blockSize == 64 && c3.telemetryHz == 30 && c3.inputMask == 3);
+
+        // An older server's parameter, without "value": the default.
+        juce::var oldParam (new juce::DynamicObject());
+        oldParam.getDynamicObject()->setProperty ("default", 0.5);
+        CHECK (juce::exactlyEqual (ParamInfo::fromVar (oldParam).value, 0.5f));
 
         CHECK (fromPayload ({ '{', 'b', 'a', 'd' }).isVoid());
     }
