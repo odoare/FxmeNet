@@ -40,7 +40,17 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
      processed on the server; another slot selected,
      "Generic controls", or the window closed: the server stops sending
      (its log's telemetry frame count stops growing).
-   - 8d: port FxmeFX Compressor and Equalizer to NetBridge.
+   - 8d (written, in FxmeFX): Compressor ("gr" meter), Equalizer ("in" and
+     "out" spectrum taps), Freeze ("display" tap; its private display FIFO
+     replaced by an fxme::SpectrumTap, `isEngaged()` read from the
+     parameter so a mirror shows it) and Cab (bridge only: its IRs are
+     chosen by parameters and plotted from the mirror's own load). FxmeFX's
+     FxmeTools pin bumped to 94e4e4d. Build the four VST3s in FxmeFX and the
+     server (rescans them: ABI now 1), then in FxmeNet in Reaper: each shows
+     T2; the Compressor's GR meter, the EQ's spectra and Freeze's display
+     move with the server's audio; Freeze's FROZEN state follows its switch;
+     Cab's IR plot follows the IR choice. Also each plugin alone in Reaper,
+     to check nothing changed locally (Freeze's display especially).
 9. Phase 5: hardening, measurements, CI.
 10. Phase 6: plugin distribution.
 11. Phase 7: JSFX.

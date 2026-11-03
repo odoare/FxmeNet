@@ -4,6 +4,23 @@ Newest first. Numbers are those of `todo.md`.
 
 ## 2026-11-03
 
+- Fix: the client's local scan kept a plugin's old version after a new
+  build was copied over its bundle (FxmeFX 0.5.1 seen as 0.5.0, so T0).
+  JUCE's scanner looks at the bundle folder's date, which a copy into it
+  leaves unchanged. `LocalCatalog` now drops cached plugins whose binary
+  changed size or date, as the server's catalog already did.
+
+- 8d (written, FxmeFX working tree): four plugins made FxmeNet-aware.
+  Compressor, Equalizer, Cab: the NetBridge member, `getVST3ClientExtensions`
+  and their registrations (3 to 6 lines each, behind `FXME_PD_BUILD`, as
+  the plan estimated). Freeze needed a small DSP change: its display fed a
+  private AbstractFifo, not a tap; now an `fxme::SpectrumTap` drained with
+  `readSince` (same `pullDisplaySamples` API), and `isEngaged()` reads the
+  On parameter, so it is right in a mirror. FxmeFX's FxmeTools pin bumped
+  from 0b46947 to 94e4e4d. Checked: syntax of the eight changed files
+  (FxmeNet's GainPan flags, FxmeFX include folders, a stub for the
+  generated asset header).
+
 - 8b complete ("Last touched" passes).
 - 8c (written): `TelemetryMailbox` (receive thread to message thread,
   per-slot queue), TELEMETRY_ACTIVE with the slot's editor (kept in the

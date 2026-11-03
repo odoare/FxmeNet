@@ -103,6 +103,19 @@ void LocalCatalog::run()
                                                            h->getStringAttribute ("sha256") };
         }
 
+    // A plugin whose binary changed is scanned again. The scanner alone would
+    // not notice: it looks at the bundle folder's date, which stays the same
+    // when a new build is copied over an installed bundle.
+    for (auto& t : list.getTypes())
+    {
+        const auto binary = catalog::pluginBinary (juce::File (t.fileOrIdentifier));
+        const auto it = hashes.find (t.fileOrIdentifier);
+        if (it != hashes.end()   // none for the plugins not offered (instruments, FxmeNet's own)
+            && (it->second.size != binary.getSize()
+                || it->second.modified != binary.getLastModificationTime().toMilliseconds()))
+            list.removeType (t);
+    }
+
     // New or changed plugins (in this process: the pedal file names a plugin
     // that crashed it, which is then skipped).
     juce::VST3PluginFormat vst3;
