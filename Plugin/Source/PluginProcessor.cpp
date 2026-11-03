@@ -188,6 +188,7 @@ void FxmeNetAudioProcessor::timerCallback()
     sendDirtyParameters();
     followChain();
     syncShadows();
+    deliverTelemetry();
 
     if (engine.getLatency() != getLatencySamples())
         setLatencySamples (engine.getLatency());
@@ -471,6 +472,18 @@ fxmenet::plugin::Shadow* FxmeNetAudioProcessor::getShadow (std::uint32_t slotId,
         });
     });
     return raw;
+}
+
+/** The server's telemetry frames into the shadows' meters and spectra
+    (FxmeNet-aware plugins: INetPlugin::writeTelemetry, in the order they
+    came). Frames for a slot without a shadow are dropped. */
+void FxmeNetAudioProcessor::deliverTelemetry()
+{
+    for (auto& [slotId, frames] : engine.takeTelemetry())
+        if (auto* shadow = findShadow (slotId))
+            if (auto* net = shadow->getNet())
+                for (auto& f : frames)
+                    net->writeTelemetry (f.data(), (std::int32_t) f.size());
 }
 
 void FxmeNetAudioProcessor::removeShadow (std::uint32_t slotId)

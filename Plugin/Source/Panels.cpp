@@ -220,6 +220,7 @@ void ParameterPanel::dropPluginEditor (std::uint32_t slotId)
     pluginEditor->removeComponentListener (this);
     editorViewport.setViewedComponent (nullptr, false);
     pluginEditor.reset();   // editorBeingDeleted on the shadow
+    processor.setEditorShown (editorSlot, false);   // no more telemetry
     editorSlot = 0;
     editorViewport.setVisible (false);
     if (onWantsSize)
@@ -253,6 +254,7 @@ void ParameterPanel::refresh (const client::SlotModel* slot)
             if (pluginEditor != nullptr)
             {
                 editorSlot = id;
+                processor.setEditorShown (id, true);   // the server sends its telemetry
                 pluginEditor->addComponentListener (this);
                 editorViewport.setViewedComponent (pluginEditor.get(), false);
                 editorViewport.setVisible (true);

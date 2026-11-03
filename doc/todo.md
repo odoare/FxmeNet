@@ -35,10 +35,11 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     the client) would make it explicit.
 13. Later, optional: mDNS publishing (`_fxmenet._tcp`) for system browsers.
 8. Phase 4: shadow editors and telemetry; port Compressor and Equalizer.
-   - 8b, last addition (written): "Last touched" in the plugin-editor
-     view: touch a control in the plugin's editor, then map it, unmap it,
-     or learn it from the button's menu.
-   - 8c: telemetry into the shadows (TELEMETRY_ACTIVE when an editor opens).
+   - 8c (written): telemetry into the shadows. Build the plugin; in Reaper
+     open GainPan's editor in FxmeNet: its four meters move with the audio
+     processed on the server; another slot selected,
+     "Generic controls", or the window closed: the server stops sending
+     (its log's telemetry frame count stops growing).
    - 8d: port FxmeFX Compressor and Equalizer to NetBridge.
 9. Phase 5: hardening, measurements, CI.
 10. Phase 6: plugin distribution.

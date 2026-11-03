@@ -43,7 +43,9 @@
 #include <FxmeNet/transport/UdpTransport.h>
 
 #include <atomic>
+#include <map>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 namespace fxmenet::client
@@ -60,6 +62,40 @@ struct AudioStatistics
     std::atomic<int> chainLatency { 0 };   ///< from the latest reply
 
     void resetMaxima() noexcept   { maxRttMicros.store (0); }
+};
+
+/** Telemetry frames (TelemetryCodec frames, protocol.md section 6) from the
+    receive thread to whoever feeds the mirrors (the message thread). A few
+    frames are queued per slot, in order: tap channels (spectra, waveforms)
+    carry the samples since the previous frame, so dropping one leaves a
+    gap. Owned by the engine, shared by its links. */
+class TelemetryMailbox
+{
+public:
+    static constexpr std::size_t maxQueued = 16;   ///< per slot; the oldest go first
+
+    /** Receive thread. */
+    void push (std::uint32_t slotId, const std::uint8_t* frame, std::size_t size)
+    {
+        const std::lock_guard<std::mutex> l (lock);
+        auto& queue = frames[slotId];
+        if (queue.size() >= maxQueued)
+            queue.erase (queue.begin());
+        queue.emplace_back (frame, frame + size);
+    }
+
+    /** Message thread: every frame queued, by slot, oldest first. */
+    std::map<std::uint32_t, std::vector<std::vector<std::uint8_t>>> take()
+    {
+        std::map<std::uint32_t, std::vector<std::vector<std::uint8_t>>> out;
+        const std::lock_guard<std::mutex> l (lock);
+        out.swap (frames);
+        return out;
+    }
+
+private:
+    std::mutex lock;
+    std::map<std::uint32_t, std::vector<std::vector<std::uint8_t>>> frames;
 };
 
 class AudioLink : private juce::Thread
@@ -81,8 +117,8 @@ public:
     static constexpr int retryIntervalMs = 50;
     static constexpr int offlineTimeoutMs = 5000;
 
-    AudioLink (const Settings& s, AudioStatistics& statistics)
-        : juce::Thread ("FxmeNet audio receive"), settings (s), stats (statistics)
+    AudioLink (const Settings& s, AudioStatistics& statistics, TelemetryMailbox& telemetryMailbox)
+        : juce::Thread ("FxmeNet audio receive"), settings (s), stats (statistics), mailbox (telemetryMailbox)
     {
         const auto& c = settings.config;
         n = c.blockSize;
@@ -251,7 +287,12 @@ private:
 
             if (m.kind == wire::Kind::telemetry)
             {
-                stats.telemetry.fetch_add (1, std::memory_order_relaxed);   // Phase 4
+                wire::TelemetryView t;
+                if (wire::readTelemetry (m.body, m.size, t))
+                {
+                    mailbox.push (t.slotId, t.codecFrame, t.size);
+                    stats.telemetry.fetch_add (1, std::memory_order_relaxed);
+                }
                 continue;
             }
 
@@ -285,6 +326,7 @@ private:
 
     const Settings settings;
     AudioStatistics& stats;
+    TelemetryMailbox& mailbox;
     std::uint64_t base = 0, nextWire = 0;   // audio thread
     int n = 128, slots = 64;
     std::uint64_t inputMask = 0;

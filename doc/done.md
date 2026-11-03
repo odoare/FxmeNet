@@ -4,6 +4,12 @@ Newest first. Numbers are those of `todo.md`.
 
 ## 2026-11-03
 
+- 8b complete ("Last touched" passes).
+- 8c (written): `TelemetryMailbox` (receive thread to message thread,
+  per-slot queue), TELEMETRY_ACTIVE with the slot's editor (kept in the
+  model, re-sent after rebuild or resume), frames written into the shadows
+  by the processor's timer. Checked: syntax.
+
 - Pool reuse fix passes; Dynette and TAL Reverb 4 null against local
   plugins, so `Buses.h` (default bus layout) stays.
 - 8b, user request (written): a "Last touched" button in the plugin-editor

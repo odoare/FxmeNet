@@ -63,6 +63,7 @@ struct SlotModel
     juce::String name, vendor;
     std::vector<std::uint8_t> state;   ///< last known state, sent with SLOT_ADD
     bool bypassed = false;
+    bool telemetryWanted = false;   ///< its editor is shown on the client (TELEMETRY_ACTIVE)
 
     /** Parameter values set (or reported by the server) since `state` was
         captured: re-applied after a rebuild. `seq` orders them against a
@@ -207,6 +208,7 @@ public:
             copy.name = s.name;
             copy.vendor = s.vendor;
             copy.bypassed = s.bypassed;
+            copy.telemetryWanted = s.telemetryWanted;
             copy.params = s.params;
             copy.onServer = s.onServer;
             copy.loaded = s.loaded;
@@ -417,6 +419,23 @@ public:
         }
         return wait->done.wait (timeoutMs) && wait->allOk;
     }
+
+    /** Asks the server for a slot's telemetry, or stops it (its editor was
+        shown or closed). Kept in the model: sent again after a rebuild. */
+    void setTelemetryActive (std::uint32_t slotId, bool on)
+    {
+        const std::lock_guard<std::mutex> l (lock);
+        auto* slot = find (slotId);
+        if (slot == nullptr || slot->telemetryWanted == on)
+            return;
+        slot->telemetryWanted = on;
+        if (ready && slot->onServer)
+            sendFrame (control::Type::telemetryActive, 0, encode (control::SlotValue { slotId, on ? 1u : 0u }));
+    }
+
+    /** Message thread: the telemetry frames received since the last call,
+        by slot, oldest first. */
+    std::map<std::uint32_t, std::vector<std::vector<std::uint8_t>>> takeTelemetry()   { return telemetry.take(); }
 
     /** Fetches one slot's state from the server (STATE_GET). `done` gets it
         on the connection thread (empty when it failed); the model keeps it
@@ -832,7 +851,7 @@ private:
         ls.config = c;
         ls.maxInFlight = maxInFlight;
         ls.generation = ++linkGeneration;
-        auto link = std::make_unique<AudioLink> (ls, stats);
+        auto link = std::make_unique<AudioLink> (ls, stats, telemetry);
         if (! link->start())
         {
             setStatus (Status::connecting, "Cannot open a UDP socket");
@@ -863,6 +882,9 @@ private:
                                 changes.push_back ({ slot.slotId, index, v.value });
                     if (! changes.empty())
                         sendFrame (control::Type::paramSet, 0, encode (changes));
+                    for (auto& slot : slots)
+                        if (slot.onServer && slot.telemetryWanted)
+                            sendFrame (control::Type::telemetryActive, 0, encode (control::SlotValue { slot.slotId, 1 }));
                     ready = true;
                     return true;
                 }
@@ -900,6 +922,8 @@ private:
                 ++position;
                 if (s.bypassed)
                     sendFrame (control::Type::slotBypass, 0, encode (control::SlotValue { s.slotId, 1 }));
+                if (s.telemetryWanted)
+                    sendFrame (control::Type::telemetryActive, 0, encode (control::SlotValue { s.slotId, 1 }));
                 if (! s.params.empty())
                 {
                     std::vector<control::ParamChange> changes;
@@ -1217,6 +1241,7 @@ private:
     std::atomic<AudioLink*> published { nullptr };
     std::atomic<AudioLink*> linkInUse { nullptr };
     AudioStatistics stats;
+    TelemetryMailbox telemetry;
     std::atomic<std::uint32_t> controlRttMicros { 0 };
     std::atomic<bool> prepared { false };
     std::atomic<bool> connectionWanted { false };

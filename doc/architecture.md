@@ -126,7 +126,10 @@ a quarter of the callback's duration: a host rendering ahead in bursts
 latency has elapsed in wall-clock time; the replies caught that way are
 counted (`rescued`). Statistics
 (sent, replies, refused, retries, round trip, chain latency) live in the
-engine and survive links.
+engine and survive links. Telemetry messages go to the engine's
+`TelemetryMailbox` (up to 16 frames queued per slot, in order: tap channels
+carry the samples since the previous frame), never to a mirror directly,
+since the message thread may delete one at any time.
 
 `ClientEngine` is FxmeNetPlugin minus its GUI and DAW glue. The chain is the
 client's (`SlotModel`: identity, last known state, bypass, parameter values
@@ -354,6 +357,12 @@ The DAW glue around `ClientEngine`; product name "FxmeNet", VST3 and AU
   file loaded in its editor) sends its whole state with STATE_SET
   (`ClientEngine::setSlotState`). Before deleting a shadow the processor
   calls `beforeShadowRemoved`, so the editor drops the view first.
+- Telemetry (Phase 4 step 8c): showing a slot's own editor sends
+  TELEMETRY_ACTIVE on (`setEditorShown`, kept in the model as
+  `telemetryWanted` and sent again after a rebuild or a resume), closing it
+  sends it off. The processor's timer takes the frames from the engine's
+  mailbox and writes them into the shadow (`INetPlugin::writeTelemetry`),
+  so an FxmeNet-aware plugin's meters and spectra show the server's audio.
 - Editor: server field (typed, or picked from a discovery broadcast run on
   a background thread), Connect, status with the server's OS; on the left
   the server's plugins (double-click or Add) and the chain with Up, Down,

@@ -94,6 +94,10 @@ public:
         editor has no FxmeNet controls of its own. */
     fxmenet::plugin::Mapping getLastTouched() const noexcept   { return lastTouched; }
 
+    /** A slot's own editor was shown or closed: the server sends its
+        telemetry only while shown (TELEMETRY_ACTIVE). */
+    void setEditorShown (std::uint32_t slotId, bool shown)   { engine.setTelemetryActive (slotId, shown); }
+
     /** The shadow of a slot if it exists (never creates one). */
     fxmenet::plugin::Shadow* findShadow (std::uint32_t slotId) const;
 
@@ -189,6 +193,7 @@ private:
     void applyServerParameterChanges();
     void followChain();
     void syncShadows();
+    void deliverTelemetry();
     void removeShadow (std::uint32_t slotId);
 
     /** With mappingLock held: names a mapped entry after its parameter;
