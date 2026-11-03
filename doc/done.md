@@ -4,6 +4,24 @@ Newest first. Numbers are those of `todo.md`.
 
 ## 2026-11-03
 
+- 3: spike 3 passes in Reaper on Linux: the editors of every plugin tried,
+  from several vendors, embed and work (display, mouse, keyboard, resizing,
+  reopening). Phase 4's shadow editors can be shown this way. The file
+  dialog was replaced by a menu of the plugins found (JUCE's browser opens
+  a .vst3 bundle instead of selecting it). Open: TAL Reverb 4 shows its
+  editor but passes the sound dry in the spike; suspected cause, a bus
+  wider than the spike's stereo buffer (the spike then skipped processing);
+  the spike now processes such plugins in a scratch buffer and traces each
+  plugin's buses. Confirmed: TAL Reverb 4 has two aux inputs, and works
+  with the scratch buffer. Spike 3 closed. The server is not affected (its
+  64-channel work buffer is cleared every block, the aux inputs get
+  silence); explicit routing of extra buses is optional item 15.
+
+- 3 (written): spike 3, `Spikes/NestedEditor` (FxmeNetSpikeNested): loads a
+  VST3 chosen in a file dialog, processes the audio through it, shows its
+  editor under a small bar, follows its size both ways, recreates it on
+  demand, remembers the plugin and its state. Checked: syntax.
+
 - 7 (Phase 3) complete: 7d passes in Reaper (parameter view, learn and
   manual mapping, Mapping tab, N / D with the latency, channel toggles).
   Phase 3's exit criterion met: in Reaper, a chain on the server is

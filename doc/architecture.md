@@ -43,6 +43,8 @@ Tools/WavClient/        fxmenet-wavclient: Phase 2 end-to-end test, a WAV throug
 Spikes/                 Phase 0 throwaway programs (FXMENET_BUILD_SPIKES, ON for now)
   HeadlessHost/         spike 1: GUI-free VST3 hosting, WAV through a plugin,
                         state round trip
+  NestedEditor/         spike 3: a VST3 hosting a VST3 and embedding its editor
+                        (XEmbed on Linux), for Phase 4's shadow editors
 doc/                    this file, todo.md, done.md; protocol.md (the wire
                         protocol, draft); audiogridder-notes.md
 ```

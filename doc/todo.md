@@ -8,8 +8,6 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
 2. Spike 2, remaining: the side channel works on Linux (Phase 1); run the
    loopback harness on Windows and macOS (the `INetPlugin` layout and
    `__stdcall` convention are the part to confirm there).
-3. Spike 3: a minimal JUCE plugin hosting a VST3 and embedding its editor,
-   in Reaper on Linux (nested XEmbed).
 12. Not FxmeNet's code, to report to AmbiRR2: when `isNonRealtime()`, wait for
     the image-source recompute instead of processing with stale taps, so
     offline bounces are deterministic.
@@ -29,6 +27,12 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     holds it), a crossfade at the switch, what to do with plugins missing
     locally (dry, with a warning), and whether to switch back automatically
     when the server returns.
+15. Later, optional: routing of a slot's extra buses (aux or sidechain
+    inputs, like TAL Reverb 4's two). Today channels go by number: on the
+    server a plugin's extra inputs get the work buffer's channels past the
+    main ones, silent unless an earlier, wider plugin wrote there. A
+    per-slot routing (silence, a chain channel, or a DAW sidechain sent by
+    the client) would make it explicit.
 13. Later, optional: mDNS publishing (`_fxmenet._tcp`) for system browsers.
 8. Phase 4: shadow editors and telemetry; port Compressor and Equalizer.
 9. Phase 5: hardening, measurements, CI.
