@@ -35,15 +35,9 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     the client) would make it explicit.
 13. Later, optional: mDNS publishing (`_fxmenet._tcp`) for system browsers.
 8. Phase 4: shadow editors and telemetry; port Compressor and Equalizer.
-   - 8a (written): `LocalCatalog` (local scan, cache, tiers) and the tiers
-     in the editor. Build `FxmeNetPlugin_VST3`; in Reaper the Stream &
-     channels tab shows the scan, then the count; the lists show T1 or T2
-     for plugins installed on both sides (T2 for GainPan), T0 for one the
-     server alone has (start the server with `--plugin-path` on a folder
-     holding a copy of a plugin you do not have in `~/.vst3`); a second
-     start of Reaper scans nothing.
-   - 8b: shadow instances (mirror role) and their editors, parameter sync
-     both ways, `notifyStateChanged` round trips.
+   - 8b, last addition (written): "Last touched" in the plugin-editor
+     view: touch a control in the plugin's editor, then map it, unmap it,
+     or learn it from the button's menu.
    - 8c: telemetry into the shadows (TELEMETRY_ACTIVE when an editor opens).
    - 8d: port FxmeFX Compressor and Equalizer to NetBridge.
 9. Phase 5: hardening, measurements, CI.

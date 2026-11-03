@@ -33,8 +33,10 @@
 
 #include "LocalCatalog.h"
 #include "ParameterPool.h"
+#include "Shadow.h"
 
 #include <array>
+#include <map>
 #include <mutex>
 #include <set>
 #include <utility>
@@ -78,6 +80,26 @@ public:
 
     /** How a server plugin compares with the local plugins (its tier). */
     fxmenet::plugin::LocalMatch matchLocal (const fxmenet::control::PluginEntry& e) const   { return localCatalog->match (e); }
+
+    //==============================================================================
+    // Shadows (Shadow.h): local copies showing a slot's own editor.
+
+    /** The slot's shadow, created on first request when the slot is loaded
+        and its plugin is compatible here (tier 1 or 2). Null otherwise, with
+        the reason in `why`. */
+    fxmenet::plugin::Shadow* getShadow (std::uint32_t slotId, juce::String* why = nullptr);
+
+    /** The last parameter moved (or grabbed) in a shadow's editor, slotId 0
+        when none: what "Map last touched" acts on, since a plugin's own
+        editor has no FxmeNet controls of its own. */
+    fxmenet::plugin::Mapping getLastTouched() const noexcept   { return lastTouched; }
+
+    /** The shadow of a slot if it exists (never creates one). */
+    fxmenet::plugin::Shadow* findShadow (std::uint32_t slotId) const;
+
+    /** Called before a shadow is deleted (its slot is gone or reloaded), so
+        an editor showing its view can drop it first. Set by the editor. */
+    std::function<void (std::uint32_t slotId)> beforeShadowRemoved;
 
     /** The server's catalog entry of a slot; false when the catalog does not
         have it (not received yet, or the plugin is gone from the server). */
@@ -135,8 +157,8 @@ public:
     void mapPool (int poolIndex, Mapping target);
     void unmapPool (int poolIndex);
 
-    /** Maps `target` to the first free pool entry; its index, or -1 when
-        the pool is full. */
+    /** Maps `target` to a free pool entry (pickFreePool); its index, or -1
+        when the pool is full. */
     int mapToFreePool (Mapping target);
 
     /** Learn: the next pool parameter the DAW moves (automation, or its
@@ -166,12 +188,15 @@ private:
     void sendDirtyParameters();
     void applyServerParameterChanges();
     void followChain();
+    void syncShadows();
+    void removeShadow (std::uint32_t slotId);
 
     /** With mappingLock held: names a mapped entry after its parameter;
         returns the parameter's current value (or -1 if not found). */
     float describeMapped (int poolIndex, const std::vector<fxmenet::client::SlotModel>& slots);
 
     Mapping learnTarget;   ///< message thread; slotId 0: not learning
+    Mapping lastTouched;   ///< message thread
 
     std::array<fxmenet::plugin::PoolParameter*, fxmenet::plugin::poolSize> pool {};
 
@@ -179,6 +204,18 @@ private:
     std::array<fxmenet::plugin::Mapping, fxmenet::plugin::poolSize> mapping {};
     std::array<float, fxmenet::plugin::poolSize> lastSent {};   ///< echo suppression, message thread
     std::set<std::uint32_t> autoMapped;    ///< slots whose parameters were given pool entries already
+
+    /** Pool entries ever mapped in this project (saved with it). The DAW's
+        automation belongs to pool entries, not to what they control: an
+        entry freed by a removed plugin keeps its lanes, so automatic
+        allocation never hands it to another plugin (a new plugin's input
+        gain once got the old one's automation, +24 dB). Only an explicit
+        Learn reuses it, or allocation once all 256 have been used. */
+    std::array<bool, fxmenet::plugin::poolSize> everUsed {};
+
+    /** With mappingLock held: a free entry, never used if possible; -1 when
+        none is free. */
+    int pickFreePool() const;
     std::set<std::uint32_t> syncedSlots;   ///< loaded slots whose values the pool shows
     juce::String lastSlotsSignature;
 
@@ -195,6 +232,9 @@ private:
     // Audio thread.
     std::array<const float*, 64> inPointers {};
     std::array<float*, 64> outPointers {};
+
+    juce::AudioPluginFormatManager shadowFormats;
+    std::map<std::uint32_t, std::unique_ptr<fxmenet::plugin::Shadow>> shadows;   ///< message thread
 
     // One scan for every instance in the process.
     juce::SharedResourcePointer<fxmenet::plugin::LocalCatalog> localCatalog;

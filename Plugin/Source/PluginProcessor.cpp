@@ -55,6 +55,8 @@ FxmeNetAudioProcessor::FxmeNetAudioProcessor()
     }
     addParameterGroup (std::move (group));
 
+    juce::addDefaultFormatsToManager (shadowFormats);
+
     engine.onParamChanged = [this] (std::uint32_t slotId, std::uint32_t index, float value)
     {
         const std::lock_guard<std::mutex> l (serverChangesLock);
@@ -67,6 +69,7 @@ FxmeNetAudioProcessor::FxmeNetAudioProcessor()
 FxmeNetAudioProcessor::~FxmeNetAudioProcessor()
 {
     stopTimer();
+    shadows.clear();   // the editor, and the shadows' views, are gone already
 }
 
 //==============================================================================
@@ -184,6 +187,7 @@ void FxmeNetAudioProcessor::timerCallback()
     applyServerParameterChanges();
     sendDirtyParameters();
     followChain();
+    syncShadows();
 
     if (engine.getLatency() != getLatencySamples())
         setLatencySamples (engine.getLatency());
@@ -280,6 +284,8 @@ void FxmeNetAudioProcessor::followChain()
 
     if (learnTarget.isMapped() && present.count (learnTarget.slotId) == 0)
         learnTarget = {};   // its slot is gone
+    if (lastTouched.isMapped() && present.count (lastTouched.slotId) == 0)
+        lastTouched = {};
 
     bool infoChanged = false;
     std::vector<std::pair<int, float>> values;   // set outside the lock
@@ -303,16 +309,15 @@ void FxmeNetAudioProcessor::followChain()
                 continue;
             autoMapped.insert (s.slotId);
 
-            int free = 0;
             for (auto& p : s.info.params)
             {
                 if (! p.automatable || p.isBypass)
                     continue;
-                while (free < poolSize && mapping[(std::size_t) free].isMapped())
-                    ++free;
-                if (free == poolSize)
+                const int free = pickFreePool();
+                if (free < 0)
                     break;   // the pool is full: the rest stays unmapped
                 mapping[(std::size_t) free] = { s.slotId, (std::uint32_t) p.index };
+                everUsed[(std::size_t) free] = true;
                 infoChanged = true;
             }
         }
@@ -379,6 +384,144 @@ juce::String FxmeNetAudioProcessor::getServer() const
 void FxmeNetAudioProcessor::addPlugin (const fxmenet::control::PluginEntry& entry)
 {
     engine.addSlot (entry.uid, entry.name, entry.vendor, (int) engine.getSlots().size());
+}
+
+//==============================================================================
+fxmenet::plugin::Shadow* FxmeNetAudioProcessor::findShadow (std::uint32_t slotId) const
+{
+    const auto it = shadows.find (slotId);
+    return it != shadows.end() ? it->second.get() : nullptr;
+}
+
+fxmenet::plugin::Shadow* FxmeNetAudioProcessor::getShadow (std::uint32_t slotId, juce::String* why)
+{
+    if (auto* s = findShadow (slotId))
+        return s;
+
+    auto fail = [why] (const juce::String& reason) -> fxmenet::plugin::Shadow*
+    {
+        if (why != nullptr)
+            *why = reason;
+        return nullptr;
+    };
+
+    SlotModel slot;
+    bool found = false;
+    for (auto& s : engine.getSlotInfos())
+        if (s.slotId == slotId)
+        {
+            slot = s;
+            found = true;
+        }
+    if (! found || ! slot.loaded)
+        return fail ("not loaded on the server");
+
+    fxmenet::control::PluginEntry entry;
+    if (! findCatalogEntry (slot, entry))
+        return fail ("not in the server's catalog");
+    const auto m = matchLocal (entry);
+    if (m.kind != fxmenet::plugin::LocalMatch::Kind::compatible)
+        return fail (m.text);
+
+    // The server's rate, and its block size: editors may read both.
+    double rate;
+    {
+        const std::lock_guard<std::mutex> l (settingsLock);
+        rate = preparedRate > 0.0 ? preparedRate : 48000.0;
+    }
+    juce::String error;
+    auto shadow = fxmenet::plugin::Shadow::create (shadowFormats, m.local, rate, getStreamSettings().blockSize, error);
+    if (shadow == nullptr)
+        return fail ("cannot load the local copy: " + error);
+
+    if (shadow->getNumParameters() != (int) slot.info.params.size())
+        return fail ("the local copy has " + juce::String (shadow->getNumParameters()) + " parameters, the server's "
+                     + juce::String ((int) slot.info.params.size()));
+
+    // Its editor moves parameters as the generic view does.
+    shadow->onParameterChanged = [this, slotId] (int index, float value)
+    {
+        lastTouched = { slotId, (std::uint32_t) index };
+        setSlotParameter ({ slotId, (std::uint32_t) index }, value);
+    };
+    shadow->onGesture = [this, slotId] (int index, bool starting)
+    {
+        lastTouched = { slotId, (std::uint32_t) index };
+        if (starting)
+            beginSlotParameterGesture ({ slotId, (std::uint32_t) index });
+        else
+            endSlotParameterGesture ({ slotId, (std::uint32_t) index });
+    };
+
+    // The server's state, then the values set since (syncShadows).
+    auto* raw = shadow.get();
+    shadows[slotId] = std::move (shadow);
+    juce::WeakReference<fxmenet::plugin::Shadow> weak (raw);
+    engine.fetchState (slotId, [weak] (std::vector<std::uint8_t> state)
+    {
+        juce::MessageManager::callAsync ([weak, state]
+        {
+            if (auto* s = weak.get())
+            {
+                if (! state.empty())
+                    s->getInstance().setStateInformation (state.data(), (int) state.size());
+                s->lastStateChangeCount = s->getStateChangeCount();   // our own load is no change
+                s->stateReceived = true;
+            }
+        });
+    });
+    return raw;
+}
+
+void FxmeNetAudioProcessor::removeShadow (std::uint32_t slotId)
+{
+    if (findShadow (slotId) == nullptr)
+        return;
+    if (beforeShadowRemoved)
+        beforeShadowRemoved (slotId);
+    shadows.erase (slotId);
+}
+
+/** Keeps the shadows in step: values from the server, the pool or the
+    generic view shown in them; their state changes sent to the server;
+    shadows of removed or unloaded slots deleted. */
+void FxmeNetAudioProcessor::syncShadows()
+{
+    if (shadows.empty())
+        return;
+
+    const auto slots = engine.getSlotInfos();
+    std::vector<std::uint32_t> gone;
+    for (auto& [id, shadow] : shadows)
+    {
+        const SlotModel* slot = nullptr;
+        for (auto& s : slots)
+            if (s.slotId == id)
+                slot = &s;
+        if (slot == nullptr || ! slot->loaded)
+        {
+            gone.push_back (id);
+            continue;
+        }
+        if (! shadow->stateReceived)
+            continue;   // its state is on its way
+
+        for (auto& p : slot->info.params)
+            shadow->setQuietly (p.index, ClientEngine::currentValue (*slot, p));
+
+        // A non-parameter change in its editor (FxmeNet-aware plugins say so).
+        const auto count = shadow->getStateChangeCount();
+        if (count != shadow->lastStateChangeCount)
+        {
+            shadow->lastStateChangeCount = count;
+            juce::MemoryBlock block;
+            shadow->getInstance().getStateInformation (block);
+            engine.setSlotState (id, std::vector<std::uint8_t> ((const std::uint8_t*) block.getData(),
+                                                                (const std::uint8_t*) block.getData() + block.getSize()));
+        }
+    }
+    for (auto id : gone)
+        removeShadow (id);
 }
 
 bool FxmeNetAudioProcessor::findCatalogEntry (const SlotModel& s, fxmenet::control::PluginEntry& out) const
@@ -464,6 +607,7 @@ void FxmeNetAudioProcessor::mapPool (int poolIndex, Mapping target)
                 pool[(std::size_t) j]->describe ({}, nullptr);
             }
         mapping[(std::size_t) poolIndex] = target;
+        everUsed[(std::size_t) poolIndex] = true;
         value = describeMapped (poolIndex, slots);
     }
 
@@ -492,16 +636,29 @@ int FxmeNetAudioProcessor::mapToFreePool (Mapping target)
     if (const int existing = findPoolFor (target); existing >= 0)
         return existing;
 
-    int free = -1;
+    int free;
     {
         const std::lock_guard<std::mutex> l (mappingLock);
-        for (int i = 0; i < poolSize && free < 0; ++i)
-            if (! mapping[(std::size_t) i].isMapped())
-                free = i;
+        free = pickFreePool();
     }
     if (free >= 0)
         mapPool (free, target);
     return free;
+}
+
+int FxmeNetAudioProcessor::pickFreePool() const
+{
+    int freed = -1;
+    for (int i = 0; i < poolSize; ++i)
+    {
+        if (mapping[(std::size_t) i].isMapped())
+            continue;
+        if (! everUsed[(std::size_t) i])
+            return i;
+        if (freed < 0)
+            freed = i;
+    }
+    return freed;   // all used once: a freed one, its automation lanes with it
 }
 
 void FxmeNetAudioProcessor::startLearn (Mapping target)   { learnTarget = target; }
@@ -569,6 +726,16 @@ void FxmeNetAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 
     {
         const std::lock_guard<std::mutex> l (mappingLock);
+        juce::String used;   // one hex digit per four entries
+        for (int i = 0; i < poolSize; i += 4)
+        {
+            int nibble = 0;
+            for (int b = 0; b < 4; ++b)
+                nibble |= everUsed[(std::size_t) (i + b)] ? (1 << b) : 0;
+            used << juce::String::toHexString (nibble);
+        }
+        root.setAttribute ("usedPool", used);
+
         for (int i = 0; i < poolSize; ++i)
             if (const auto m = mapping[(std::size_t) i]; m.isMapped())
             {
@@ -610,12 +777,24 @@ void FxmeNetAudioProcessor::setStateInformation (const void* data, int sizeInByt
     {
         const std::lock_guard<std::mutex> l (mappingLock);
         mapping.fill ({});
+        everUsed.fill (false);
         for (auto* e : xml->getChildWithTagNameIterator ("MAP"))
         {
             const int i = e->getIntAttribute ("pool", -1);
             if (juce::isPositiveAndBelow (i, poolSize))
+            {
                 mapping[(std::size_t) i] = { (std::uint32_t) e->getIntAttribute ("slot"),
                                              (std::uint32_t) e->getIntAttribute ("param") };
+                everUsed[(std::size_t) i] = true;   // also for states saved before "usedPool"
+            }
+        }
+        const auto used = xml->getStringAttribute ("usedPool");
+        for (int d = 0; d < used.length() && d * 4 < poolSize; ++d)
+        {
+            const int nibble = juce::String::charToString (used[d]).getHexValue32();
+            for (int b = 0; b < 4; ++b)
+                if ((nibble >> b) & 1)
+                    everUsed[(std::size_t) (d * 4 + b)] = true;
         }
         for (auto* p : pool)
             p->describe ({}, nullptr);   // named again as their slots load

@@ -157,11 +157,146 @@ ParameterPanel::ParameterPanel (FxmeNetAudioProcessor& p) : processor (p)
     viewport.setViewedComponent (&content, false);
     viewport.setScrollBarsShown (true, false);
     addAndMakeVisible (viewport);
+    addChildComponent (editorViewport);
+
+    viewButton.setTooltip (tips::editorView);
+    viewButton.onClick = [this]
+    {
+        preferPluginEditor = ! preferPluginEditor;
+        dropPluginEditor();
+        shownSignature = {};   // rebuilt by the next refresh
+    };
+    styleButton (viewButton);
+    addChildComponent (viewButton);
+
+    lastTouchedButton.setTooltip (tips::lastTouched);
+    lastTouchedButton.onClick = [this] { lastTouchedMenu(); };
+    styleButton (lastTouchedButton);
+    addChildComponent (lastTouchedButton);
 }
 
-ParameterPanel::~ParameterPanel() = default;
+void ParameterPanel::lastTouchedMenu()
+{
+    const auto target = processor.getLastTouched();
+    if (! target.isMapped() || target.slotId != editorSlot)
+        return;
+
+    const int pool = processor.findPoolFor (target);
+    juce::PopupMenu menu;
+    if (pool >= 0)
+        menu.addItem (1, "Unmap from " + poolLabel (pool));
+    else
+        menu.addItem (2, "Map to a new automation parameter");
+    menu.addItem (3, "Learn: map it to the next FxmeNet parameter moved in the DAW");
+    if (processor.getLearnTarget().isMapped())
+        menu.addItem (4, "Cancel learn");
+
+    menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (&lastTouchedButton),
+                        [safe = juce::Component::SafePointer<ParameterPanel> (this), target, pool] (int result)
+                        {
+                            if (safe == nullptr)
+                                return;
+                            auto& p = safe->processor;
+                            switch (result)
+                            {
+                                case 1: p.unmapPool (pool); break;
+                                case 2: p.mapToFreePool (target); break;
+                                case 3: p.startLearn (target); break;
+                                case 4: p.cancelLearn(); break;
+                                default: break;
+                            }
+                        });
+}
+
+ParameterPanel::~ParameterPanel()
+{
+    dropPluginEditor();
+}
+
+void ParameterPanel::dropPluginEditor (std::uint32_t slotId)
+{
+    if (pluginEditor == nullptr || (slotId != 0 && slotId != editorSlot))
+        return;
+    pluginEditor->removeComponentListener (this);
+    editorViewport.setViewedComponent (nullptr, false);
+    pluginEditor.reset();   // editorBeingDeleted on the shadow
+    editorSlot = 0;
+    editorViewport.setVisible (false);
+    if (onWantsSize)
+        onWantsSize (0, 0);
+}
 
 void ParameterPanel::refresh (const client::SlotModel* slot)
+{
+    const std::uint32_t id = slot != nullptr ? slot->slotId : 0;
+    if (pluginEditor != nullptr && editorSlot != id)
+        dropPluginEditor();
+
+    // The plugin's own editor, when it can have one here.
+    juce::String why;
+    fxmenet::plugin::Shadow* shadow = nullptr;
+    if (slot != nullptr && slot->loaded)
+        shadow = processor.getShadow (id, &why);
+    const bool canShowEditor = shadow != nullptr && shadow->getInstance().hasEditor();
+
+    viewButton.setVisible (canShowEditor);
+    viewButton.setButtonText (preferPluginEditor ? "Generic controls" : "Plugin editor");
+
+    if (canShowEditor && preferPluginEditor)
+    {
+        if (pluginEditor == nullptr)
+        {
+            rows.clear();
+            viewport.setVisible (false);
+            message = {};
+            pluginEditor.reset (shadow->getInstance().createEditorAndMakeActive());
+            if (pluginEditor != nullptr)
+            {
+                editorSlot = id;
+                pluginEditor->addComponentListener (this);
+                editorViewport.setViewedComponent (pluginEditor.get(), false);
+                editorViewport.setVisible (true);
+                info = slot->name + ": its own editor";
+                shownSlot = id;
+                shownSignature = "editor";
+                if (onWantsSize)
+                    onWantsSize (pluginEditor->getWidth(), pluginEditor->getHeight());
+                resized();
+                repaint();
+            }
+        }
+        if (pluginEditor != nullptr)
+        {
+            // The last control touched in the plugin's editor, to map it.
+            const auto touched = processor.getLastTouched();
+            const bool here = touched.isMapped() && touched.slotId == id;
+            juce::String text = "Map last touched";
+            if (here)
+                for (auto& p : slot->info.params)
+                    if ((std::uint32_t) p.index == touched.paramIndex)
+                    {
+                        const int pool = processor.findPoolFor (touched);
+                        text = (processor.getLearnTarget() == touched ? "Learning: " : "Last touched: ")
+                             + p.name + (pool >= 0 ? " (" + poolLabel (pool) + ")" : juce::String (", unmapped"));
+                    }
+            lastTouchedButton.setButtonText (text);
+            lastTouchedButton.setEnabled (here);
+            lastTouchedButton.setVisible (true);
+            return;
+        }
+    }
+
+    if (pluginEditor != nullptr)
+        dropPluginEditor();
+    lastTouchedButton.setVisible (false);
+    info = slot == nullptr ? juce::String()
+         : canShowEditor   ? slot->name + ": generic controls"
+         : why.isNotEmpty() ? slot->name + ": generic controls (" + why + ")"
+                            : slot->name;
+    showGeneric (slot);
+}
+
+void ParameterPanel::showGeneric (const client::SlotModel* slot)
 {
     const std::uint32_t id = slot != nullptr ? slot->slotId : 0;
     juce::String signature;
@@ -173,14 +308,15 @@ void ParameterPanel::refresh (const client::SlotModel* slot)
         shownSlot = id;
         shownSignature = signature;
         rows.clear();
+        viewport.setVisible (true);
         message = slot == nullptr ? "Select a plugin in the chain to see its parameters."
                 : ! slot->loaded  ? slot->name + " is not loaded on the server."
                                   : juce::String();
 
         if (slot != nullptr && slot->loaded)
-            for (auto& info : slot->info.params)
+            for (auto& paramInfo : slot->info.params)
             {
-                rows.push_back (std::make_unique<Row> (processor, id, info));
+                rows.push_back (std::make_unique<Row> (processor, id, paramInfo));
                 content.addAndMakeVisible (*rows.back());
             }
         resized();
@@ -192,26 +328,42 @@ void ParameterPanel::refresh (const client::SlotModel* slot)
             rows[i]->update (client::ClientEngine::currentValue (*slot, slot->info.params[i]));
 }
 
+void ParameterPanel::componentMovedOrResized (juce::Component& c, bool, bool wasResized)
+{
+    if (&c == pluginEditor.get() && wasResized && onWantsSize)
+        onWantsSize (c.getWidth(), c.getHeight());
+}
+
 void ParameterPanel::paint (juce::Graphics& g)
 {
     g.fillAll (theme::panel);
+    g.setFont (juce::Font (juce::FontOptions (12.5f)));
+    g.setColour (theme::dimText);
+    g.drawText (info, infoArea, juce::Justification::centredLeft, true);
     if (message.isNotEmpty())
     {
-        g.setColour (theme::dimText);
         g.setFont (juce::Font (juce::FontOptions (13.0f)));
-        g.drawText (message, getLocalBounds().reduced (12), juce::Justification::centred, true);
+        g.drawText (message, getLocalBounds().withTrimmedTop (topRowHeight).reduced (12), juce::Justification::centred, true);
     }
 }
 
 void ParameterPanel::resized()
 {
-    viewport.setBounds (getLocalBounds());
+    auto r = getLocalBounds();
+    auto top = r.removeFromTop (topRowHeight).reduced (8, 3);
+    viewButton.setBounds (top.removeFromRight (130));
+    top.removeFromRight (6);
+    lastTouchedButton.setBounds (top.removeFromRight (juce::jmin (300, top.getWidth() / 2)));
+    infoArea = top;
+
+    editorViewport.setBounds (r);
+    viewport.setBounds (r);
     const int w = viewport.getWidth() - viewport.getScrollBarThickness();
     content.setSize (w, (int) rows.size() * 26);
     int y = 0;
-    for (auto& r : rows)
+    for (auto& row : rows)
     {
-        r->setBounds (0, y, w, 26);
+        row->setBounds (0, y, w, 26);
         y += 26;
     }
 }

@@ -10,6 +10,8 @@
 #include "Chain.h"
 #include "Log.h"
 
+#include <FxmeNet/catalog/Buses.h>
+
 namespace fxmenet::server
 {
 
@@ -104,7 +106,7 @@ juce::String Chain::addSlot (std::uint32_t slotId, int position,
     auto slot = std::make_shared<Slot>();
     slot->slotId = slotId;
 
-    instance->enableAllBuses();
+    catalog::useDefaultBuses (*instance);   // not enableAllBuses: see Buses.h
     if (auto* vst3 = instance->getVST3Client())
         slot->net = fxme::net::queryNetPlugin (vst3->getIComponentPtr());
 

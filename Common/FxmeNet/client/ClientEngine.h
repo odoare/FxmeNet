@@ -418,6 +418,83 @@ public:
         return wait->done.wait (timeoutMs) && wait->allOk;
     }
 
+    /** Fetches one slot's state from the server (STATE_GET). `done` gets it
+        on the connection thread (empty when it failed); the model keeps it
+        too. */
+    void fetchState (std::uint32_t slotId, std::function<void (std::vector<std::uint8_t>)> done)
+    {
+        std::uint64_t seqAtRequest;
+        {
+            const std::lock_guard<std::mutex> l (lock);
+            seqAtRequest = paramSeq;
+        }
+        control::SlotState get;
+        get.slotId = slotId;
+        const bool sent = sendAsync (control::Type::stateGet, 0, encode (get),
+                                     [this, slotId, seqAtRequest, done] (const control::Frame* f)
+        {
+            control::SlotState s;
+            if (f == nullptr || f->type != control::Type::state || ! decode (f->payload, s) || s.slotId != slotId)
+            {
+                done ({});
+                return;
+            }
+            {
+                const std::lock_guard<std::mutex> l (lock);
+                if (auto* slot = find (slotId))
+                {
+                    slot->state = s.state;
+                    for (auto it = slot->params.begin(); it != slot->params.end();)
+                    {
+                        if (it->second.seq > seqAtRequest)
+                        {
+                            ++it;
+                            continue;
+                        }
+                        for (auto& p : slot->info.params)
+                            if ((std::uint32_t) p.index == it->first)
+                                p.value = it->second.value;
+                        it = slot->params.erase (it);
+                    }
+                }
+            }
+            done (std::move (s.state));
+        });
+        if (! sent)
+            done ({});
+    }
+
+    /** Replaces a slot's state, on the server (STATE_SET) and in the model:
+        a non-parameter change made on the client (a mirror's editor loading
+        a preset or a file). Not on the audio thread. */
+    void setSlotState (std::uint32_t slotId, std::vector<std::uint8_t> state)
+    {
+        const std::lock_guard<std::mutex> l (lock);
+        auto* slot = find (slotId);
+        if (slot == nullptr)
+            return;
+        slot->state = state;
+        // The parameter values set since are kept: a preset load also
+        // changes parameters, which arrive as PARAM_SET anyway, and the
+        // displays read their values from there.
+        if (! ready || ! slot->onServer)
+        {
+            dirty = ! ready || dirty;
+            return;
+        }
+        control::SlotState set;
+        set.slotId = slotId;
+        set.state = std::move (state);
+        dirty |= ! sendAsync (control::Type::stateSet, 0, encode (set), [this] (const control::Frame* f)
+        {
+            if (f == nullptr || f->type == control::Type::error)
+            {
+                const std::lock_guard<std::mutex> later (lock);
+                dirty = true;   // the server may not have it: rebuild from the model
+            }
+        });
+    }
+
     /** Asks the server for its plugins; getCatalog() has them after the
         next onStateChange. */
     void requestCatalog()

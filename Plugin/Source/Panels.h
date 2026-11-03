@@ -31,7 +31,10 @@ namespace fxmenet::plugin
 {
 
 //==============================================================================
-class ParameterPanel : public juce::Component
+/** The selected slot: its own editor (through its shadow, tier 1 and 2), or
+    the generic rows; a button switches between them. */
+class ParameterPanel : public juce::Component,
+                       private juce::ComponentListener
 {
 public:
     explicit ParameterPanel (FxmeNetAudioProcessor&);
@@ -40,16 +43,43 @@ public:
     /** Shows `slot` (null: nothing selected). Message thread, from the timer. */
     void refresh (const client::SlotModel* slot);
 
+    /** Deletes the plugin editor if it shows `slotId` (0: whichever): its
+        shadow is about to go. */
+    void dropPluginEditor (std::uint32_t slotId = 0);
+
+    /** The size the plugin editor needs below the panel's top row, or 0, 0
+        when none is shown: the window adapts to it. */
+    std::function<void (int width, int height)> onWantsSize;
+
+    /** The height of the row above the plugin editor or the generic rows. */
+    static constexpr int topRowHeight = 30;
+
     void paint (juce::Graphics&) override;
     void resized() override;
 
 private:
     class Row;
 
+    void showGeneric (const client::SlotModel* slot);
+    void componentMovedOrResized (juce::Component&, bool, bool wasResized) override;
+
+    /** The menu of the last touched control: map, unmap, learn. */
+    void lastTouchedMenu();
+
     FxmeNetAudioProcessor& processor;
+    juce::TextButton viewButton, lastTouchedButton;
+    juce::Rectangle<int> infoArea;
+    juce::String info;
+
     juce::Viewport viewport;
     juce::Component content;
     std::vector<std::unique_ptr<Row>> rows;
+
+    juce::Viewport editorViewport;
+    std::unique_ptr<juce::AudioProcessorEditor> pluginEditor;
+    std::uint32_t editorSlot = 0;
+    bool preferPluginEditor = true;
+
     std::uint32_t shownSlot = 0;
     juce::String shownSignature, message;
 };

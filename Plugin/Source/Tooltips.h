@@ -38,6 +38,8 @@ namespace fxmenet::plugin::tips
     inline constexpr auto allChannels   = "Enable every channel.";
     inline constexpr auto inputChannel  = "Send this input to the server. Off: the chain gets silence on it.";
     inline constexpr auto outputChannel = "Receive this output from the server. Off: silent.";
+    inline constexpr auto editorView    = "Switch between the plugin's own editor (a local copy, its audio still on the server) and generic controls.";
+    inline constexpr auto lastTouched   = "The control last moved in the plugin's editor: map it to an automation parameter, unmap it, or learn one moved in the DAW.";
     inline constexpr auto rescan        = "Look for plugins installed or changed on this computer since the last scan.";
     inline constexpr auto fullRescan    = "Scan every plugin on this computer again, ignoring the cache.";
 }

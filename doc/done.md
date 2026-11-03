@@ -4,6 +4,40 @@ Newest first. Numbers are those of `todo.md`.
 
 ## 2026-11-03
 
+- Pool reuse fix passes; Dynette and TAL Reverb 4 null against local
+  plugins, so `Buses.h` (default bus layout) stays.
+- 8b, user request (written): a "Last touched" button in the plugin-editor
+  view of the Parameters tab (a plugin's own editor has no way to reach
+  FxmeNet's mapping): shows the control last moved or grabbed there and its
+  pool entry; its menu maps it to a new entry, unmaps it, or starts a learn.
+  Checked: syntax.
+
+- Dynette's loudness found by the user: a new plugin's parameters were
+  auto-mapped to pool entries just freed by a removed plugin, whose
+  automation lanes in the DAW then drove them (Dynette's input gain at
+  +24 dB). Fixed: automatic allocation and Map take only pool entries never
+  used in the project (`everUsed`, saved as `usedPool`; mapped entries count
+  as used in older states); freed ones are reused by Learn, or once all 256
+  have been used. Checked: syntax.
+- 8b passes in Reaper, except two plugins with aux inputs processed on the
+  server: Dynette very loud, TAL Reverb 4 sounding different from local.
+  First suspected cause (not the actual one for Dynette, see above): the server called `enableAllBuses()`, activating
+  their aux / sidechain inputs, which are silent there, while a DAW keeps a
+  plugin's default layout (aux inactive); such plugins switch their
+  detector or mix to that input. Fixed: `Common/FxmeNet/catalog/Buses.h`,
+  `useDefaultBuses` (default layout, main buses enabled), used by the
+  server's chain, the shadows, the wavclient's local reference and spike 3.
+  Checked: syntax.
+
+- 8a passes in Reaper (GainPan T2 once the "FxmeNet*" filter, which hid it,
+  was narrowed to FxmeNet itself and its spike).
+- 8b (written): `Shadow.h` (mirror role, quiet values, editor changes and
+  gestures out), shadows in the processor (created on demand, state from
+  the server, values synced at 50 Hz, state changes sent, removed with
+  their slot), the slot's own editor in the Parameters tab with a switch to
+  generic controls and the window fitted to it. Engine: `fetchState`,
+  `setSlotState`. Checked: syntax with JUCE's warning flags and `-Wshadow`.
+
 - 8a (written): `Common/FxmeNet/catalog/PluginFiles.h` (bundle folder,
   binary, sha256; the server's catalog uses it now), `LocalCatalog` in the
   plugin (shared background scan with dead man's pedal, cache with hashes,

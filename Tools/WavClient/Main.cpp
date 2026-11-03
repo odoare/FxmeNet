@@ -47,6 +47,7 @@
 #include <juce_audio_formats/juce_audio_formats.h>
 #include <juce_audio_processors_headless/juce_audio_processors_headless.h>
 
+#include <FxmeNet/catalog/Buses.h>
 #include <FxmeNet/client/ClientEngine.h>
 #include <FxmeNet/control/ControlConnection.h>
 #include <FxmeNet/control/Discovery.h>
@@ -481,7 +482,7 @@ bool processLocally (const juce::OwnedArray<juce::PluginDescription>& descriptio
             fail ("local " + d->name + ": " + error);
             return false;
         }
-        instance->enableAllBuses();
+        fxmenet::catalog::useDefaultBuses (*instance);   // as the server does
         instance->setPlayHead (&playHead);
         instance->prepareToPlay (sampleRate, n);
         channels = juce::jmax (channels, instance->getTotalNumInputChannels(), instance->getTotalNumOutputChannels());

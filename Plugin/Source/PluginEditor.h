@@ -77,6 +77,10 @@ private:
 
     static juce::Image assetImage (const char* resourceName);
 
+    /** The window's size for a plugin editor of w x h in the Parameters
+        tab (0, 0: none, the default size). */
+    void fitToPluginEditor (int w, int h);
+
     /** "T0", "T1", "T2" or "?" (local scan not done), and its colour. */
     static juce::String tierTag (const fxmenet::plugin::LocalMatch&);
     static juce::Colour tierColour (const fxmenet::plugin::LocalMatch&);

@@ -74,7 +74,12 @@ public:
         if (instance == nullptr)
             return "cannot load " + found[0]->name + ": " + error;
 
-        instance->enableAllBuses();
+        // The plugin's default buses, main ones enabled (not enableAllBuses:
+        // an active aux or sidechain input changes what some plugins do).
+        for (const bool input : { true, false })
+            if (auto* main = instance->getBus (input, 0))
+                if (! main->isEnabled())
+                    main->enable (true);
         instance->prepareToPlay (rate, block);
         traceBuses (*instance);
 

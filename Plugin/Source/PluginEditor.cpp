@@ -112,6 +112,11 @@ FxmeNetAudioProcessorEditor::FxmeNetAudioProcessorEditor (FxmeNetAudioProcessor&
         addAndMakeVisible (*b);
     }
 
+    // A slot's own editor, in the Parameters tab: the window adapts to it,
+    // and drops it before its shadow goes.
+    parameterPanel.onWantsSize = [this] (int w, int h) { fitToPluginEditor (w, h); };
+    processor.beforeShadowRemoved = [this] (std::uint32_t slotId) { parameterPanel.dropPluginEditor (slotId); };
+
     // Tabs.
     tabs.setTabBarDepth (26);
     tabs.setOutline (0);
@@ -128,6 +133,9 @@ FxmeNetAudioProcessorEditor::FxmeNetAudioProcessorEditor (FxmeNetAudioProcessor&
 FxmeNetAudioProcessorEditor::~FxmeNetAudioProcessorEditor()
 {
     stopTimer();
+    processor.beforeShadowRemoved = nullptr;
+    parameterPanel.onWantsSize = nullptr;
+    parameterPanel.dropPluginEditor();
     setLookAndFeel (nullptr);
 }
 
@@ -372,6 +380,25 @@ void FxmeNetAudioProcessorEditor::styleButton (juce::TextButton& b)
 {
     b.setColour (juce::TextButton::buttonColourId, theme::panel);
     b.setColour (juce::TextButton::textColourOffId, theme::text);
+}
+
+void FxmeNetAudioProcessorEditor::fitToPluginEditor (int w, int h)
+{
+    if (w <= 0 || h <= 0)
+    {
+        if (getWidth() != theme::width || getHeight() != theme::height)
+            setSize (theme::width, theme::height);
+        return;
+    }
+
+    // What the tab gives the editor now, at the default size.
+    const int availableW = tabs.getWidth();
+    const int availableH = tabs.getHeight() - tabs.getTabBarDepth() - fxmenet::plugin::ParameterPanel::topRowHeight;
+    if (availableW <= 0 || availableH <= 0)
+        return;
+    const int extraW = juce::jmax (0, w - availableW + (getWidth() - theme::width));
+    const int extraH = juce::jmax (0, h - availableH + (getHeight() - theme::height));
+    setSize (theme::width + extraW, theme::height + extraH);
 }
 
 juce::String FxmeNetAudioProcessorEditor::tierTag (const fxmenet::plugin::LocalMatch& m)

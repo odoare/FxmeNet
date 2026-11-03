@@ -21,7 +21,9 @@ Common/                 shared by server and client, header-only:
                         JUCE-free), ControlMessages.h (JSON messages, juce::JSON),
                         ControlConnection.h (one TCP connection, juce::StreamingSocket)
   FxmeNet/catalog/      PluginFiles.h: a bundle's platform folder, its binary, the
-                        binary's sha256 (server catalog and client matching)
+                        binary's sha256 (server catalog and client matching);
+                        Buses.h: the buses a hosted plugin gets everywhere (its
+                        default layout, main buses on; never enableAllBuses)
   FxmeNet/client/       the client: BlockStream (re-blocking, latency, jitter
                         buffer, concealment) and ReplyRing, JUCE-free; AudioLink
                         (one session's UDP audio) and ClientEngine (chain,
@@ -301,7 +303,12 @@ The DAW glue around `ClientEngine`; product name "FxmeNet", VST3 and AU
   are not echoed back. When a slot first loads, its automatable parameters
   (bypass excepted) are mapped to the first free pool entries; the pool
   then shows the slot's current values (`SLOT_READY` carries them). A
-  removed slot frees its entries. Mapping by hand: `mapPool` (one pool
+  removed slot frees its entries. Automatic allocation (and Map) only takes
+  entries never used in the project (`everUsed`, saved as `usedPool`): the
+  DAW's automation lanes belong to pool entries, so a freed entry still
+  carries the removed plugin's automation, and must not silently drive the
+  next plugin's parameter. A freed entry is reused only by Learn, or once
+  all 256 have been used. Mapping by hand: `mapPool` (one pool
   entry per slot parameter: mapping one drops the others), `mapToFreePool`,
   `unmapPool`; learn: `startLearn (target)`, then the first pool parameter
   whose value the DAW changes (any value other than the last one FxmeNet
@@ -331,11 +338,33 @@ The DAW glue around `ClientEngine`; product name "FxmeNet", VST3 and AU
   with the reason on hover. FxmeNet and its spikes are never listed;
   instruments are left out (FxmeNet hosts effects). The plugin is built
   with `JUCE_PLUGINHOST_VST3`.
+- Shadows (`Shadow.h`, Phase 4 step 8b): a slot's local copy, created the
+  first time its editor is asked for (a slot that is loaded and tier 1 or
+  2), kept until the slot goes or reloads. Told it is a mirror
+  (`INetPlugin::setRole`) before `prepareToPlay` at the session's rate and
+  N; never processed. It must have the same parameter count as on the
+  server, or it is refused. It gets the slot's state from the server
+  (`ClientEngine::fetchState`), then, from the processor's 50 Hz timer,
+  every parameter's current value (`setQuietly`: shown in its editor,
+  nothing reported; a parameter its editor moved in the last 300 ms is left
+  alone). Its editor's own moves and gestures go through
+  `setSlotParameter` and the gesture calls, like the generic view's (via
+  the pool entry when mapped, so the DAW records them). For an
+  FxmeNet-aware plugin, a change of `getStateChangeCount` (a preset or a
+  file loaded in its editor) sends its whole state with STATE_SET
+  (`ClientEngine::setSlotState`). Before deleting a shadow the processor
+  calls `beforeShadowRemoved`, so the editor drops the view first.
 - Editor: server field (typed, or picked from a discovery broadcast run on
   a background thread), Connect, status with the server's OS; on the left
   the server's plugins (double-click or Add) and the chain with Up, Down,
   Bypass, Remove; on the right three tabs (`Panels.h`):
-  - Parameters: the selected slot's parameters, one row each: name and
+  - Parameters: the slot's own editor (its shadow's), in a viewport, with a
+    button to switch to generic controls, and a "last touched" button: the
+    control last moved or grabbed in the plugin's editor (the processor
+    records it from the shadow's callbacks), with a menu to map it to a new
+    pool entry, unmap it, or learn it; the window grows to fit the plugin's
+    editor and returns to its size afterwards. Generic controls
+    otherwise (and the reason when there is no own editor), one row each: name and
     unit, a slider (normalised, stepped ones snap; double-click for the
     default), the value text (the step's name, else the normalised value:
     the plugin's own texts are Phase 4, with its own editor), the pool
