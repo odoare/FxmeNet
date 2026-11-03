@@ -20,6 +20,8 @@ Common/                 shared by server and client, header-only:
   FxmeNet/control/      ControlFrame.h (frames, types, binary payloads, FrameAssembler;
                         JUCE-free), ControlMessages.h (JSON messages, juce::JSON),
                         ControlConnection.h (one TCP connection, juce::StreamingSocket)
+  FxmeNet/catalog/      PluginFiles.h: a bundle's platform folder, its binary, the
+                        binary's sha256 (server catalog and client matching)
   FxmeNet/client/       the client: BlockStream (re-blocking, latency, jitter
                         buffer, concealment) and ReplyRing, JUCE-free; AudioLink
                         (one session's UDP audio) and ClientEngine (chain,
@@ -313,6 +315,22 @@ The DAW glue around `ClientEngine`; product name "FxmeNet", VST3 and AU
   `setStateInformation` hands the chain to the engine, which rebuilds it on
   the server, restores the mapping as saved (no automatic mapping for those
   slots), and connects.
+- Local plugins (`LocalCatalog`, Phase 4 step 8a): one scan per process,
+  shared by every instance (`juce::SharedResourcePointer`), on a background
+  thread with JUCE's `PluginDirectoryScanner` and a dead man's pedal file
+  (a plugin that crashes the DAW while scanned is skipped from then on).
+  Cached with each binary's sha256 in `FX-Mechanics/fxmenet-client-plugins.xml`
+  (the pedal file beside it), so only new or changed plugins are scanned
+  and hashed again; Rescan and Full rescan in the Stream & channels tab.
+  `match` compares a server entry with the local plugins: same uid, name and
+  vendor is the same plugin; the same version makes it compatible, tier 1,
+  or tier 2 when the server says it is FxmeNet-aware; another version or no
+  copy, tier 0 (generic controls). The sha256 is compared only when both
+  sides run the same platform, and a difference is shown (another build of
+  the same version), not refused. The editor's lists show T0 / T1 / T2,
+  with the reason on hover. FxmeNet and its spikes are never listed;
+  instruments are left out (FxmeNet hosts effects). The plugin is built
+  with `JUCE_PLUGINHOST_VST3`.
 - Editor: server field (typed, or picked from a discovery broadcast run on
   a background thread), Connect, status with the server's OS; on the left
   the server's plugins (double-click or Add) and the chain with Up, Down,

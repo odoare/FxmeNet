@@ -4,6 +4,15 @@ Newest first. Numbers are those of `todo.md`.
 
 ## 2026-11-03
 
+- 8a (written): `Common/FxmeNet/catalog/PluginFiles.h` (bundle folder,
+  binary, sha256; the server's catalog uses it now), `LocalCatalog` in the
+  plugin (shared background scan with dead man's pedal, cache with hashes,
+  tier matching), tiers in the editor's lists with reasons on hover, local
+  scan status and Rescan / Full rescan in the Stream & channels tab. The
+  plugin now builds with `JUCE_PLUGINHOST_VST3` and links
+  `juce_cryptography`. Checked: syntax of the plugin sources and the
+  server's catalog.
+
 - 3: spike 3 passes in Reaper on Linux: the editors of every plugin tried,
   from several vendors, embed and work (display, mouse, keyboard, resizing,
   reopening). Phase 4's shadow editors can be shown this way. The file

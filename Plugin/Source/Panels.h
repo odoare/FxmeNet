@@ -97,9 +97,10 @@ private:
     juce::ComboBox blockBox, budgetBox;
     juce::OwnedArray<juce::TextButton> inputButtons, outputButtons;
     juce::TextButton allInputs { "All" }, allOutputs { "All" };
+    juce::TextButton rescanButton { "Rescan" }, fullRescanButton { "Full rescan" };
     int shownInputs = -1, shownOutputs = -1;
-    juce::String latencyText;
-    juce::Rectangle<int> blockLabel, budgetLabel, latencyArea, inputsLabel, outputsLabel;
+    juce::String latencyText, localText;
+    juce::Rectangle<int> blockLabel, budgetLabel, latencyArea, inputsLabel, outputsLabel, localArea;
 };
 
 } // namespace fxmenet::plugin

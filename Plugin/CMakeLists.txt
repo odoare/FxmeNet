@@ -28,6 +28,7 @@ target_sources(FxmeNetPlugin PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
     Source/Panels.cpp
+    Source/LocalCatalog.cpp
 )
 
 target_include_directories(FxmeNetPlugin PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Source)
@@ -42,6 +43,7 @@ juce_generate_juce_header(FxmeNetPlugin)
 
 target_compile_definitions(FxmeNetPlugin
     PUBLIC
+        JUCE_PLUGINHOST_VST3=1   # the local plugins: scanned (8a), then shadows (8b)
         JUCE_STRICT_REFCOUNTEDPOINTER=1
         JUCE_VST3_CAN_REPLACE_VST2=0
         JUCE_WEB_BROWSER=0
@@ -60,6 +62,7 @@ target_link_libraries(FxmeNetPlugin
         juce::juce_audio_processors
         juce::juce_audio_utils
         juce::juce_core
+        juce::juce_cryptography
         juce::juce_data_structures
         juce::juce_dsp
         juce::juce_events

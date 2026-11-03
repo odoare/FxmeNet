@@ -169,6 +169,7 @@ void FxmeNetAudioProcessorEditor::refreshCatalog()
 {
     catalog = processor.getEngine().getCatalog();
     juce::String signature;
+    signature << (int) processor.getLocalCatalog().getRevision() << ":";
     for (auto& e : catalog)
         signature << fxmenet::control::json::hex32 (e.uid) << e.name << ";";
     if (signature == catalogSignature)
@@ -177,10 +178,14 @@ void FxmeNetAudioProcessorEditor::refreshCatalog()
 
     catalogRows.rows.clear();
     for (auto& e : catalog)
+    {
+        const auto m = processor.matchLocal (e);
         catalogRows.rows.push_back ({ e.name,
                                       e.vendor + "  " + juce::String (e.inputs) + "/" + juce::String (e.outputs)
-                                          + (e.fxmenetAbi > 0 ? "  FxmeNet" : ""),
-                                      e.fxmenetAbi > 0 ? theme::accent : theme::text });
+                                          + "  " + tierTag (m),
+                                      tierColour (m),
+                                      m.text });
+    }
     catalogList.updateContent();
     catalogList.repaint();
 }
@@ -189,6 +194,7 @@ void FxmeNetAudioProcessorEditor::refreshChain()
 {
     slots = processor.getEngine().getSlotInfos();
     juce::String signature;
+    signature << (int) processor.getLocalCatalog().getRevision() << ":" << catalogSignature << ":";
     for (auto& s : slots)
         signature << (int) s.slotId << (s.loaded ? "L" : "-") << (s.bypassed ? "B" : "-") << s.error << ";";
     if (signature == chainSignature)
@@ -201,6 +207,8 @@ void FxmeNetAudioProcessorEditor::refreshChain()
     {
         juce::String detail;
         juce::Colour colour = theme::text;
+        fxmenet::control::PluginEntry entry;
+        const auto m = processor.findCatalogEntry (s, entry) ? processor.matchLocal (entry) : fxmenet::plugin::LocalMatch {};
         if (s.error.isNotEmpty())
         {
             detail = s.error;
@@ -213,7 +221,7 @@ void FxmeNetAudioProcessorEditor::refreshChain()
         }
         else
         {
-            detail = juce::String ((int) s.info.params.size()) + " parameters"
+            detail = tierTag (m) + "  " + juce::String ((int) s.info.params.size()) + " parameters"
                    + (s.info.latency > 0 ? ", latency " + juce::String (s.info.latency) : juce::String());
         }
         if (s.bypassed)
@@ -221,7 +229,7 @@ void FxmeNetAudioProcessorEditor::refreshChain()
             detail = "bypassed  " + detail;
             colour = theme::dimText;
         }
-        chainRows.rows.push_back ({ juce::String (position++) + "  " + s.name, detail, colour });
+        chainRows.rows.push_back ({ juce::String (position++) + "  " + s.name, detail, colour, m.text });
     }
     chainList.updateContent();
     chainList.repaint();
@@ -364,6 +372,23 @@ void FxmeNetAudioProcessorEditor::styleButton (juce::TextButton& b)
 {
     b.setColour (juce::TextButton::buttonColourId, theme::panel);
     b.setColour (juce::TextButton::textColourOffId, theme::text);
+}
+
+juce::String FxmeNetAudioProcessorEditor::tierTag (const fxmenet::plugin::LocalMatch& m)
+{
+    return m.kind == fxmenet::plugin::LocalMatch::Kind::unknown ? juce::String ("T?") : "T" + juce::String (m.tier);
+}
+
+juce::Colour FxmeNetAudioProcessorEditor::tierColour (const fxmenet::plugin::LocalMatch& m)
+{
+    switch (m.kind)
+    {
+        case fxmenet::plugin::LocalMatch::Kind::compatible:    return m.tier == 2 ? theme::accent : theme::text;
+        case fxmenet::plugin::LocalMatch::Kind::otherVersion:  return theme::warning;
+        case fxmenet::plugin::LocalMatch::Kind::missing:
+        case fxmenet::plugin::LocalMatch::Kind::unknown:       break;
+    }
+    return theme::dimText;
 }
 
 juce::Image FxmeNetAudioProcessorEditor::assetImage (const char* resourceName)

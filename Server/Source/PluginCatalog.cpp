@@ -10,9 +10,8 @@
 #include "PluginCatalog.h"
 #include "Log.h"
 
+#include <FxmeNet/catalog/PluginFiles.h>
 #include <FxmeTools/net/NetAbi.h>
-
-#include <juce_cryptography/juce_cryptography.h>
 
 #include <iostream>
 #include <map>
@@ -26,18 +25,7 @@ namespace
     const juce::String endMarker   = "FXMENET-SCAN-END";
     constexpr int childTimeoutMs   = 30000;
 
-    /** The file holding this platform's code: the plugin file itself, or
-        the binary inside a VST3 bundle. */
-    juce::File pluginBinary (const juce::File& plugin)
-    {
-        if (plugin.existsAsFile())
-            return plugin;
-
-        auto folder = plugin.getChildFile ("Contents").getChildFile (PluginCatalog::bundlePlatformFolder());
-        auto files = folder.findChildFiles (juce::File::findFiles, false);
-        files.sort();
-        return files.isEmpty() ? juce::File() : files.getFirst();
-    }
+    using catalog::pluginBinary;
 }
 
 PluginCatalog::PluginCatalog()
@@ -47,21 +35,7 @@ PluginCatalog::PluginCatalog()
 
 juce::String PluginCatalog::bundlePlatformFolder()
 {
-   #if JUCE_MAC
-    return "MacOS";
-   #elif JUCE_WINDOWS
-    #if JUCE_ARM
-     return "arm64-win";
-    #else
-     return "x86_64-win";
-    #endif
-   #else
-    #if JUCE_ARM
-     return "aarch64-linux";
-    #else
-     return "x86_64-linux";
-    #endif
-   #endif
+    return catalog::bundlePlatformFolder();
 }
 
 juce::File PluginCatalog::getCacheFile()
@@ -84,8 +58,7 @@ int PluginCatalog::scanOnePlugin (const juce::String& file)
         if (format->fileMightContainThisPluginType (file))
             format->findAllTypesForFile (found, file);
 
-    const auto binary = pluginBinary (juce::File (file));
-    const auto sha256 = binary.existsAsFile() ? juce::SHA256 (binary).toHexString() : juce::String();
+    const auto sha256 = catalog::binarySha256 (juce::File (file));
 
     juce::XmlElement root ("FxmeNetScan");
     for (auto* d : found)

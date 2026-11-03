@@ -31,6 +31,7 @@
 
 #include <FxmeNet/client/ClientEngine.h>
 
+#include "LocalCatalog.h"
 #include "ParameterPool.h"
 
 #include <array>
@@ -73,6 +74,14 @@ public:
     // Message thread (the editor).
 
     fxmenet::client::ClientEngine& getEngine() noexcept     { return engine; }
+    fxmenet::plugin::LocalCatalog& getLocalCatalog() noexcept { return *localCatalog; }
+
+    /** How a server plugin compares with the local plugins (its tier). */
+    fxmenet::plugin::LocalMatch matchLocal (const fxmenet::control::PluginEntry& e) const   { return localCatalog->match (e); }
+
+    /** The server's catalog entry of a slot; false when the catalog does not
+        have it (not received yet, or the plugin is gone from the server). */
+    bool findCatalogEntry (const fxmenet::client::SlotModel&, fxmenet::control::PluginEntry& out) const;
 
     /** "host" or "host:port"; empty disconnects. Remembered for new instances. */
     void connectTo (const juce::String& hostAndPort);
@@ -186,6 +195,9 @@ private:
     // Audio thread.
     std::array<const float*, 64> inPointers {};
     std::array<float*, 64> outPointers {};
+
+    // One scan for every instance in the process.
+    juce::SharedResourcePointer<fxmenet::plugin::LocalCatalog> localCatalog;
 
     // Last, so it is destroyed first: its connection thread calls back into
     // the members above until it stops.

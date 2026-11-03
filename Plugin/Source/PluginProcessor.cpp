@@ -381,6 +381,17 @@ void FxmeNetAudioProcessor::addPlugin (const fxmenet::control::PluginEntry& entr
     engine.addSlot (entry.uid, entry.name, entry.vendor, (int) engine.getSlots().size());
 }
 
+bool FxmeNetAudioProcessor::findCatalogEntry (const SlotModel& s, fxmenet::control::PluginEntry& out) const
+{
+    for (auto& e : engine.getCatalog())
+        if (e.uid == s.uid && e.name == s.name && e.vendor == s.vendor)
+        {
+            out = e;
+            return true;
+        }
+    return false;
+}
+
 int FxmeNetAudioProcessor::getNumMapped() const
 {
     const std::lock_guard<std::mutex> l (mappingLock);

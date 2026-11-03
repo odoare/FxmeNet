@@ -366,7 +366,12 @@ SettingsPanel::SettingsPanel (FxmeNetAudioProcessor& p) : processor (p)
             b->setToggleState (true, juce::dontSendNotification);
         apply();
     };
-    for (auto* b : { &allInputs, &allOutputs })
+    rescanButton.setTooltip (tips::rescan);
+    fullRescanButton.setTooltip (tips::fullRescan);
+    rescanButton.onClick = [this] { processor.getLocalCatalog().rescan (false); };
+    fullRescanButton.onClick = [this] { processor.getLocalCatalog().rescan (true); };
+
+    for (auto* b : { &allInputs, &allOutputs, &rescanButton, &fullRescanButton })
     {
         styleButton (*b);
         addAndMakeVisible (*b);
@@ -428,6 +433,16 @@ void SettingsPanel::refresh()
         latencyText = text;
         repaint (latencyArea);
     }
+
+    auto& local = processor.getLocalCatalog();
+    const auto lt = local.getProgress();
+    rescanButton.setEnabled (! local.isScanning());
+    fullRescanButton.setEnabled (! local.isScanning());
+    if (lt != localText)
+    {
+        localText = lt;
+        repaint (localArea);
+    }
 }
 
 void SettingsPanel::apply()
@@ -455,13 +470,24 @@ void SettingsPanel::paint (juce::Graphics& g)
     g.drawText ("Network budget D", budgetLabel, juce::Justification::centredLeft);
     g.drawText ("INPUTS sent to the server", inputsLabel, juce::Justification::centredLeft);
     g.drawText ("OUTPUTS received from the server", outputsLabel, juce::Justification::centredLeft);
+    g.drawText ("LOCAL PLUGINS (for the plugins' own editors)", localArea.withHeight (18), juce::Justification::centredLeft);
     g.setColour (theme::text);
     g.drawFittedText (latencyText, latencyArea, juce::Justification::centredLeft, 2);
+    g.drawText (localText, localArea.withTrimmedTop (22).withHeight (24), juce::Justification::centredLeft, true);
 }
 
 void SettingsPanel::resized()
 {
     auto r = getLocalBounds().reduced (12, 10);
+
+    // Local plugins, at the bottom.
+    localArea = r.removeFromBottom (48);
+    auto buttons = localArea.withTrimmedTop (22).removeFromRight (190);
+    fullRescanButton.setBounds (buttons.removeFromRight (100).withHeight (24));
+    buttons.removeFromRight (6);
+    rescanButton.setBounds (buttons.removeFromRight (80).withHeight (24));
+    localArea = localArea.withTrimmedRight (200);
+    r.removeFromBottom (8);
 
     auto row = r.removeFromTop (26);
     blockLabel = row.removeFromLeft (120);

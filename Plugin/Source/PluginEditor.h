@@ -46,12 +46,17 @@ private:
         {
             juce::String text, detail;
             juce::Colour colour;
+            juce::String tip;   ///< hover text of the row (optional)
         };
 
         std::vector<Row> rows;
         std::function<void (int)> onDoubleClick;
 
         int getNumRows() override   { return (int) rows.size(); }
+        juce::String getTooltipForRow (int row) override
+        {
+            return juce::isPositiveAndBelow (row, (int) rows.size()) ? rows[(std::size_t) row].tip : juce::String();
+        }
         void paintListBoxItem (int row, juce::Graphics&, int width, int height, bool selected) override;
         void listBoxItemDoubleClicked (int row, const juce::MouseEvent&) override
         {
@@ -71,6 +76,10 @@ private:
     std::uint32_t selectedSlot() const;
 
     static juce::Image assetImage (const char* resourceName);
+
+    /** "T0", "T1", "T2" or "?" (local scan not done), and its colour. */
+    static juce::String tierTag (const fxmenet::plugin::LocalMatch&);
+    static juce::Colour tierColour (const fxmenet::plugin::LocalMatch&);
     static void styleButton (juce::TextButton&);
 
     FxmeNetAudioProcessor& processor;
