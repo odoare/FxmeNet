@@ -33,6 +33,13 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     main ones, silent unless an earlier, wider plugin wrote there. A
     per-slot routing (silence, a chain channel, or a DAW sidechain sent by
     the client) would make it explicit.
+16. Later, optional (user request 2026-11-03): extra plugin folders for the
+    client's local scan. `LocalCatalog` searches only the VST3 default
+    folders (and their subfolders), so a plugin installed elsewhere stays
+    tier 0. A list of folders in the Settings tab, kept in `AppSettings`
+    (shared by every instance) and added to the scanner's search path;
+    changing it starts a rescan. The server could take the same list
+    (command line or its settings file).
 13. Later, optional: mDNS publishing (`_fxmenet._tcp`) for system browsers.
 8. Phase 4: shadow editors and telemetry; port Compressor and Equalizer.
    - 8c (written): telemetry into the shadows. Build the plugin; in Reaper

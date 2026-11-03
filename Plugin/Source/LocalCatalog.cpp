@@ -196,11 +196,17 @@ LocalMatch LocalCatalog::match (const control::PluginEntry& server) const
 
     const Entry* same = nullptr;
     const Entry* other = nullptr;
+    const Entry* otherUid = nullptr;   // same name and vendor, another uid
     for (auto& e : entries)
     {
         const auto& d = e.description;
-        if ((std::uint32_t) d.uniqueId != server.uid || d.name != server.name || d.manufacturerName != server.vendor)
+        if (d.name != server.name || d.manufacturerName != server.vendor)
             continue;
+        if ((std::uint32_t) d.uniqueId != server.uid)
+        {
+            otherUid = &e;
+            continue;
+        }
         if (d.version == server.version)
             same = &e;
         else if (other == nullptr)
@@ -210,7 +216,11 @@ LocalMatch LocalCatalog::match (const control::PluginEntry& server) const
     if (same == nullptr && other == nullptr)
     {
         m.kind = LocalMatch::Kind::missing;
-        m.text = "not installed here: generic controls";
+        m.text = otherUid == nullptr
+                   ? juce::String ("not installed here: generic controls")
+                   : "installed here with another uid ("
+                         + juce::String::toHexString ((int) otherUid->description.uniqueId) + " here, "
+                         + juce::String::toHexString ((int) server.uid) + " on the server): generic controls";
         return m;
     }
 
