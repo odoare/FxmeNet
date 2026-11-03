@@ -56,7 +56,7 @@ public:
         for (std::size_t i = 0; i < count; ++i)
         {
             const std::size_t offset = i * budget;
-            const std::size_t length = std::min (budget, size - offset);
+            const std::size_t length = std::min<std::size_t> (budget, size - offset);
 
             scratch.clear();
             ByteWriter w (scratch);
@@ -102,7 +102,7 @@ public:
         : budget (std::max<std::size_t> (1, datagramBudget)),
           maxSize (maxMessageSize),
           maxFragments ((maxMessageSize + budget - 1) / budget + 1),
-          slots ((std::size_t) std::max (1, numSlots))
+          slots ((std::size_t) std::max<int> (1, numSlots))
     {
         for (auto& s : slots)
         {
