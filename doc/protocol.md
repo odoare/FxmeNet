@@ -166,7 +166,8 @@ The server has no clock: it processes a block when its request arrives.
 ### 5.2 Audio request (kind 1, client to server)
 
 Flags: bit 0 `offline` (no deadline: the client waits), bit 1 `retry` (a
-re-send of the same block), bit 2 `transport` present.
+re-send of the same block), bit 2 `transport` present, bit 3 `resetParity`
+(added 2026-11-04, see 5.4).
 
 ```
 u64 block        block index k since the session started (0, 1, 2, ...)
@@ -216,6 +217,17 @@ u16 midiBytes
   holds block k+1 until block k has arrived (bounded by the same 5 s), and
   answers a retry of a block already processed from its cache: nothing is
   processed twice, nothing is lost.
+- **Reset:** when the host resets the client's plugin (JUCE's `reset()`:
+  transport start, stop or seek, a flush), the client's reset count goes up
+  and every later request carries its parity in bit 3. The server resets
+  every plugin of the chain before processing the first block whose parity
+  differs from the previous block's, so the chain is reset at the same point
+  of the stream as the client (to the block: with host blocks that are not
+  multiples of N, that block may start a few samples before the reset). A
+  parity rather than a one-off flag: a lost request moves the reset one
+  block later instead of losing it. The first block of a stream only sets
+  the parity (the chain is fresh). Two resets within one lost block cancel
+  out; the price is accepted.
 - **Bypass on the client** (the DAW's bypass, or no server): the dry signal is
   delayed by the reported latency, so the timing never jumps.
 - **Disconnected:** as bypass, plus a visible state; the session is rebuilt

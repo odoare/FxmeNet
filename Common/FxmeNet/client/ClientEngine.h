@@ -185,6 +185,13 @@ public:
     int getLatency() const noexcept              { return stream.getLatency() + stats.chainLatency.load(); }
     int getStreamLatency() const noexcept        { return stream.getLatency(); }
     std::uint64_t getConcealedCount() const noexcept   { return stream.getConcealedCount(); }
+
+    /** The host reset the plugin (transport start, stop, seek, flush): the
+        server resets its chain at the same point of the stream (the next
+        block sent carries the new parity, wire::requestFlags::resetParity).
+        Any thread; not while process() runs, as hosts guarantee. */
+    void reset() noexcept                        { resets.fetch_add (1); }
+    std::uint32_t getResetCount() const noexcept { return resets.load(); }
     const AudioStatistics& getStatistics() const noexcept   { return stats; }
     std::uint32_t getControlRttMicros() const noexcept      { return controlRttMicros.load(); }
 
@@ -562,7 +569,8 @@ public:
                      + (juce::int64) (realtimeWaitFraction * numSamples / audioSampleRate
                                       * (double) juce::Time::getHighResolutionTicksPerSecond());
 
-        Network network { *this, link, offline, bypassed, transport, deadline };
+        const bool resetParity = (resets.load() & 1u) != 0;
+        Network network { *this, link, offline, bypassed, resetParity, transport, deadline };
         stream.process (in, out, numSamples, network);
         releaseLink();
     }
@@ -600,7 +608,7 @@ private:
     {
         ClientEngine& e;
         AudioLink* link;
-        bool offline, bypassed;
+        bool offline, bypassed, resetParity;
         const wire::Transport* transport;
         juce::int64 deadline;   ///< real time: how long missing replies may be waited for
 
@@ -620,7 +628,7 @@ private:
 
             if (transport == nullptr)
             {
-                link->send (k, block, nullptr, offline);
+                link->send (k, block, nullptr, offline, resetParity);
                 return;
             }
 
@@ -630,7 +638,7 @@ private:
             t.timeInSamples += start;
             if (e.audioSampleRate > 0.0)
                 t.ppqPosition += start / e.audioSampleRate * t.bpm / 60.0;
-            link->send (k, block, &t, offline);
+            link->send (k, block, &t, offline, resetParity);
         }
 
         bool fetchBlock (std::uint64_t k, float* const* dest)
@@ -1243,6 +1251,7 @@ private:
     AudioStatistics stats;
     TelemetryMailbox telemetry;
     std::atomic<std::uint32_t> controlRttMicros { 0 };
+    std::atomic<std::uint32_t> resets { 0 };
     std::atomic<bool> prepared { false };
     std::atomic<bool> connectionWanted { false };
     std::atomic<std::uint32_t> prepareGeneration { 0 }, usableGeneration { 0 };

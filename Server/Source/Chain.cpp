@@ -232,7 +232,7 @@ void Chain::publish()
 }
 
 //==============================================================================
-void Chain::process (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi, bool offline)
+void Chain::process (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi, bool offline, bool reset)
 {
     // Hazard pointer: announce the snapshot, then check it is still current,
     // so publish() cannot free it between the two.
@@ -253,6 +253,8 @@ void Chain::process (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi, b
             auto& instance = *slot->instance;
             if (instance.isNonRealtime() != offline)
                 instance.setNonRealtime (offline);
+            if (reset)
+                instance.reset();   // a VST3: deactivated and activated again, so not free, but rare
             const int n = juce::jmin (slot->numChannels, buffer.getNumChannels());
             juce::AudioBuffer<float> view (buffer.getArrayOfWritePointers(), n, buffer.getNumSamples());
 

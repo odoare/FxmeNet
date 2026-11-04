@@ -49,6 +49,7 @@ public:
         std::atomic<std::uint64_t> queueFull { 0 };
         std::atomic<std::uint64_t> malformed { 0 };
         std::atomic<std::uint64_t> sendErrors { 0 };
+        std::atomic<std::uint64_t> resets { 0 };          ///< chain resets asked for by the client
         std::atomic<std::uint32_t> lastProcessMicros { 0 };
         std::atomic<std::uint32_t> maxProcessMicros { 0 };
     };
@@ -145,6 +146,7 @@ private:
     std::array<Cached, cacheSize> cache;
     bool started = false;
     std::uint64_t expected = 0;
+    bool haveParity = false, lastParity = false;   ///< reset parity of the last block processed
 
     juce::AudioBuffer<float> work;
     juce::MidiBuffer midi;

@@ -52,5 +52,11 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
      Cab's IR plot follows the IR choice. Also each plugin alone in Reaper,
      to check nothing changed locally (Freeze's display especially).
 9. Phase 5: hardening, measurements, CI.
+   - Reset forwarding (written): build the plugin and the server. In Reaper,
+     the null test of local and remote pairs at start, stop and seek; the
+     client's "resets" and the server log's "resets" go up together. If a
+     short difference remains right after a reset (the replies already in
+     flight, about the stream latency), part 2: the client plays silence
+     for the blocks sent before the reset.
 10. Phase 6: plugin distribution.
 11. Phase 7: JSFX.

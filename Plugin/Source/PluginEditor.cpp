@@ -160,6 +160,7 @@ void FxmeNetAudioProcessorEditor::timerCallback()
               + " ms)   round trip " + juce::String (st.lastRttMicros.load() / 1000.0, 2) + " ms"
               + "   concealed " + juce::String ((juce::int64) engine.getConcealedCount())
               + "   rescued " + juce::String ((juce::int64) st.rescued.load())
+              + "   resets " + juce::String ((juce::int64) engine.getResetCount())
               + "   parameters mapped " + juce::String (processor.getNumMapped()) + "/" + juce::String (fxmenet::plugin::poolSize);
 
     refreshCatalog();

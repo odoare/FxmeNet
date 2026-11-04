@@ -61,6 +61,13 @@ namespace requestFlags
     constexpr std::uint16_t offline   = 1 << 0;
     constexpr std::uint16_t retry     = 1 << 1;
     constexpr std::uint16_t transport = 1 << 2;
+
+    /** The parity of the client's reset count (protocol.md section 5.1):
+        the server resets every plugin of the chain before the first block
+        whose parity differs from the previous block's. A parity rather than
+        a one-off flag, so a lost request delays the reset by a block
+        instead of losing it. */
+    constexpr std::uint16_t resetParity = 1 << 3;
 }
 
 struct DatagramHeader

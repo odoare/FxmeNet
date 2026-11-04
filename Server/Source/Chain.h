@@ -131,8 +131,10 @@ public:
     /** Processes `buffer` (at least as many channels as any slot needs, see
         getRequiredChannels) through every slot in order. `offline` is the
         request's offline flag, passed on to the plugins (setNonRealtime: the
-        VST3 host turns it into the process mode of this very call). */
-    void process (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi, bool offline);
+        VST3 host turns it into the process mode of this very call).
+        `reset`: every slot is reset first (the client's plugin was, at
+        this point of the stream: protocol.md section 5.1). */
+    void process (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi, bool offline, bool reset = false);
 
     /** The chain's current latency, summed over the slots (any thread). */
     int getLatency() const noexcept             { return latency.load(); }

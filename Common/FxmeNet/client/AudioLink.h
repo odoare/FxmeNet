@@ -167,8 +167,10 @@ public:
     // Audio thread.
 
     /** Sends block k (`block` has numInputs channels of N samples).
-        `transportInfo` may be null. */
-    void send (std::uint64_t streamBlock, const float* const* block, const wire::Transport* transportInfo, bool offline)
+        `transportInfo` may be null. `resetParity`: the parity of the
+        client's reset count (wire::requestFlags::resetParity). */
+    void send (std::uint64_t streamBlock, const float* const* block, const wire::Transport* transportInfo, bool offline,
+               bool resetParity = false)
     {
         const auto k = base + streamBlock;
         nextWire = juce::jmax (nextWire, k + 1);
@@ -191,7 +193,8 @@ public:
         wire::ByteWriter w (r.body);
         wire::writeBlock (w, false, info, nullptr, 0, sendPointers.data());
         r.flags = (std::uint16_t) ((offline ? wire::requestFlags::offline : 0)
-                                   | (transportInfo != nullptr ? wire::requestFlags::transport : 0));
+                                   | (transportInfo != nullptr ? wire::requestFlags::transport : 0)
+                                   | (resetParity ? wire::requestFlags::resetParity : 0));
         r.block.store (k + 1, std::memory_order_relaxed);
         r.sentTicks.store (juce::Time::getHighResolutionTicks(), std::memory_order_release);
 

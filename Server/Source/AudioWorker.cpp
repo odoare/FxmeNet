@@ -83,6 +83,7 @@ void AudioWorker::start (const control::Configure& c, std::uint32_t session, std
 
     started = false;
     expected = 0;
+    haveParity = false;   // the first block sets it: a stream starts with a fresh chain
 
     if (! startRealtimeThread (juce::Thread::RealtimeOptions{}.withPriority (8)))
         startThread (juce::Thread::Priority::highest);
@@ -302,7 +303,16 @@ void AudioWorker::processBlock (const wire::BlockView& v, std::uint16_t flags)
     if (v.info.hasTransport)
         chain.getPlayHead().set (v.info.transport, config.sampleRate);
 
-    chain.process (work, midi, (flags & wire::requestFlags::offline) != 0);
+    // The client's plugin was reset (transport moved, host flush): blocks
+    // come in order here, so a parity change marks the first block after it.
+    const bool parity = (flags & wire::requestFlags::resetParity) != 0;
+    const bool reset = haveParity && parity != lastParity;
+    haveParity = true;
+    lastParity = parity;
+    if (reset)
+        stats.resets.fetch_add (1);
+
+    chain.process (work, midi, (flags & wire::requestFlags::offline) != 0, reset);
 
     // Reply, written straight into its cache slot.
     auto& k = cache[(std::size_t) (v.info.block % cacheSize)];

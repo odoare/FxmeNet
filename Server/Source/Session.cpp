@@ -135,6 +135,7 @@ juce::String Session::describeActivity()
          + ", lost " + juce::String ((juce::int64) s.lostBlocks.load())
          + ", from cache " + juce::String ((juce::int64) s.fromCache.load())
          + ", stale " + juce::String ((juce::int64) s.stale.load())
+         + ", resets " + juce::String ((juce::int64) s.resets.load())
          + ", queue full " + juce::String ((juce::int64) s.queueFull.load())
          + ", process " + juce::String ((int) s.lastProcessMicros.load())
          + " us (max " + juce::String ((int) s.maxProcessMicros.load()) + ")"

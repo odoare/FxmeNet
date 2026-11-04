@@ -4,6 +4,19 @@ Newest first. Numbers are those of `todo.md`.
 
 ## 2026-11-04
 
+- Phase 5, first step (written): host resets reach the server's chain.
+  Reported: 10 Windows-client instances (8 FxmeFX plugins each) against
+  the Linux server over gigabit, no glitch at 128x2 or 1024x2, but local
+  and remote pairs stopped cancelling after start, stop or seek: JUCE calls
+  `reset()` when the host stops processing, the local plugins cleared
+  their state, the server's kept it. Now `FxmeNetAudioProcessor::reset()`
+  counts resets (`ClientEngine::reset`), each request carries the count's
+  parity (`requestFlags::resetParity`, bit 3), and the server's worker
+  resets every slot (`Chain::process (..., reset)`) before the first block
+  whose parity changed. Counts: "resets" in the client's status line and
+  in the server's session log. protocol.md 5.2 and 5.4 amended. Checked:
+  syntax of the changed plugin, server and wavclient sources.
+
 - 16 (written): extra plugin folders for the client's local scan. Kept in
   FxmeNet.settings (`localPluginFolders`, shared by every instance), edited
   with "Folders..." in the Stream & channels tab (add with a folder chooser,
