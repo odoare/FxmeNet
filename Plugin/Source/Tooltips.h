@@ -42,4 +42,5 @@ namespace fxmenet::plugin::tips
     inline constexpr auto lastTouched   = "The control last moved in the plugin's editor: map it to an automation parameter, unmap it, or learn one moved in the DAW.";
     inline constexpr auto rescan        = "Look for plugins installed or changed on this computer since the last scan.";
     inline constexpr auto fullRescan    = "Scan every plugin on this computer again, ignoring the cache.";
+    inline constexpr auto pluginFolders = "Folders searched for plugins besides the standard VST3 ones (with their subfolders).";
 }

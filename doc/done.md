@@ -2,6 +2,21 @@
 
 Newest first. Numbers are those of `todo.md`.
 
+## 2026-11-04
+
+- 16 (written): extra plugin folders for the client's local scan. Kept in
+  FxmeNet.settings (`localPluginFolders`, shared by every instance), edited
+  with "Folders..." in the Stream & channels tab (add with a folder chooser,
+  remove from a submenu), listed below the scan status. `LocalCatalog`
+  searches them besides the VST3 default folders; plugins outside the
+  search path leave the list. Its scan thread now stays alive and waits
+  for requests, so a rescan asked for during a scan (a folder added) runs
+  after it instead of being dropped. The server already had
+  `--plugin-path DIR` (repeatable). Checked: syntax of Panels.cpp and
+  LocalCatalog.cpp.
+- The "not installed here" text now names a uid mismatch (same name and
+  vendor, another uid), with both uids.
+
 ## 2026-11-03
 
 - Fix: the client's local scan kept a plugin's old version after a new

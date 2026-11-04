@@ -524,8 +524,10 @@ SettingsPanel::SettingsPanel (FxmeNetAudioProcessor& p) : processor (p)
     fullRescanButton.setTooltip (tips::fullRescan);
     rescanButton.onClick = [this] { processor.getLocalCatalog().rescan (false); };
     fullRescanButton.onClick = [this] { processor.getLocalCatalog().rescan (true); };
+    foldersButton.setTooltip (tips::pluginFolders);
+    foldersButton.onClick = [this] { foldersMenu(); };
 
-    for (auto* b : { &allInputs, &allOutputs, &rescanButton, &fullRescanButton })
+    for (auto* b : { &allInputs, &allOutputs, &rescanButton, &fullRescanButton, &foldersButton })
     {
         styleButton (*b);
         addAndMakeVisible (*b);
@@ -597,6 +599,57 @@ void SettingsPanel::refresh()
         localText = lt;
         repaint (localArea);
     }
+
+    const auto folders = local.getExtraFolders();
+    const auto ft = folders.isEmpty() ? juce::String ("Searched: the standard VST3 folders")
+                                      : "Searched: the standard VST3 folders, and " + folders.joinIntoString ("; ");
+    if (ft != foldersText)
+    {
+        foldersText = ft;
+        repaint (foldersArea);
+    }
+}
+
+void SettingsPanel::foldersMenu()
+{
+    auto& local = processor.getLocalCatalog();
+    const auto folders = local.getExtraFolders();
+
+    juce::PopupMenu menu, remove;
+    for (int i = 0; i < folders.size(); ++i)
+        remove.addItem (100 + i, folders[i]);
+    menu.addItem (1, "Add a folder...");
+    menu.addSubMenu ("Remove", remove, ! folders.isEmpty());
+
+    menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (foldersButton),
+                        [this, folders] (int result)
+    {
+        auto& catalog = processor.getLocalCatalog();
+        if (result >= 100 && result - 100 < folders.size())
+        {
+            auto remaining = catalog.getExtraFolders();
+            remaining.removeString (folders[result - 100]);
+            catalog.setExtraFolders (remaining);
+        }
+        else if (result == 1)
+        {
+            chooser = std::make_unique<juce::FileChooser> ("A folder holding VST3 plugins",
+                                                           juce::File::getSpecialLocation (juce::File::userHomeDirectory));
+            chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectDirectories,
+                                  [this] (const juce::FileChooser& fc)
+            {
+                const auto folder = fc.getResult();
+                if (! folder.isDirectory())
+                    return;
+                auto& scan = processor.getLocalCatalog();
+                auto current = scan.getExtraFolders();
+                if (current.contains (folder.getFullPathName()))
+                    return;
+                current.add (folder.getFullPathName());
+                scan.setExtraFolders (current);
+            });
+        }
+    });
 }
 
 void SettingsPanel::apply()
@@ -628,6 +681,8 @@ void SettingsPanel::paint (juce::Graphics& g)
     g.setColour (theme::text);
     g.drawFittedText (latencyText, latencyArea, juce::Justification::centredLeft, 2);
     g.drawText (localText, localArea.withTrimmedTop (22).withHeight (24), juce::Justification::centredLeft, true);
+    g.setColour (theme::dimText);
+    g.drawText (foldersText, foldersArea, juce::Justification::centredLeft, true);
 }
 
 void SettingsPanel::resized()
@@ -635,12 +690,15 @@ void SettingsPanel::resized()
     auto r = getLocalBounds().reduced (12, 10);
 
     // Local plugins, at the bottom.
-    localArea = r.removeFromBottom (48);
-    auto buttons = localArea.withTrimmedTop (22).removeFromRight (190);
+    localArea = r.removeFromBottom (70);
+    foldersArea = localArea.withTrimmedTop (50);
+    auto buttons = localArea.withTrimmedTop (22).removeFromRight (286);
     fullRescanButton.setBounds (buttons.removeFromRight (100).withHeight (24));
     buttons.removeFromRight (6);
     rescanButton.setBounds (buttons.removeFromRight (80).withHeight (24));
-    localArea = localArea.withTrimmedRight (200);
+    buttons.removeFromRight (6);
+    foldersButton.setBounds (buttons.removeFromRight (90).withHeight (24));
+    localArea = localArea.withTrimmedRight (296);
     r.removeFromBottom (8);
 
     auto row = r.removeFromTop (26);

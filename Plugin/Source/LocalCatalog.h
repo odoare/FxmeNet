@@ -26,6 +26,11 @@
     cached (FX-Mechanics/fxmenet-client-plugins.xml) with each binary's
     sha256, so only new or changed plugins are scanned or hashed again.
 
+    Searched: the VST3 default folders and the user's extra folders
+    (AppSettings, set from the Settings tab), with their subfolders. The
+    scan thread lives as long as the catalog; a rescan asked for while one
+    runs follows it.
+
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-FXME-Commercial
   ------------------------------------------------------------------------------
@@ -69,9 +74,14 @@ public:
     LocalCatalog();
     ~LocalCatalog() override;
 
-    /** Scans again: only what changed, or everything (`full`). Ignored while
-        a scan runs. Any thread. */
+    /** Scans again: only what changed, or everything (`full`). While a scan
+        runs, another follows it. Any thread. */
     void rescan (bool full);
+
+    /** The folders searched besides the VST3 default ones. Setting them
+        saves them (AppSettings) and rescans. Message thread. */
+    juce::StringArray getExtraFolders() const;
+    void setExtraFolders (const juce::StringArray& folders);
 
     bool isScanning() const noexcept           { return scanning.load(); }
     juce::String getProgress() const;
@@ -92,13 +102,16 @@ private:
     };
 
     void run() override;
+    void scan (bool full);
 
     mutable std::mutex lock;
     std::vector<Entry> entries;
     bool scanned = false;
     juce::String progress;
+    juce::StringArray extraFolders;
+    bool requested = false, fullRequested = false;   // under `lock`
 
-    std::atomic<bool> scanning { false }, fullRescan { false };
+    std::atomic<bool> scanning { false };
     std::atomic<std::uint32_t> revision { 0 };
 
     JUCE_DECLARE_NON_COPYABLE (LocalCatalog)

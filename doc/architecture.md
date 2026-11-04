@@ -331,7 +331,13 @@ The DAW glue around `ClientEngine`; product name "FxmeNet", VST3 and AU
   (a plugin that crashes the DAW while scanned is skipped from then on).
   Cached with each binary's sha256 in `FX-Mechanics/fxmenet-client-plugins.xml`
   (the pedal file beside it), so only new or changed plugins are scanned
-  and hashed again; Rescan and Full rescan in the Stream & channels tab.
+  and hashed again (changed: the binary's size or date, not the bundle
+  folder's, which a copy over an installed bundle leaves alone). Searched:
+  the VST3 default folders and the user's extra folders (FxmeNet.settings,
+  "Folders..." in the Stream & channels tab), with their subfolders; a
+  plugin outside them leaves the list. Rescan and Full rescan in the same
+  tab; the scan thread waits for requests, and one made during a scan
+  follows it.
   `match` compares a server entry with the local plugins: same uid, name and
   vendor is the same plugin; the same version makes it compatible, tier 1,
   or tier 2 when the server says it is FxmeNet-aware; another version or no

@@ -11,7 +11,8 @@
       - MappingPanel: every mapped pool entry, with Unmap, and the state of
         a learn in progress;
       - SettingsPanel: block size N and budget D with the latency they give,
-        and one toggle per input and output channel (the masks).
+        one toggle per input and output channel (the masks), and the local
+        plugin scan (its extra folders, rescans).
 
     Each is refreshed by the editor's timer from the processor; none keeps a
     copy of anything the processor owns beyond what it shows.
@@ -123,14 +124,18 @@ private:
     void rebuildChannels (int inputs, int outputs);
     void apply();
 
+    /** The menu of the extra plugin folders: add one, remove one. */
+    void foldersMenu();
+
     FxmeNetAudioProcessor& processor;
     juce::ComboBox blockBox, budgetBox;
     juce::OwnedArray<juce::TextButton> inputButtons, outputButtons;
     juce::TextButton allInputs { "All" }, allOutputs { "All" };
-    juce::TextButton rescanButton { "Rescan" }, fullRescanButton { "Full rescan" };
+    juce::TextButton rescanButton { "Rescan" }, fullRescanButton { "Full rescan" }, foldersButton { "Folders..." };
+    std::unique_ptr<juce::FileChooser> chooser;
     int shownInputs = -1, shownOutputs = -1;
-    juce::String latencyText, localText;
-    juce::Rectangle<int> blockLabel, budgetLabel, latencyArea, inputsLabel, outputsLabel, localArea;
+    juce::String latencyText, localText, foldersText;
+    juce::Rectangle<int> blockLabel, budgetLabel, latencyArea, inputsLabel, outputsLabel, localArea, foldersArea;
 };
 
 } // namespace fxmenet::plugin

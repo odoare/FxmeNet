@@ -8,6 +8,7 @@
 */
 
 #include "LocalCatalog.h"
+#include "AppSettings.h"
 
 #include <FxmeNet/catalog/PluginFiles.h>
 
@@ -43,12 +44,15 @@ namespace
 
 LocalCatalog::LocalCatalog() : juce::Thread ("FxmeNet local plugin scan")
 {
+    extraFolders = getLocalPluginFolders();
+    startThread (juce::Thread::Priority::low);
     rescan (false);
 }
 
 LocalCatalog::~LocalCatalog()
 {
     signalThreadShouldExit();
+    notify();
     stopThread (30000);   // a plugin being scanned cannot be interrupted
 }
 
@@ -59,15 +63,31 @@ juce::File LocalCatalog::getCacheFile()
 
 void LocalCatalog::rescan (bool full)
 {
-    if (scanning.exchange (true))
-        return;
-    fullRescan = full;
     {
         const std::lock_guard<std::mutex> l (lock);
-        progress = "Scanning local plugins";
+        requested = true;
+        fullRequested = fullRequested || full;
+        if (! scanning.exchange (true))
+            progress = "Scanning local plugins";
     }
     revision.fetch_add (1);
-    startThread (juce::Thread::Priority::low);
+    notify();
+}
+
+juce::StringArray LocalCatalog::getExtraFolders() const
+{
+    const std::lock_guard<std::mutex> l (lock);
+    return extraFolders;
+}
+
+void LocalCatalog::setExtraFolders (const juce::StringArray& folders)
+{
+    {
+        const std::lock_guard<std::mutex> l (lock);
+        extraFolders = folders;
+    }
+    setLocalPluginFolders (folders);
+    rescan (false);
 }
 
 juce::String LocalCatalog::getProgress() const
@@ -85,6 +105,29 @@ int LocalCatalog::getNumPlugins() const
 //==============================================================================
 void LocalCatalog::run()
 {
+    while (! threadShouldExit())
+    {
+        bool full = false, go = false;
+        {
+            const std::lock_guard<std::mutex> l (lock);
+            go = requested;
+            full = fullRequested;
+            requested = fullRequested = false;
+            if (! go)
+                scanning = false;
+        }
+        if (go)
+            scan (full);
+        else
+        {
+            revision.fetch_add (1);
+            wait (-1);   // until rescan() or the destructor
+        }
+    }
+}
+
+void LocalCatalog::scan (bool full)
+{
     const auto cacheFile = getCacheFile();
     const auto pedalFile = settingsFolder().getChildFile ("fxmenet-client-scan.pedal");
     cacheFile.getParentDirectory().createDirectory();
@@ -92,7 +135,7 @@ void LocalCatalog::run()
     // The previous results: the plugin list, and the binaries' hashes.
     juce::KnownPluginList list;
     std::map<juce::String, Hash> hashes;
-    if (! fullRescan)
+    if (! full)
         if (const auto cache = juce::parseXML (cacheFile); cache != nullptr && cache->hasTagName ("FxmeNetClientPlugins"))
         {
             if (auto* known = cache->getChildByName ("KNOWNPLUGINS"))
@@ -119,7 +162,13 @@ void LocalCatalog::run()
     // New or changed plugins (in this process: the pedal file names a plugin
     // that crashed it, which is then skipped).
     juce::VST3PluginFormat vst3;
-    juce::PluginDirectoryScanner scanner (list, vst3, vst3.getDefaultLocationsToSearch(), true, pedalFile, false);
+    auto searchPath = vst3.getDefaultLocationsToSearch();
+    for (auto& folder : getExtraFolders())
+        if (juce::File::isAbsolutePath (folder))
+            searchPath.addIfNotAlreadyThere (juce::File (folder));
+    searchPath.removeNonExistentPaths();
+
+    juce::PluginDirectoryScanner scanner (list, vst3, searchPath, true, pedalFile, false);
     juce::String name;
     while (! threadShouldExit())
     {
@@ -131,10 +180,13 @@ void LocalCatalog::run()
             break;
     }
 
-    // Plugins removed since: out of the list.
+    // Plugins removed since, or in a folder no longer searched: out of the list.
     for (auto& t : list.getTypes())
-        if (! juce::File (t.fileOrIdentifier).exists())
+    {
+        const juce::File file (t.fileOrIdentifier);
+        if (! file.exists() || ! searchPath.isFileInPath (file, true))
             list.removeType (t);
+    }
 
     // Hashes, for what is new or changed.
     std::vector<Entry> found;
@@ -179,7 +231,6 @@ void LocalCatalog::run()
         progress = juce::String ((int) entries.size()) + " local plugins"
                  + (failed.isEmpty() ? juce::String() : ", " + juce::String (failed.size()) + " failed to scan");
     }
-    scanning = false;
     revision.fetch_add (1);
 }
 

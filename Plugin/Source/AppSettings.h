@@ -70,4 +70,25 @@ inline void setLastServer (const juce::String& hostAndPort)
     }
 }
 
+/** Folders scanned for local plugins besides the VST3 default ones. */
+inline juce::StringArray getLocalPluginFolders()
+{
+    auto* s = appProperties().getUserSettings();
+    if (s == nullptr)
+        return {};
+    juce::StringArray folders;
+    folders.addLines (s->getValue ("localPluginFolders"));
+    folders.removeEmptyStrings();
+    return folders;
+}
+
+inline void setLocalPluginFolders (const juce::StringArray& folders)
+{
+    if (auto* s = appProperties().getUserSettings())
+    {
+        s->setValue ("localPluginFolders", folders.joinIntoString ("\n"));
+        s->saveIfNeeded();
+    }
+}
+
 } // namespace fxmenet::plugin
