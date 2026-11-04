@@ -57,8 +57,8 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
      concealed block at start, stop or seek ("rescued" goes up instead);
      "host ahead" shows a few hundred ms while playing, about 0 when
      stopped; the client's and the server's "resets" go up together; the
-     null test of the pairs. If a short difference remains right after a
-     reset (the replies already in flight), part 2: the client plays
-     silence for the blocks sent before the reset.
+     null test of the pairs. Part 2 (written): the client flushes its
+     stream at a reset; test that the pairs cancel at start, stop and seek
+     at 1024x2 and 128x2.
 10. Phase 6: plugin distribution.
 11. Phase 7: JSFX.

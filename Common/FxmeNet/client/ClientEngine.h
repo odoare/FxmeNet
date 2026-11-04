@@ -569,12 +569,23 @@ public:
 
         AudioLink* link = acquireLink();
         const auto generation = link != nullptr ? link->getGeneration() : 0u;
-        if (generation != audioGeneration)
+        const auto resetCount = resets.load();
+        if (generation != audioGeneration || resetCount != audioResets)
         {
-            stream.reset();          // back to block 0, the FIFO refilled with silence
+            // Back to block 0, the FIFO refilled with silence. After a host
+            // reset the latency is kept, and the replies in flight (processed
+            // before the server's chain was reset) are dropped: like a local
+            // plugin clearing its delay line.
+            if (generation != audioGeneration)
+                stream.reset();
+            else
+                stream.flush();
+            std::fill (dryBlock.begin(), dryBlock.end(), 0);   // k starts again: no old block may match
+            std::fill (sentBlock.begin(), sentBlock.end(), 0);
             if (link != nullptr)
-                link->rebase();      // same link: its numbering goes on
+                link->rebase();      // same link: its numbering goes on, older replies refused
             audioGeneration = generation;
+            audioResets = resetCount;
         }
 
         juce::int64 deadline = 0;
@@ -590,7 +601,7 @@ public:
             aheadAnchored = false;
         }
 
-        const bool resetParity = (resets.load() & 1u) != 0;
+        const bool resetParity = (resetCount & 1u) != 0;
         Network network { *this, link, offline, bypassed, resetParity, transport, deadline };
         stream.process (in, out, numSamples, network);
         releaseLink();
@@ -1322,6 +1333,7 @@ private:
     std::vector<std::uint64_t> dryBlock, sentBlock;   ///< k + 1 per slot
     double audioSampleRate = 0.0;
     std::uint32_t audioGeneration = 0;
+    std::uint32_t audioResets = 0;   ///< the reset count the stream was last flushed for
 
     // How far ahead of real time the host runs (measureAhead): the audio
     // delivered since an anchor, minus the wall-clock time since.

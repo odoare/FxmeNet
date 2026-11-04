@@ -89,6 +89,15 @@ public:
     {
         aligned = maxHost % n == 0;
         latency.store (latencyFor (n, maxHost, budget, aligned));
+        flush();
+    }
+
+    /** As reset(), but the latency stays what it is (aligned or not): the
+        plugin was reset by its host, and the audio in flight (the partial
+        input block, the FIFO) belongs to before. The output is silence for
+        the latency, as from a local plugin clearing its delay line. */
+    void flush() noexcept
+    {
         fill = 0;
         nextBlock = 0;
         nextFetch = 0;

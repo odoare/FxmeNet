@@ -234,7 +234,12 @@ u16 midiBytes
   parity rather than a one-off flag: a lost request moves the reset one
   block later instead of losing it. The first block of a stream only sets
   the parity (the chain is fresh). Two resets within one lost block cancel
-  out; the price is accepted.
+  out; the price is accepted. The client also drops what is in flight:
+  its stream restarts at block 0 with the FIFO full of silence and the
+  latency unchanged (the wire numbering goes on, older replies are
+  refused), so it outputs silence for its latency after a reset, as a
+  local plugin clearing its delay line does (amended 2026-11-04: without
+  it, the replies in flight played the audio from before a seek).
 - **Bypass on the client** (the DAW's bypass, or no server): the dry signal is
   delayed by the reported latency, so the timing never jumps.
 - **Disconnected:** as bypass, plus a visible state; the session is rebuilt

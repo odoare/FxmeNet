@@ -5,7 +5,7 @@
     The client's audio-thread core (Common/FxmeNet/client), without JUCE and
     without a network: BlockStream against a fake network that echoes each
     block, for many host block sizes, block sizes and budgets, fixed and
-    random; then concealment, and ReplyRing.
+    random; then a flush (host reset), concealment, and ReplyRing.
 
     What is checked for BlockStream:
       - the output is the input delayed by exactly getLatency() samples;
@@ -302,6 +302,48 @@ namespace
         CHECK (net.minBudget >= (long) d * n);
     }
 
+    /** A host reset: flush() drops what is in flight and the output is
+        silence for the latency, then the new input; the latency stays as it
+        was, aligned or not. */
+    void testFlush()
+    {
+        std::printf ("BlockStream, flush (host reset)\n");
+        const int n = 128, host = 512, d = 2;
+        for (const bool loseAlignment : { false, true })
+        {
+            BlockStream stream;
+            stream.prepare (2, 2, n, host, d);
+
+            EchoNetwork before;
+            before.nIn = before.nOut = 2;
+            before.n = n;
+            std::vector<int> sizes (20, host);
+            if (loseAlignment)
+                sizes.push_back (100);
+            long sum = 0;
+            for (int s : sizes)
+                sum += s;
+            run (stream, before, 2, 2, sizes, sum);
+            const int latency = stream.getLatency();
+            CHECK (latency == BlockStream::latencyFor (n, host, d, ! loseAlignment));
+
+            stream.flush();
+            CHECK (stream.getLatency() == latency);
+            CHECK (stream.isAligned() == ! loseAlignment);
+
+            // Block numbers start again at 0: a fresh network sees the new input only.
+            EchoNetwork after;
+            after.nIn = after.nOut = 2;
+            after.n = n;
+            const long total = 100L * host;
+            const auto r = run (stream, after, 2, 2, std::vector<int> (1, host), total);
+            CHECK (r.latencyChangedAt == -1);
+            CHECK (isDelayedInput ({ r.out, latency, -1 }, 2, latency, 0, total));
+            CHECK (after.causalityErrors == 0 && after.cutErrors == 0 && after.orderErrors == 0);
+            CHECK (after.minBudget >= (long) d * n);
+        }
+    }
+
     void testConcealment()
     {
         std::printf ("BlockStream, concealment\n");
@@ -420,6 +462,7 @@ int main()
     testFixedSizes();
     testRandomSizes();
     testAlignmentLost();
+    testFlush();
     testConcealment();
     testReplyRing();
 

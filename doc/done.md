@@ -26,6 +26,15 @@ Newest first. Numbers are those of `todo.md`.
   behind) and a callback may also wait half that margin (at most 250 ms):
   never more than the host has buffered, nothing more at real-time pace.
   "host ahead" in the client's status line. protocol.md 5.4 amended.
+- Tested: no concealment left at play start; a shorter, weaker difference
+  remained after each reset, scaling with the block size: the replies in
+  flight (processed before the reset). Part 2: on a host reset the client
+  flushes its stream (`BlockStream::flush`: as reset() but the latency
+  kept, aligned or not, so no latency change per transport event), clears
+  its dry and sent block marks, and rebases the link (older replies
+  refused). Silence for the latency, then the new audio, as a local plugin
+  with latency does. ClientTests: a flush test (aligned and not), 976
+  checks pass. Syntax of the plugin and wavclient checked.
 
 - 16 (written): extra plugin folders for the client's local scan. Kept in
   FxmeNet.settings (`localPluginFolders`, shared by every instance), edited
