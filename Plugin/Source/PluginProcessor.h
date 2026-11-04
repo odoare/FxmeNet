@@ -186,6 +186,12 @@ private:
     void process (juce::AudioBuffer<float>&, bool bypassed);
     void timerCallback() override;
 
+    /** Message thread: the engine's audio events, into the events log when
+        it is on (AppSettings); the machine-wide switches followed. */
+    void handleAudioEvents();
+    int settingsPollTicks = 0;
+    bool logEvents = false;
+
     /** Re-prepares the engine with new stream settings, the audio suspended. */
     void applyStreamSettings (const StreamSettings&);
 

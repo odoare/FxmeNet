@@ -132,10 +132,11 @@ private:
     juce::OwnedArray<juce::TextButton> inputButtons, outputButtons;
     juce::TextButton allInputs { "All" }, allOutputs { "All" };
     juce::TextButton rescanButton { "Rescan" }, fullRescanButton { "Full rescan" }, foldersButton { "Folders..." };
+    juce::TextButton flushButton { "Silence in-flight audio at reset" }, logButton { "Log transport events" };
     std::unique_ptr<juce::FileChooser> chooser;
     int shownInputs = -1, shownOutputs = -1;
     juce::String latencyText, localText, foldersText;
-    juce::Rectangle<int> blockLabel, budgetLabel, latencyArea, inputsLabel, outputsLabel, localArea, foldersArea;
+    juce::Rectangle<int> blockLabel, budgetLabel, latencyArea, inputsLabel, outputsLabel, localArea, foldersArea, diagnosticsLabel;
 };
 
 } // namespace fxmenet::plugin

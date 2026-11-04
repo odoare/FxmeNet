@@ -63,6 +63,8 @@ FxmeNetAudioProcessor::FxmeNetAudioProcessor()
         serverChanges.push_back ({ slotId, index, value });
     };
 
+    engine.setFlushOnReset (fxmenet::plugin::getFlushOnReset());
+    logEvents = fxmenet::plugin::getLogEvents();
     startTimerHz (50);
 }
 
@@ -182,6 +184,50 @@ void FxmeNetAudioProcessor::process (juce::AudioBuffer<float>& buffer, bool bypa
 }
 
 //==============================================================================
+void FxmeNetAudioProcessor::handleAudioEvents()
+{
+    if (++settingsPollTicks >= 25)   // twice a second: another instance may have changed them
+    {
+        settingsPollTicks = 0;
+        engine.setFlushOnReset (fxmenet::plugin::getFlushOnReset());
+        logEvents = fxmenet::plugin::getLogEvents();
+    }
+
+    juce::String lines;
+    const auto tag = juce::String::toHexString ((juce::pointer_sized_int) this).getLastCharacters (5);
+    engine.drainEvents ([&] (const ClientEngine::AudioEvent& e)
+    {
+        if (! logEvents)
+            return;
+        using E = ClientEngine::AudioEvent;
+        auto line = juce::Time::getCurrentTime().formatted ("%H:%M:%S.")
+                  + juce::String (juce::Time::getCurrentTime().getMilliseconds()).paddedLeft ('0', 3)
+                  + " [" + tag + "] " + juce::String (e.wallMs, 1) + " ms  callback "
+                  + juce::String ((juce::int64) e.callback);
+        if ((e.bits & E::resetSeen) != 0)
+            line << "  RESET (" << juce::String (e.resetDelayMs, 1) << " ms after reset()"
+                 << (e.flushed ? ", flushed)" : ", not flushed)");
+        if ((e.bits & E::playChange) != 0)
+            line << (e.playing ? "  STOP->PLAY" : "  PLAY->STOP");
+        if ((e.bits & E::jump) != 0)
+            line << "  JUMP " << (juce::int64) (e.time - e.expected) << " samples";
+        if ((e.bits & E::concealed) != 0)
+            line << "  CONCEALED " << (int) e.concealedBlocks;
+        line << "  (play head " << (juce::int64) e.time << ", " << e.numSamples << " samples, host ahead "
+             << juce::String (e.aheadMicros / 1000.0, 1) << " ms)";
+        lines << line << "\n";
+    });
+
+    if (lines.isNotEmpty())
+    {
+        const auto file = fxmenet::plugin::getEventsLogFile();
+        file.getParentDirectory().createDirectory();
+        juce::FileOutputStream out (file);   // appends
+        if (out.openedOk())
+            out.writeText (lines, false, false, nullptr);
+    }
+}
+
 void FxmeNetAudioProcessor::timerCallback()
 {
     applyServerParameterChanges();
@@ -189,6 +235,7 @@ void FxmeNetAudioProcessor::timerCallback()
     followChain();
     syncShadows();
     deliverTelemetry();
+    handleAudioEvents();
 
     if (engine.getLatency() != getLatencySamples())
         setLatencySamples (engine.getLatency());

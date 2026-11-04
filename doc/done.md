@@ -35,6 +35,26 @@ Newest first. Numbers are those of `todo.md`.
   refused). Silence for the latency, then the new audio, as a local plugin
   with latency does. ClientTests: a flush test (aligned and not), 976
   checks pass. Syntax of the plugin and wavclient checked.
+- Tested: start fixed, a glitch still at stop and seek. Suspect: Reaper's
+  reset reaching the plugin after it already processed audio of the new
+  position, so the flush would cut new audio. Diagnostics added (written):
+  the engine records, per callback, a reset seen (and how long after
+  `reset()`), play / stop changes, play-head jumps and concealed blocks
+  (`ClientEngine::AudioEvent`, a 256-entry ring drained by the processor's
+  timer) into FX-Mechanics/fxmenet-client-events.log; switches in the
+  Stream & channels tab, machine-wide (AppSettings): "Silence in-flight
+  audio at reset" (the flush, on by default) and "Log transport events"
+  (off by default).
+- Events log read: resets arrive in the callback of the play-head jump
+  (0.2 to 4.6 ms after `reset()`), none at stop, no concealment; the
+  late-reset suspicion is ruled out. Added
+  `Tools/Reaper/FxmeNet latency reference.jsfx`, a pure delay reporting its
+  latency, to test REAPER's latency compensation without FxmeNet.
+- Concluded: the JSFX pair shows the same glitches at stop and seek, so
+  they come from REAPER's handling of any plugin with latency, not from
+  FxmeNet. Kept: reset forwarding, the wait while the host runs ahead, the
+  flush at reset (on by default, as a local plugin clearing its delay
+  line), the events log and both switches.
 
 - 16 (written): extra plugin folders for the client's local scan. Kept in
   FxmeNet.settings (`localPluginFolders`, shared by every instance), edited

@@ -42,5 +42,7 @@ namespace fxmenet::plugin::tips
     inline constexpr auto lastTouched   = "The control last moved in the plugin's editor: map it to an automation parameter, unmap it, or learn one moved in the DAW.";
     inline constexpr auto rescan        = "Look for plugins installed or changed on this computer since the last scan.";
     inline constexpr auto fullRescan    = "Scan every plugin on this computer again, ignoring the cache.";
+    inline constexpr auto flushOnReset  = "When the DAW resets the plugin (start, stop, seek), drop the audio on its way back from the server: silence for the latency, as a local plugin clearing its delay line. For every FxmeNet instance.";
+    inline constexpr auto logEvents     = "Write what the audio thread sees around transport events (resets, play / stop, jumps, concealed blocks) to fxmenet-client-events.log in the FX-Mechanics settings folder. For every FxmeNet instance.";
     inline constexpr auto pluginFolders = "Folders searched for plugins besides the standard VST3 ones (with their subfolders).";
 }

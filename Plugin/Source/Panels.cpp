@@ -8,6 +8,7 @@
 */
 
 #include "Panels.h"
+#include "AppSettings.h"
 #include "Theme.h"
 #include "Tooltips.h"
 
@@ -527,6 +528,21 @@ SettingsPanel::SettingsPanel (FxmeNetAudioProcessor& p) : processor (p)
     foldersButton.setTooltip (tips::pluginFolders);
     foldersButton.onClick = [this] { foldersMenu(); };
 
+    flushButton.setTooltip (tips::flushOnReset);
+    logButton.setTooltip (tips::logEvents);
+    for (auto* b : { &flushButton, &logButton })
+    {
+        styleButton (*b);
+        b->setClickingTogglesState (true);
+        addAndMakeVisible (*b);
+    }
+    flushButton.onClick = [this]
+    {
+        setFlushOnReset (flushButton.getToggleState());
+        processor.getEngine().setFlushOnReset (flushButton.getToggleState());
+    };
+    logButton.onClick = [this] { setLogEvents (logButton.getToggleState()); };
+
     for (auto* b : { &allInputs, &allOutputs, &rescanButton, &fullRescanButton, &foldersButton })
     {
         styleButton (*b);
@@ -589,6 +605,9 @@ void SettingsPanel::refresh()
         latencyText = text;
         repaint (latencyArea);
     }
+
+    flushButton.setToggleState (processor.getEngine().getFlushOnReset(), juce::dontSendNotification);
+    logButton.setToggleState (getLogEvents(), juce::dontSendNotification);
 
     auto& local = processor.getLocalCatalog();
     const auto lt = local.getProgress();
@@ -678,6 +697,7 @@ void SettingsPanel::paint (juce::Graphics& g)
     g.drawText ("INPUTS sent to the server", inputsLabel, juce::Justification::centredLeft);
     g.drawText ("OUTPUTS received from the server", outputsLabel, juce::Justification::centredLeft);
     g.drawText ("LOCAL PLUGINS (for the plugins' own editors)", localArea.withHeight (18), juce::Justification::centredLeft);
+    g.drawText ("TRANSPORT", diagnosticsLabel, juce::Justification::centredLeft);
     g.setColour (theme::text);
     g.drawFittedText (latencyText, latencyArea, juce::Justification::centredLeft, 2);
     g.drawText (localText, localArea.withTrimmedTop (22).withHeight (24), juce::Justification::centredLeft, true);
@@ -699,6 +719,14 @@ void SettingsPanel::resized()
     buttons.removeFromRight (6);
     foldersButton.setBounds (buttons.removeFromRight (90).withHeight (24));
     localArea = localArea.withTrimmedRight (296);
+    r.removeFromBottom (8);
+
+    // Reset behaviour and the events log, above.
+    auto diagnostics = r.removeFromBottom (24);
+    diagnosticsLabel = diagnostics.removeFromLeft (90);
+    flushButton.setBounds (diagnostics.removeFromLeft (230));
+    diagnostics.removeFromLeft (6);
+    logButton.setBounds (diagnostics.removeFromLeft (170));
     r.removeFromBottom (8);
 
     auto row = r.removeFromTop (26);

@@ -1,0 +1,40 @@
+desc:FxmeNet test: pure delay reporting its latency
+// A local stand-in for FxmeNet's stream: delays by `Latency` samples and
+// reports it to REAPER (pdc_delay), so REAPER compensates it as it does
+// FxmeNet. Its delay line is cleared whenever REAPER runs @init (playback
+// start, and whatever else REAPER decides). Used to tell whether a null-test
+// difference at stop or seek comes from FxmeNet or from REAPER's handling of
+// any plugin with latency.
+//
+// Author: Olivier Doaré, github.com/odoare
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-FXME-Commercial
+
+slider1:1280<0,65535,1>Latency (samples)
+
+in_pin:left input
+in_pin:right input
+out_pin:left output
+out_pin:right output
+
+@init
+size = 65536;
+bufL = 0;
+bufR = size;
+memset (0, 0, 2 * size);
+pos = 0;
+
+@slider
+lat = slider1 | 0;
+pdc_delay = lat;
+pdc_bot_ch = 0;
+pdc_top_ch = 2;
+
+@sample
+bufL[pos] = spl0;
+bufR[pos] = spl1;
+rd = pos - lat;
+rd < 0 ? rd += size;
+spl0 = bufL[rd];
+spl1 = bufR[rd];
+pos += 1;
+pos >= size ? pos = 0;

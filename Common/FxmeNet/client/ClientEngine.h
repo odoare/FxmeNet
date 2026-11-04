@@ -45,6 +45,7 @@
 #include <FxmeNet/client/BlockStream.h>
 #include <FxmeNet/control/ControlConnection.h>
 
+#include <array>
 #include <atomic>
 #include <functional>
 #include <map>
@@ -161,6 +162,7 @@ public:
         audioSampleRate = sampleRate;
         audioGeneration = ~std::uint32_t (0);
         aheadAnchored = false;
+        callbackCount = 0;
         prepared = true;
         wake.signal();
     }
@@ -204,8 +206,50 @@ public:
         server resets its chain at the same point of the stream (the next
         block sent carries the new parity, wire::requestFlags::resetParity).
         Any thread; not while process() runs, as hosts guarantee. */
-    void reset() noexcept                        { resets.fetch_add (1); }
+    void reset() noexcept
+    {
+        lastResetMs.store (juce::Time::getMillisecondCounterHiRes());
+        resets.fetch_add (1);
+    }
     std::uint32_t getResetCount() const noexcept { return resets.load(); }
+
+    /** Whether a host reset also drops the audio in flight (silence for the
+        latency, as a local plugin clearing its delay line). Any thread. */
+    void setFlushOnReset (bool on) noexcept      { flushOnReset.store (on); }
+    bool getFlushOnReset() const noexcept        { return flushOnReset.load(); }
+
+    /** Diagnostics: what the audio thread saw around transport events. */
+    struct AudioEvent
+    {
+        enum Bits : std::uint32_t
+        {
+            resetSeen  = 1,   ///< the reset count changed since the last callback
+            playChange = 2,   ///< playing / stopped changed
+            jump       = 4,   ///< playing, and the play head is not where the last callback ended
+            concealed  = 8    ///< blocks concealed in this callback
+        };
+        std::uint32_t bits = 0;
+        std::uint64_t callback = 0;        ///< callback count since prepare
+        double wallMs = 0.0;               ///< juce::Time::getMillisecondCounterHiRes
+        double resetDelayMs = 0.0;         ///< resetSeen: since reset() was called
+        std::int64_t time = 0, expected = 0;   ///< play head, and where it would be without a jump
+        bool playing = false, flushed = false;
+        int numSamples = 0;
+        std::uint32_t concealedBlocks = 0;
+        std::uint32_t aheadMicros = 0;
+    };
+
+    /** Message thread: the events since the last call, oldest first (the
+        oldest are lost when more than eventCapacity pile up). */
+    template <typename Function>
+    void drainEvents (Function&& fn)
+    {
+        const auto end = eventWrite.load (std::memory_order_acquire);
+        if (end - eventRead > eventCapacity)
+            eventRead = end - eventCapacity;
+        for (; eventRead < end; ++eventRead)
+            fn (events[(std::size_t) (eventRead % eventCapacity)]);
+    }
     const AudioStatistics& getStatistics() const noexcept   { return stats; }
     std::uint32_t getControlRttMicros() const noexcept      { return controlRttMicros.load(); }
 
@@ -570,7 +614,29 @@ public:
         AudioLink* link = acquireLink();
         const auto generation = link != nullptr ? link->getGeneration() : 0u;
         const auto resetCount = resets.load();
-        if (generation != audioGeneration || resetCount != audioResets)
+        AudioEvent ev;
+        ev.callback = ++callbackCount;
+        ev.numSamples = numSamples;
+        if (resetCount != audioResets)
+        {
+            ev.bits |= AudioEvent::resetSeen;
+            ev.resetDelayMs = juce::Time::getMillisecondCounterHiRes() - lastResetMs.load();
+        }
+        if (transport != nullptr)
+        {
+            ev.time = transport->timeInSamples;
+            ev.expected = evNextTime;
+            ev.playing = transport->playing;
+            if (transport->playing != evPlaying)
+                ev.bits |= AudioEvent::playChange;
+            else if (transport->playing && transport->timeInSamples != evNextTime)
+                ev.bits |= AudioEvent::jump;
+            evPlaying = transport->playing;
+            evNextTime = transport->timeInSamples + numSamples;
+        }
+
+        const bool flushNow = resetCount != audioResets && flushOnReset.load();
+        if (generation != audioGeneration || flushNow)
         {
             // Back to block 0, the FIFO refilled with silence. After a host
             // reset the latency is kept, and the replies in flight (processed
@@ -585,8 +651,9 @@ public:
             if (link != nullptr)
                 link->rebase();      // same link: its numbering goes on, older replies refused
             audioGeneration = generation;
-            audioResets = resetCount;
+            ev.flushed = flushNow;
         }
+        audioResets = resetCount;
 
         juce::int64 deadline = 0;
         if (! offline && audioSampleRate > 0.0)
@@ -603,8 +670,21 @@ public:
 
         const bool resetParity = (resetCount & 1u) != 0;
         Network network { *this, link, offline, bypassed, resetParity, transport, deadline };
+        const auto concealedBefore = stream.getConcealedCount();
         stream.process (in, out, numSamples, network);
         releaseLink();
+
+        ev.concealedBlocks = (std::uint32_t) (stream.getConcealedCount() - concealedBefore);
+        if (ev.concealedBlocks > 0)
+            ev.bits |= AudioEvent::concealed;
+        if (ev.bits != 0)
+        {
+            ev.wallMs = juce::Time::getMillisecondCounterHiRes();
+            ev.aheadMicros = hostAheadMicros.load (std::memory_order_relaxed);
+            const auto w = eventWrite.load (std::memory_order_relaxed);
+            events[(std::size_t) (w % eventCapacity)] = ev;
+            eventWrite.store (w + 1, std::memory_order_release);
+        }
     }
 
     /** Audio thread, real time: how many seconds of audio the host has
@@ -1321,7 +1401,15 @@ private:
     TelemetryMailbox telemetry;
     std::atomic<std::uint32_t> controlRttMicros { 0 };
     std::atomic<std::uint32_t> resets { 0 };
+    std::atomic<double> lastResetMs { 0.0 };
+    std::atomic<bool> flushOnReset { true };
     std::atomic<std::uint32_t> hostAheadMicros { 0 };
+
+    // Diagnostics (drainEvents): written by the audio thread only.
+    static constexpr std::uint64_t eventCapacity = 256;
+    std::array<AudioEvent, (std::size_t) eventCapacity> events;
+    std::atomic<std::uint64_t> eventWrite { 0 };
+    std::uint64_t eventRead = 0;   // message thread
     std::atomic<bool> prepared { false };
     std::atomic<bool> connectionWanted { false };
     std::atomic<std::uint32_t> prepareGeneration { 0 }, usableGeneration { 0 };
@@ -1333,7 +1421,10 @@ private:
     std::vector<std::uint64_t> dryBlock, sentBlock;   ///< k + 1 per slot
     double audioSampleRate = 0.0;
     std::uint32_t audioGeneration = 0;
-    std::uint32_t audioResets = 0;   ///< the reset count the stream was last flushed for
+    std::uint32_t audioResets = 0;   ///< the reset count the last callback saw
+    std::uint64_t callbackCount = 0;
+    bool evPlaying = false;
+    std::int64_t evNextTime = 0;
 
     // How far ahead of real time the host runs (measureAhead): the audio
     // delivered since an anchor, minus the wall-clock time since.
