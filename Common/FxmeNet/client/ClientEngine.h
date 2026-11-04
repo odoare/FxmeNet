@@ -89,6 +89,15 @@ public:
         fraction of its own duration (see AudioLink::fetch). */
     static constexpr double realtimeWaitFraction = 0.25;
 
+    /** In real time, a host calling faster than real time (Reaper refilling
+        its render-ahead buffer after a start, stop or seek) is ahead of its
+        audio output: a callback may also wait this fraction of that margin,
+        up to aheadWaitMaxSeconds. A margin above aheadMaxSeconds is taken
+        for an error and measured again. */
+    static constexpr double aheadWaitFraction = 0.5;
+    static constexpr double aheadWaitMaxSeconds = 0.25;
+    static constexpr double aheadMaxSeconds = 2.0;
+
     struct Settings
     {
         int blockSize = 128;       ///< N
@@ -151,6 +160,7 @@ public:
         sentBlock.assign ((std::size_t) maxInFlight, 0);
         audioSampleRate = sampleRate;
         audioGeneration = ~std::uint32_t (0);
+        aheadAnchored = false;
         prepared = true;
         wake.signal();
     }
@@ -185,6 +195,10 @@ public:
     int getLatency() const noexcept              { return stream.getLatency() + stats.chainLatency.load(); }
     int getStreamLatency() const noexcept        { return stream.getLatency(); }
     std::uint64_t getConcealedCount() const noexcept   { return stream.getConcealedCount(); }
+
+    /** How far ahead of real time the host was at the last callback, in ms
+        (0 when it calls at real-time pace). */
+    double getHostAheadMs() const noexcept       { return hostAheadMicros.load() / 1000.0; }
 
     /** The host reset the plugin (transport start, stop, seek, flush): the
         server resets its chain at the same point of the stream (the next
@@ -565,14 +579,58 @@ public:
 
         juce::int64 deadline = 0;
         if (! offline && audioSampleRate > 0.0)
-            deadline = juce::Time::getHighResolutionTicks()
-                     + (juce::int64) (realtimeWaitFraction * numSamples / audioSampleRate
-                                      * (double) juce::Time::getHighResolutionTicksPerSecond());
+        {
+            const auto now = juce::Time::getHighResolutionTicks();
+            const double wait = realtimeWaitFraction * numSamples / audioSampleRate
+                              + aheadWaitFraction * juce::jmin (measureAhead (now, numSamples, transport), aheadWaitMaxSeconds);
+            deadline = now + (juce::int64) (wait * (double) juce::Time::getHighResolutionTicksPerSecond());
+        }
+        else
+        {
+            aheadAnchored = false;
+        }
 
         const bool resetParity = (resets.load() & 1u) != 0;
         Network network { *this, link, offline, bypassed, resetParity, transport, deadline };
         stream.process (in, out, numSamples, network);
         releaseLink();
+    }
+
+    /** Audio thread, real time: how many seconds of audio the host has
+        delivered beyond the wall clock, before this callback. Measured from
+        an anchor taken again at every discontinuity (a reset, play / stop,
+        a jump of the play head, the host falling behind): audio the host
+        threw away (its render-ahead buffer at a seek) is never counted. */
+    double measureAhead (juce::int64 now, int numSamples, const wire::Transport* transport)
+    {
+        const auto r = resets.load();
+        bool restart = ! aheadAnchored || r != aheadResets;
+        aheadResets = r;
+        if (transport != nullptr)
+        {
+            restart = restart || transport->playing != aheadPlaying
+                   || (transport->playing && transport->timeInSamples != aheadNextTime);
+            aheadPlaying = transport->playing;
+            aheadNextTime = transport->timeInSamples + numSamples;
+        }
+
+        double ahead = 0.0;
+        if (! restart)
+        {
+            const double elapsed = (double) (now - aheadAnchorTicks) / (double) juce::Time::getHighResolutionTicksPerSecond();
+            ahead = aheadDelivered - elapsed;
+            restart = ahead < 0.0 || ahead > aheadMaxSeconds;
+        }
+        if (restart)
+        {
+            aheadAnchored = true;
+            aheadAnchorTicks = now;
+            aheadDelivered = 0.0;
+            ahead = 0.0;
+        }
+        aheadDelivered += numSamples / audioSampleRate;
+        hostAheadMicros.store ((std::uint32_t) (ahead * 1.0e6), std::memory_order_relaxed);
+        return ahead;
     }
 
 private:
@@ -1252,6 +1310,7 @@ private:
     TelemetryMailbox telemetry;
     std::atomic<std::uint32_t> controlRttMicros { 0 };
     std::atomic<std::uint32_t> resets { 0 };
+    std::atomic<std::uint32_t> hostAheadMicros { 0 };
     std::atomic<bool> prepared { false };
     std::atomic<bool> connectionWanted { false };
     std::atomic<std::uint32_t> prepareGeneration { 0 }, usableGeneration { 0 };
@@ -1263,6 +1322,16 @@ private:
     std::vector<std::uint64_t> dryBlock, sentBlock;   ///< k + 1 per slot
     double audioSampleRate = 0.0;
     std::uint32_t audioGeneration = 0;
+
+    // How far ahead of real time the host runs (measureAhead): the audio
+    // delivered since an anchor, minus the wall-clock time since.
+    bool aheadAnchored = false;
+    juce::int64 aheadAnchorTicks = 0;
+    double aheadDelivered = 0.0;   ///< seconds of audio since the anchor, before this callback
+    std::uint32_t aheadResets = 0;
+    bool aheadPlaying = false;
+    std::int64_t aheadNextTime = 0;
+
     static constexpr int offlineWaitMs = 5000;
     int offlineWaitLeftMs = offlineWaitMs;
 

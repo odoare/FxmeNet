@@ -16,6 +16,16 @@ Newest first. Numbers are those of `todo.md`.
   whose parity changed. Counts: "resets" in the client's status line and
   in the server's session log. protocol.md 5.2 and 5.4 amended. Checked:
   syntax of the changed plugin, server and wavclient sources.
+- Tested: no change; but 10 to 13 blocks concealed at each start, stop or
+  seek (1024x2), the actual cause of the difference: Reaper refills its
+  render-ahead buffer in a burst, faster than any reply can come back, and
+  the real-time wait (a quarter of a callback) was too short. Now
+  `ClientEngine::measureAhead` measures how far ahead of real time the
+  host runs (audio delivered since an anchor minus wall-clock time; anchor
+  again at a reset, play / stop, a play-head jump, or the host falling
+  behind) and a callback may also wait half that margin (at most 250 ms):
+  never more than the host has buffered, nothing more at real-time pace.
+  "host ahead" in the client's status line. protocol.md 5.4 amended.
 
 - 16 (written): extra plugin folders for the client's local scan. Kept in
   FxmeNet.settings (`localPluginFolders`, shared by every instance), edited

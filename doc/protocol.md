@@ -208,7 +208,14 @@ u16 midiBytes
   hosts that render ahead (Reaper's anticipative FX processing) call the
   plugin in bursts faster than real time, so a block can be needed before
   its latency has elapsed in wall-clock time (amended 2026-11-03; the first
-  draft never waited). After the deadline the block is replaced by silence
+  draft never waited). A host calling faster than real time is ahead of its
+  audio output by the buffer it is filling: the client measures that
+  margin (audio delivered since an anchor minus wall-clock time, the anchor
+  taken again at each reset, play / stop change, play-head jump, or when
+  the host falls behind) and the deadline grows by half of it, at most
+  250 ms. That covers Reaper refilling its whole render-ahead buffer after
+  a start, stop or seek (amended 2026-11-04: 10 to 13 blocks of 1024 were
+  concealed at each). After the deadline the block is replaced by silence
   with short ramps (64 samples), counted and shown; a reply arriving after
   that is discarded.
 - **Offline (flag set, the DAW's `isNonRealtime()`):** the client's audio

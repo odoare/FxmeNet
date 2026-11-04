@@ -161,6 +161,7 @@ void FxmeNetAudioProcessorEditor::timerCallback()
               + "   concealed " + juce::String ((juce::int64) engine.getConcealedCount())
               + "   rescued " + juce::String ((juce::int64) st.rescued.load())
               + "   resets " + juce::String ((juce::int64) engine.getResetCount())
+              + "   host ahead " + juce::String (engine.getHostAheadMs(), 0) + " ms"
               + "   parameters mapped " + juce::String (processor.getNumMapped()) + "/" + juce::String (fxmenet::plugin::poolSize);
 
     refreshCatalog();
