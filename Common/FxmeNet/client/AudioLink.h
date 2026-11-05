@@ -126,7 +126,7 @@ public:
         slots = juce::jmax (4, settings.maxInFlight);
 
         const int channelsSent = wire::countChannels (inputMask);
-        const std::size_t bodySize = 64 + wire::transportSize + (std::size_t) (channelsSent * n * 4);
+        const std::size_t bodySize = 64 + wire::transportSize + wire::maxMidiBytes + (std::size_t) (channelsSent * n * 4);
         requests = std::make_unique<Request[]> ((std::size_t) slots);
         for (int i = 0; i < slots; ++i)
             requests[(std::size_t) i].body.reserve (bodySize);
@@ -151,7 +151,7 @@ public:
         t.sessionId = settings.sessionId;
         t.token = settings.token;
         t.datagramBudget = (std::size_t) settings.config.datagramBudget;
-        t.maxMessageSize = 64 + (std::size_t) (wire::maxChannels * n * 4);
+        t.maxMessageSize = 64 + wire::maxMidiBytes + (std::size_t) (wire::maxChannels * n * 4);   // replies may carry MIDI
         transport = std::make_unique<UdpTransport> (socket, settings.host, settings.udpPort, t);
 
         if (! transport->send (wire::Kind::keepAlive, 0, nullptr, 0))
@@ -168,10 +168,15 @@ public:
 
     /** Sends block k (`block` has numInputs channels of N samples).
         `transportInfo` may be null. `resetParity`: the parity of the
-        client's reset count (wire::requestFlags::resetParity). */
+        client's reset count (wire::requestFlags::resetParity). `midi`: the
+        block's events, packed (wire::MidiWriter), at most
+        wire::maxMidiBytes. */
     void send (std::uint64_t streamBlock, const float* const* block, const wire::Transport* transportInfo, bool offline,
-               bool resetParity = false)
+               bool resetParity = false, const std::uint8_t* midi = nullptr, std::size_t midiBytes = 0)
     {
+        if (midi == nullptr || midiBytes > wire::maxMidiBytes)
+            midiBytes = 0;
+
         const auto k = base + streamBlock;
         nextWire = juce::jmax (nextWire, k + 1);
 
@@ -191,7 +196,7 @@ public:
 
         r.body.clear();
         wire::ByteWriter w (r.body);
-        wire::writeBlock (w, false, info, nullptr, 0, sendPointers.data());
+        wire::writeBlock (w, false, info, midi, midiBytes, sendPointers.data());
         r.flags = (std::uint16_t) ((offline ? wire::requestFlags::offline : 0)
                                    | (transportInfo != nullptr ? wire::requestFlags::transport : 0)
                                    | (resetParity ? wire::requestFlags::resetParity : 0));

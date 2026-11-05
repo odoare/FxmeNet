@@ -132,9 +132,9 @@ void FxmeNetAudioProcessor::applyStreamSettings (const StreamSettings& s)
 }
 
 //==============================================================================
-void FxmeNetAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
+void FxmeNetAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
-    process (buffer, false);
+    process (buffer, false, &midi);
 }
 
 void FxmeNetAudioProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
@@ -142,7 +142,7 @@ void FxmeNetAudioProcessor::processBlockBypassed (juce::AudioBuffer<float>& buff
     process (buffer, true);   // dry, delayed by the latency the host compensates
 }
 
-void FxmeNetAudioProcessor::process (juce::AudioBuffer<float>& buffer, bool bypassed)
+void FxmeNetAudioProcessor::process (juce::AudioBuffer<float>& buffer, bool bypassed, const juce::MidiBuffer* midi)
 {
     juce::ScopedNoDenormals noDenormals;
     const int ins = getTotalNumInputChannels(), outs = getTotalNumOutputChannels();
@@ -179,8 +179,19 @@ void FxmeNetAudioProcessor::process (juce::AudioBuffer<float>& buffer, bool bypa
     for (int c = 0; c < outs; ++c)
         outPointers[(std::size_t) c] = buffer.getWritePointer (c);
 
+    // The host's MIDI, travelling with the blocks that hold it (bypassed:
+    // nothing is sent, so neither is MIDI).
+    int numMidi = 0;
+    if (midi != nullptr)
+        for (const auto m : *midi)
+        {
+            if (numMidi == maxMidiEvents)
+                break;
+            midiEvents[(std::size_t) numMidi++] = { m.samplePosition, m.numBytes, m.data };
+        }
+
     engine.process (inPointers.data(), outPointers.data(), buffer.getNumSamples(),
-                    isNonRealtime(), bypassed, transportPointer);
+                    isNonRealtime(), bypassed, transportPointer, midiEvents.data(), numMidi);
 }
 
 //==============================================================================

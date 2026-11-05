@@ -197,6 +197,7 @@ public:
     int getLatency() const noexcept              { return stream.getLatency() + stats.chainLatency.load(); }
     int getStreamLatency() const noexcept        { return stream.getLatency(); }
     std::uint64_t getConcealedCount() const noexcept   { return stream.getConcealedCount(); }
+    std::uint64_t getMidiDropped() const noexcept      { return stream.getMidiDropped(); }   ///< MIDI events not sent (too long, block full)
 
     /** How far ahead of real time the host was at the last callback, in ms
         (0 when it calls at real-time pace). */
@@ -601,9 +602,11 @@ public:
     /** Audio thread. `in` has the prepared number of inputs, `out` of
         outputs; they may be the same buffers. `offline`: the host renders
         faster than real time (each reply is waited for). `transport` may be
-        null. No allocation; waits only when offline. */
+        null. `midi`: the callback's events, in position order (may be null),
+        sent with the blocks that hold them. No allocation; waits only when
+        offline. */
     void process (const float* const* in, float* const* out, int numSamples, bool offline, bool bypassed,
-                  const wire::Transport* transport)
+                  const wire::Transport* transport, const MidiInput* midi = nullptr, int numMidi = 0)
     {
         if (! prepared)
             return;
@@ -671,7 +674,7 @@ public:
         const bool resetParity = (resetCount & 1u) != 0;
         Network network { *this, link, offline, bypassed, resetParity, transport, deadline };
         const auto concealedBefore = stream.getConcealedCount();
-        stream.process (in, out, numSamples, network);
+        stream.process (in, out, numSamples, network, midi, numMidi);
         releaseLink();
 
         ev.concealedBlocks = (std::uint32_t) (stream.getConcealedCount() - concealedBefore);
@@ -775,9 +778,11 @@ private:
             if (! send)
                 return;
 
+            const auto* midi = e.stream.getBlockMidi();
+            const auto midiBytes = e.stream.getBlockMidiBytes();
             if (transport == nullptr)
             {
-                link->send (k, block, nullptr, offline, resetParity);
+                link->send (k, block, nullptr, offline, resetParity, midi, midiBytes);
                 return;
             }
 
@@ -787,7 +792,7 @@ private:
             t.timeInSamples += start;
             if (e.audioSampleRate > 0.0)
                 t.ppqPosition += start / e.audioSampleRate * t.bpm / 60.0;
-            link->send (k, block, &t, offline, resetParity);
+            link->send (k, block, &t, offline, resetParity, midi, midiBytes);
         }
 
         bool fetchBlock (std::uint64_t k, float* const* dest)

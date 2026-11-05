@@ -16,7 +16,7 @@ juce_add_plugin(FxmeNetPlugin
     DESCRIPTION                 "FX-Mechanics FxmeNet: plugins processed on a server on the network"
     VERSION                     ${PROJECT_VERSION}
     IS_SYNTH                    FALSE
-    NEEDS_MIDI_INPUT            FALSE
+    NEEDS_MIDI_INPUT            TRUE
     NEEDS_MIDI_OUTPUT           FALSE
     IS_MIDI_EFFECT              FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS TRUE

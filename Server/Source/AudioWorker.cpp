@@ -14,7 +14,7 @@ namespace fxmenet::server
 
 namespace
 {
-    constexpr std::size_t maxMidiBytes = 8192;
+    constexpr std::size_t maxMidiBytes = wire::maxMidiBytes;
 
     void raiseTo (std::atomic<std::uint32_t>& a, std::uint32_t v) noexcept
     {

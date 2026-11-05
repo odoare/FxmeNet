@@ -30,6 +30,15 @@
     switches to the second formula, once, the first time it happens: 2N - 1
     samples of silence then, and a latency change to report.
 
+    MIDI travels with the audio: each host event goes into the block that
+    holds its sample, at its offset in that block, so the server's plugins
+    get it exactly where the host put it, only delayed by the latency like
+    the audio. A block filled over several callbacks gathers their events
+    in order. Inside blockReady the block's events are getBlockMidi() /
+    getBlockMidiBytes(), packed as on the wire (wire::MidiWriter). Events
+    over 255 bytes (long SysEx), and any beyond wire::maxMidiBytes in one
+    block, are dropped and counted.
+
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: LGPL-3.0-or-later
   ------------------------------------------------------------------------------
@@ -37,13 +46,26 @@
 
 #pragma once
 
+#include <FxmeNet/protocol/Wire.h>
+
 #include <algorithm>
 #include <atomic>
+#include <climits>
 #include <cstdint>
 #include <vector>
 
 namespace fxmenet::client
 {
+
+/** One MIDI event of a host callback: its sample position in the
+    callback's buffers, and its bytes (valid during the callback). Events
+    come in position order. */
+struct MidiInput
+{
+    int position = 0;
+    int size = 0;
+    const std::uint8_t* data = nullptr;
+};
 
 class BlockStream
 {
@@ -72,6 +94,8 @@ public:
         outBlock.assign ((std::size_t) (nOut * n), 0.0f);
         fifo.assign ((std::size_t) (nOut * capacity), 0.0f);
         lastSample.assign ((std::size_t) nOut, 0.0f);
+        midi.clear();
+        midi.reserve (wire::maxMidiBytes);   // the audio thread only fills what is reserved
 
         inPointers.clear();
         for (int c = 0; c < nIn; ++c)
@@ -106,6 +130,7 @@ public:
         available = latency.load();
         std::fill (lastSample.begin(), lastSample.end(), 0.0f);
         fadeInPending = false;
+        midi.clear();   // the partial block's events go with it
     }
 
     //==============================================================================
@@ -121,17 +146,38 @@ public:
               fill numOutputs x N samples with block k's result; false when it
               is not there (it is then concealed).
 
-        fetchBlock (k) is only ever called after blockReady (k), in order. */
+        fetchBlock (k) is only ever called after blockReady (k), in order.
+
+        `midiEvents`: this callback's MIDI, in position order (may be null). */
     template <typename Network>
-    void process (const float* const* in, float* const* out, int numSamples, Network& network)
+    void process (const float* const* in, float* const* out, int numSamples, Network& network,
+                  const MidiInput* midiEvents = nullptr, int numMidiEvents = 0)
     {
+        events = midiEvents;
+        numEvents = midiEvents != nullptr ? std::max (0, numMidiEvents) : 0;
+        nextEvent = 0;
+
         for (int done = 0; done < numSamples;)
         {
             const int chunk = std::min (numSamples - done, maxHost);
             processChunk (in, out, done, chunk, network);
             done += chunk;
         }
+
+        // The rest belongs to the partial block, begun at numSamples - fill
+        // (an event placed past the end by a careless host lands on its
+        // last sample).
+        takeMidi (INT_MAX, numSamples - fill);
+        events = nullptr;
+        numEvents = 0;
     }
+
+    /** Inside blockReady: the block's MIDI, packed as on the wire. */
+    const std::uint8_t* getBlockMidi() const noexcept       { return midi.data(); }
+    std::size_t getBlockMidiBytes() const noexcept          { return midi.size(); }
+
+    /** MIDI events dropped (too long, or a block's share full). Any thread. */
+    std::uint64_t getMidiDropped() const noexcept   { return midiDropped.load (std::memory_order_relaxed); }
 
     //==============================================================================
     int getLatency() const noexcept                 { return latency.load(); }   ///< any thread
@@ -165,7 +211,9 @@ private:
             pos += take;
             if (fill == n)
             {
+                takeMidi (offset + pos, offset + pos - n);
                 network.blockReady (nextBlock++, inPointers.data(), offset + pos);
+                midi.clear();
                 fill = 0;
             }
         }
@@ -236,6 +284,24 @@ private:
         available += n;
     }
 
+    /** This callback's events before `end` into the current block, which
+        began at `blockStart` (both in the callback's sample positions). */
+    void takeMidi (int end, int blockStart) noexcept
+    {
+        for (; nextEvent < numEvents && events[nextEvent].position < end; ++nextEvent)
+        {
+            const auto& e = events[nextEvent];
+            if (e.data == nullptr || e.size <= 0 || e.size > 255
+                || midi.size() + 3 + (std::size_t) e.size > wire::maxMidiBytes)
+            {
+                midiDropped.fetch_add (1, std::memory_order_relaxed);
+                continue;
+            }
+            const int at = std::clamp (e.position - blockStart, 0, n - 1);
+            wire::MidiWriter (midi).add (at, e.data, e.size);
+        }
+    }
+
     void pushSilence (int count) noexcept
     {
         const int writePos = (readPos + available) % capacity;
@@ -257,6 +323,11 @@ private:
     int readPos = 0, available = 0;
     bool fadeInPending = false;
     std::atomic<std::uint64_t> concealed { 0 };
+
+    std::vector<std::uint8_t> midi;   ///< the current block's events, packed
+    const MidiInput* events = nullptr;
+    int numEvents = 0, nextEvent = 0;
+    std::atomic<std::uint64_t> midiDropped { 0 };
 };
 
 } // namespace fxmenet::client

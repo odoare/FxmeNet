@@ -59,7 +59,7 @@ public:
     bool hasEditor() const override                         { return true; }
 
     const juce::String getName() const override             { return JucePlugin_Name; }
-    bool acceptsMidi() const override                       { return false; }
+    bool acceptsMidi() const override                       { return true; }   // passed on to the server's chain
     bool producesMidi() const override                      { return false; }
     bool isMidiEffect() const override                      { return false; }
     double getTailLengthSeconds() const override            { return 0.0; }
@@ -183,7 +183,7 @@ public:
 
 private:
 
-    void process (juce::AudioBuffer<float>&, bool bypassed);
+    void process (juce::AudioBuffer<float>&, bool bypassed, const juce::MidiBuffer* midi = nullptr);
     void timerCallback() override;
 
     /** Message thread: the engine's audio events, into the events log when
@@ -244,6 +244,8 @@ private:
     // Audio thread.
     std::array<const float*, 64> inPointers {};
     std::array<float*, 64> outPointers {};
+    static constexpr int maxMidiEvents = 2048;   ///< per host callback; more are not sent
+    std::array<fxmenet::client::MidiInput, maxMidiEvents> midiEvents {};
 
     juce::AudioPluginFormatManager shadowFormats;
     std::map<std::uint32_t, std::unique_ptr<fxmenet::plugin::Shadow>> shadows;   ///< message thread

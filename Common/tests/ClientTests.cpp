@@ -12,7 +12,12 @@
       - a block is never fetched in the callback that sent it, and its reply
         always had at least D x N samples of time (from the start of the
         callback that sent it to the start of the one that plays it);
-      - blocks are cut where they should be (blockReady's endOffset).
+      - blocks are cut where they should be (blockReady's endOffset);
+      - MIDI: every host event reaches the block that holds its sample, at
+        its offset in that block, in order, whatever the callback sizes
+        (blocks spanning callbacks, callbacks cut at the largest host
+        block); a block's share is capped at wire::maxMidiBytes, the rest
+        counted as dropped.
 
     SPDX-License-Identifier: LGPL-3.0-or-later
   ------------------------------------------------------------------------------
@@ -457,6 +462,124 @@ namespace
     }
 }
 
+namespace
+{
+    /** Records each block's MIDI as (absolute sample, bytes). */
+    struct MidiNetwork
+    {
+        BlockStream* stream = nullptr;
+        int n = 0;
+        std::vector<std::pair<long, std::vector<std::uint8_t>>> received;
+        long badOffsets = 0;
+
+        void blockReady (std::uint64_t k, const float* const*, int)
+        {
+            wire::MidiReader r (stream->getBlockMidi(), stream->getBlockMidiBytes());
+            wire::MidiEvent e;
+            while (r.next (e))
+            {
+                if (e.sampleOffset >= n)
+                    ++badOffsets;
+                received.push_back ({ (long) k * n + e.sampleOffset,
+                                      std::vector<std::uint8_t> (e.data, e.data + e.size) });
+            }
+        }
+
+        bool fetchBlock (std::uint64_t, float* const*)   { return false; }
+    };
+
+    std::vector<std::uint8_t> noteAt (long t)
+    {
+        return { 0x90, (std::uint8_t) (t & 0x7f), (std::uint8_t) ((t >> 7) & 0x7f) };
+    }
+
+    void testMidi()
+    {
+        std::printf ("BlockStream, MIDI\n");
+        std::mt19937 rng (7);
+        int cases = 0;
+        for (int n : { 64, 128, 256 })
+            for (int maxHost : { 50, 128, 300, 1024 })
+            {
+                BlockStream stream;
+                stream.prepare (1, 1, n, maxHost, 2);
+                MidiNetwork net;
+                net.stream = &stream;
+                net.n = n;
+
+                // Events at random times, several on one sample sometimes,
+                // and on callback edges; callbacks of random sizes, some
+                // larger than maxHost (cut into pieces by the stream).
+                const long total = 20000;
+                std::vector<long> times;
+                for (long t = 0; t < total; t += (long) (rng() % 40))
+                    times.push_back (t);
+
+                std::vector<float> in (2048, 0.0f), out (2048, 0.0f);
+                const float* inPtr = in.data();
+                float* outPtr = out.data();
+                std::vector<std::vector<std::uint8_t>> bytes;
+                std::vector<fxmenet::client::MidiInput> events;
+                std::size_t next = 0;
+                long pos = 0;
+                while (pos < total)
+                {
+                    const int size = (int) std::min<long> (1 + (long) (rng() % 1500), total - pos);
+                    bytes.clear();
+                    events.clear();
+                    for (; next < times.size() && times[next] < pos + size; ++next)
+                        bytes.push_back (noteAt (times[next]));
+                    std::size_t b = 0;
+                    for (std::size_t i = next - bytes.size(); i < next; ++i, ++b)
+                        events.push_back ({ (int) (times[i] - pos), 3, bytes[b].data() });
+                    stream.process (&inPtr, &outPtr, size, net, events.data(), (int) events.size());
+                    pos += size;
+                }
+
+                // Every event of a completed block arrived, in place.
+                const long complete = (total / n) * n;
+                std::size_t expected = 0;
+                while (expected < times.size() && times[expected] < complete)
+                    ++expected;
+                bool same = net.received.size() == expected;
+                for (std::size_t i = 0; same && i < expected; ++i)
+                    same = net.received[i].first == times[i] && net.received[i].second == noteAt (times[i]);
+                ++cases;
+                if (! CHECK (same) || ! CHECK (net.badOffsets == 0) || ! CHECK (stream.getMidiDropped() == 0))
+                    std::printf ("    N %d, max host %d: %d of %d events\n", n, maxHost,
+                                 (int) net.received.size(), (int) expected);
+            }
+
+        // Too much for one block: the first wire::maxMidiBytes go, the rest
+        // are counted; the next block starts empty again.
+        {
+            const int n = 128;
+            BlockStream stream;
+            stream.prepare (1, 1, n, n, 2);
+            MidiNetwork net;
+            net.stream = &stream;
+            net.n = n;
+            const std::uint8_t note[3] = { 0x90, 60, 100 };
+            const std::uint8_t sysex[300] = { 0xf0 };
+            std::vector<fxmenet::client::MidiInput> events (3000, { 5, 3, note });
+            events.push_back ({ 6, 300, sysex });   // over 255 bytes: never sent
+            std::vector<float> buf ((std::size_t) n, 0.0f);
+            const float* inPtr = buf.data();
+            float* outPtr = buf.data();
+            stream.process (&inPtr, &outPtr, n, net, events.data(), (int) events.size());
+            const std::size_t kept = wire::maxMidiBytes / 6;
+            CHECK (net.received.size() == kept);
+            CHECK (stream.getMidiDropped() == 3001 - kept);
+
+            net.received.clear();
+            events.assign (1, { 0, 3, note });
+            stream.process (&inPtr, &outPtr, n, net, events.data(), 1);
+            CHECK (net.received.size() == 1 && net.received[0].first == n);
+        }
+        std::printf ("  %d configurations\n", cases);
+    }
+}
+
 int main()
 {
     testFixedSizes();
@@ -465,6 +588,7 @@ int main()
     testFlush();
     testConcealment();
     testReplyRing();
+    testMidi();
 
     std::printf ("%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;

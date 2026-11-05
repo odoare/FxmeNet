@@ -222,6 +222,10 @@ struct MidiEvent
     const std::uint8_t* data = nullptr;
 };
 
+/** The most packed MIDI bytes a request or reply carries: what the server
+    reserves, and where the client stops adding events to a block. */
+constexpr std::size_t maxMidiBytes = 8192;
+
 /** Packed MIDI events (u16 offset, u8 size, bytes), as in the message. */
 class MidiWriter
 {
