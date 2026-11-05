@@ -2,6 +2,24 @@
 
 Newest first. Numbers are those of `todo.md`.
 
+## 2026-11-05
+
+- FxmeFX, written (FxmeFX and FxmeTools working trees): every one of the
+  14 FxmeFX plugins is FxmeNet-aware, and their panels moved to a new look.
+  Telemetry: Compressor "gr", Limiter "gr", Transient "gain", Equalizer
+  "in" / "out", Freeze "display", Chorus / Flanger / Phaser "phase" (the
+  LFO's master phase, an atomic the DSP updates per block), StereoDelay
+  "bpm", "timeL", "timeR", "note" (its read-out, now published by the
+  audio thread instead of recomputed from audio-thread state); Cab, Tube,
+  ConvolReverb, Oct and Reverb draw nothing from their DSP (IR plots come
+  from the mirror's own loader, started by prepare). `isOn()` of
+  Compressor, Limiter and Transient read the On parameter, so a mirror
+  greys its meter right. New in FxmeTools: the console fader style, a
+  segmented `GainReductionMeter`, an `LfoPhaseDisplay`; the panel
+  background is darker. New in FxmeFX: `Common/Theme.h` (each effect's
+  accent, spread along its family's gradient) and `Common/Controls.h`
+  (shared fader set-up). Checked: syntax of every changed file.
+
 ## 2026-11-04
 
 - Phase 5, first step (written): host resets reach the server's chain.

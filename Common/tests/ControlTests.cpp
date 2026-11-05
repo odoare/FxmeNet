@@ -5,8 +5,11 @@
     The control channel with JUCE: every JSON message round-trips through
     its text (including 64-bit tokens and masks, which JSON numbers could
     not carry exactly), and a TCP exchange on the loopback interface: HELLO
-    and WELCOME, a 1 MB plugin state in SLOT_ADD echoed back as STATE, an
-    ERROR reply, and the server seeing the client close.
+    and WELCOME, a 1 MB plugin state in SLOT_ADD echoed back as STATE, a
+    48 MB one echoed from another thread while the server's thread keeps
+    reading and the client reads nothing for a while (send() must wait for
+    room in the socket buffer, not fail, as the real server's message
+    thread sends while its reader thread reads), an ERROR reply, and the server seeing the client close.
 
     SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-FXME-Commercial
   ------------------------------------------------------------------------------
@@ -17,6 +20,7 @@
 #include <FxmeNet/control/ControlConnection.h>
 
 #include <cstdio>
+#include <thread>
 
 namespace
 {
@@ -53,12 +57,16 @@ namespace
         std::atomic<bool> sawClose { false };
         std::atomic<int> framesHandled { 0 };
 
+        std::atomic<bool> bigSent { false };
+
         void run() override
         {
             std::unique_ptr<juce::StreamingSocket> s (listener.waitForNextConnection());
             if (s == nullptr)
                 return;
             ControlConnection c (std::move (s));
+            std::thread sender;   // big echoes: sent while this thread reads
+            struct Join { std::thread& t; ~Join() { if (t.joinable()) t.join(); } } join { sender };
 
             while (! threadShouldExit())
             {
@@ -85,8 +93,13 @@ namespace
                 else if (f.type == Type::slotAdd)
                 {
                     SlotAdd add;
-                    if (decode (f.payload, add))
+                    if (! decode (f.payload, add))
+                        continue;
+                    if (add.state.size() < ((std::size_t) 8 << 20))
                         c.sendBinary (Type::state, f.requestId, encode (SlotState { add.slotId, add.state }));
+                    else
+                        sender = std::thread ([this, &c, id = f.requestId, reply = encode (SlotState { add.slotId, add.state })]
+                                              { bigSent = c.sendBinary (Type::state, id, reply); });
                 }
                 else if (f.type == Type::slotRemove)
                 {
@@ -234,6 +247,20 @@ int main()
             CHECK (f.type == Type::state && f.requestId == 2 && decode (f.payload, echoed));
             CHECK (echoed.slotId == 5 && echoed.state == add.state);
 
+            // A frame far larger than the socket buffers, while the client
+            // reads nothing for a while: the server's send must wait for
+            // room, not fail (both sockets are non-blocking by now).
+            add.slotId = 6;
+            add.state.assign ((std::size_t) 48 << 20, 0x5a);
+            CHECK (client->sendBinary (Type::slotAdd, 4, encode (add)));
+            juce::Thread::sleep (500);
+            CHECK (client->read (f, 10000) == ControlConnection::ReadResult::frame);
+            CHECK (f.type == Type::state && f.requestId == 4 && decode (f.payload, echoed));
+            CHECK (echoed.slotId == 6 && echoed.state == add.state);
+            for (int i = 0; i < 50 && ! server.bigSent; ++i)   // send() returns just after the last byte
+                juce::Thread::sleep (20);
+            CHECK (server.bigSent.load());
+
             CHECK (client->sendBinary (Type::slotRemove, 3, encode (SlotValue { 9, 0 })));
             CHECK (client->read (f, 2000) == ControlConnection::ReadResult::frame);
             CHECK (f.type == Type::error && f.requestId == 3);
@@ -247,7 +274,7 @@ int main()
             for (int i = 0; i < 50 && ! server.sawClose; ++i)
                 juce::Thread::sleep (20);
             CHECK (server.sawClose.load());
-            CHECK (server.framesHandled.load() == 3);
+            CHECK (server.framesHandled.load() == 4);
         }
 
         server.stopThread (2000);

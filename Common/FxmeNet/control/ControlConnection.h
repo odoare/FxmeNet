@@ -10,6 +10,18 @@
     JUCE's StreamingSocket already sets TCP_NODELAY, so small frames are not
     held back by Nagle's algorithm.
 
+    The socket is non-blocking for writes too: StreamingSocket::read (...,
+    false), which read() uses, switches the socket to non-blocking and
+    leaves it so. A frame larger than the kernel's send buffer then makes
+    write() return -1 (EAGAIN) partway through, so send() waits for room
+    rather than taking that as a broken connection. On the loopback
+    interface the reader drains the buffer fast enough that this hardly
+    shows; over a real network it showed with SLOT_READY for a plugin
+    with thousands of parameters (a JUCE VST3 that takes MIDI input, such
+    as FxmeStereoDelay, exposes some 2000 hidden MIDI CC parameters): the
+    frame was cut, the server dropped the connection, and the client sat
+    on "loading".
+
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-FXME-Commercial
   ------------------------------------------------------------------------------
@@ -66,18 +78,37 @@ public:
         writeFrame (outgoing, type, flags, requestId, payload, size);
 
         std::size_t done = 0;
+        auto lastProgress = juce::Time::getMillisecondCounter();
         while (done < outgoing.size())
         {
             const int n = socket->write (outgoing.data() + done, (int) (outgoing.size() - done));
-            if (n <= 0)
+            if (n > 0)
+            {
+                done += (std::size_t) n;
+                lastProgress = juce::Time::getMillisecondCounter();
+                continue;
+            }
+
+            // The socket is non-blocking (see the header comment): -1 may
+            // only mean that the send buffer is full. Try again shortly.
+            // Not waitUntilReady (false, ...): it try-locks the socket's
+            // read lock, which the reading thread holds while it waits,
+            // and returns -1 at once. The connection is broken when the
+            // reader saw the peer go, or when nothing could be written for
+            // sendStallMs.
+            if (failed || ! socket->isConnected()
+                || juce::Time::getMillisecondCounter() - lastProgress > (juce::uint32) sendStallMs)
             {
                 failed = true;
                 return false;
             }
-            done += (std::size_t) n;
+            juce::Thread::sleep (2);
         }
         return true;
     }
+
+    /** How long send() waits for a peer that reads nothing before giving up. */
+    static constexpr int sendStallMs = 10000;
 
     bool sendBinary (Type type, std::uint32_t requestId, const std::vector<std::uint8_t>& payload)
     {
