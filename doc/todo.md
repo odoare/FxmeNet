@@ -27,12 +27,16 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     holds it), a crossfade at the switch, what to do with plugins missing
     locally (dry, with a warning), and whether to switch back automatically
     when the server returns.
-15. Later, optional: routing of a slot's extra buses (aux or sidechain
-    inputs, like TAL Reverb 4's two). Today channels go by number: on the
-    server a plugin's extra inputs get the work buffer's channels past the
-    main ones, silent unless an earlier, wider plugin wrote there. A
-    per-slot routing (silence, a chain channel, or a DAW sidechain sent by
-    the client) would make it explicit.
+15. Routing between the chain's plugins, with sidechains and parallel
+    paths (user request 2026-11-06): the design, decisions and plan are in
+    [`routing.md`](routing.md). Steps:
+    - A (written): the routing model, `Common/FxmeNet/chain/Routing.h`.
+      Build and run FxmeNetRoutingTests.
+    - B: protocol (buses in SLOT_READY, ROUTING message, capability).
+    - C: server (a buffer per plugin, sums, latency compensation, aux
+      buses enabled when connected).
+    - D: client engine and state (masks derived from the routing).
+    - E: the view, in a reorganized stream and channels view.
 16. (written) Tier 1 plugins: send non-parameter state changes to the
     server. Before, `syncShadows` sent a shadow's state only when its
     state-change counter moved, and only FxmeNet-aware (tier 2) plugins have

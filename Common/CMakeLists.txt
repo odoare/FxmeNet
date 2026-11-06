@@ -25,6 +25,14 @@ target_compile_options(FxmeNetClientTests PRIVATE
     $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra>)
 add_test(NAME FxmeNetClientTests COMMAND FxmeNetClientTests)
 
+# The routing model between a chain's plugins (doc/routing.md), without JUCE.
+add_executable(FxmeNetRoutingTests tests/RoutingTests.cpp)
+target_link_libraries(FxmeNetRoutingTests PRIVATE FxmeNetProtocol)
+target_compile_options(FxmeNetRoutingTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4>
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra>)
+add_test(NAME FxmeNetRoutingTests COMMAND FxmeNetRoutingTests)
+
 # UdpTransport over the loopback interface (juce_core only).
 juce_add_console_app(FxmeNetTransportTests PRODUCT_NAME "FxmeNetTransportTests")
 target_sources(FxmeNetTransportTests PRIVATE tests/TransportTests.cpp)
