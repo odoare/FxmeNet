@@ -289,6 +289,33 @@ int main()
         CHECK (r.getTiming ({ 0, 50, 7, 0 }).latency == 7);
     }
 
+    std::printf ("Default rule options\n");
+    {
+        // 8 in, a stereo plugin, a plugin with 2 main + 2 aux outputs, 8 out.
+        Routing r;
+        r.setBoxes (chain (8, { plugin (1, 2, 2), plugin (2, 2, 2, 0, 2, 1) }, 8));
+        CHECK (fedBy (r, { O, 5 }, { { I, 5 } }));                // around, by default
+        CHECK (fedBy (r, { O, 2 }, { { I, 2 } }) && ! r.isBusEnabled (2, false, 1));
+
+        r.setOptions ({ false, false });                           // not around
+        CHECK (r.sourcesOf ({ O, 5 }).empty() && r.sourcesOf ({ O, 2 }).empty());
+        CHECK (fedBy (r, { O, 0 }, { { 2, 0 } }) && fedBy (r, { 2, 1 }, { { 1, 1 } }));
+        CHECK (r.getInputsUsed() == 3 && r.getOutputsUsed() == 3);
+
+        r.setOptions ({ true, true });                             // extra outputs
+        CHECK (fedBy (r, { O, 2 }, { { 2, 2 } }) && fedBy (r, { O, 3 }, { { 2, 3 } }));
+        CHECK (fedBy (r, { O, 4 }, { { I, 4 } }) && r.isBusEnabled (2, false, 1));
+
+        r.setOptions ({ false, true });                            // both
+        CHECK (fedBy (r, { O, 3 }, { { 2, 3 } }) && r.sourcesOf ({ O, 4 }).empty());
+        CHECK (r.getOutputsUsed() == 15);
+
+        // Manual pins are not affected; a copy keeps the options.
+        CHECK (r.connect ({ I, 7 }, { O, 7 }));
+        Routing copy = r;
+        CHECK (copy.getOptions() == r.getOptions() && fedBy (copy, { O, 7 }, { { I, 7 } }));
+    }
+
     std::printf ("Aux buses\n");
     {
         Routing r;

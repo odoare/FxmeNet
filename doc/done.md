@@ -2,6 +2,30 @@
 
 Newest first. Numbers are those of `todo.md`.
 
+## 2026-11-06
+
+- 15, done: routing between the chain's plugins (design, decisions and
+  internals in `routing.md`). Model with its rules (default routing as the
+  old serial chain, manual pins, chain edits) in
+  `Common/FxmeNet/chain/Routing.h`; protocol (buses in SLOT_READY,
+  ROUTING, the "routing" capability; protocol.md 4.5 and 4.6); server
+  engine (`RoutingEngine.h`: a buffer per plugin, sums, delay lines for
+  latency compensation taken over across rebuilds, aux buses switched by
+  muting the slot, latency changes followed); client (model over 64-wide
+  ends, resolved on the server's chain, saved with the project, unused
+  inputs and outputs left out of each block, shadows given the same
+  buses); the view in the "Stream & channels" tab (drag pins or bus
+  names, shift-click removes, right-click an input pin, Reset routing,
+  two "ROUTING DEFAULTS" switches). FxmeNetRoutingTests: 44,629 checks,
+  among them the default routing against the old serial buffer on random
+  chains. Checked in Reaper: the view, save and reload, and with LSP's
+  linear-phase EQ the latency reported and compensated (it adds to
+  FxmeNet's latency in Reaper; the input summed with the output directly
+  gives a true sum, no comb filtering). Also fixed on the way: the
+  server's scan of a bundle holding many plugins (LSP's 194: an 80 kB
+  report filled the pipe, the scan was killed as hung and the bundle
+  cached as failed).
+
 ## 2026-11-05
 
 - FxmeFX, written (FxmeFX and FxmeTools working trees): every one of the

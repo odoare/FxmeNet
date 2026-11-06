@@ -27,33 +27,6 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     holds it), a crossfade at the switch, what to do with plugins missing
     locally (dry, with a warning), and whether to switch back automatically
     when the server returns.
-15. Routing between the chain's plugins, with sidechains and parallel
-    paths (user request 2026-11-06): the design, decisions and plan are in
-    [`routing.md`](routing.md). Steps:
-    - A (written): the routing model, `Common/FxmeNet/chain/Routing.h`.
-      Build and run FxmeNetRoutingTests.
-    - B (written): protocol (buses in SLOT_READY, ROUTING message,
-      capability; protocol.md 4.5 and 4.6). Build and run
-      FxmeNetProtocolTests and FxmeNetControlTests; rebuild the server and
-      the plugin (nothing changes in use yet).
-    - C (written): server (a buffer per plugin, sums, latency
-      compensation, aux buses enabled when connected; routing.md section
-      5). Build and run FxmeNetRoutingTests; rebuild the server. Nothing
-      changes in use until D: the client sends no ROUTING yet, so chains
-      stay serial (the server now lists "routing" in WELCOME).
-    - D (written, checked 2026-11-06 with the temporary dry path, since
-      replaced by the view): client engine and state (routing.md
-      section 6). The latency alignment in a real session is left for
-      after E.
-    - E (written): the view (`RoutingView.cpp`), in the reorganized
-      "Stream & channels" tab; the channel toggles and the temporary test
-      buttons are gone. Build the plugin (CMake picks up the new source
-      file by itself) and check in Reaper: the chain is drawn as the
-      default routing (dim); drag a pin to a pin, a bus name to a bus
-      name; shift-click removes; right-click an input pin; Reset routing;
-      a sidechain bus fills in when connected; save and reload. Then the
-      latency test left from D (a plugin with latency, a dry path:
-      aligned).
 16. (written) Tier 1 plugins: send non-parameter state changes to the
     server. Before, `syncShadows` sent a shadow's state only when its
     state-change counter moved, and only FxmeNet-aware (tier 2) plugins have

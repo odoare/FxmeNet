@@ -20,7 +20,12 @@
         buffer (a plugin narrower than the buffer let the other channels
         through; a mono-to-stereo plugin overwrote channel 2), so a chain
         left on the default routing sounds as before. Aux buses (sidechains,
-        extra inputs) are never fed by the rule.
+        extra inputs) are never fed by the rule. Two options (Options,
+        saved with the project) change it: `around` off, a channel comes
+        only from the box right above (a channel no plugin has is not
+        passed around them: silent); `extraOutputs` on, a box's outputs
+        count across all its buses (its aux outputs continue the main
+        ones: 2 + 2 feed channels 1 to 4 below, and that bus is enabled).
       - manual: fed by the sources the user chose, possibly none. A pin
         becomes manual when the user connects to it (its current sources
         are kept, the new one is added) or disconnects from it.
@@ -228,9 +233,23 @@ inline Timing computeTiming (const std::vector<std::uint32_t>& order, const std:
 }
 
 //==============================================================================
+/** The default rule's options (header comment). */
+struct Options
+{
+    bool around = true;          ///< channels go around boxes that lack them
+    bool extraOutputs = false;   ///< aux outputs continue the main ones
+
+    bool operator== (const Options& o) const noexcept   { return around == o.around && extraOutputs == o.extraOutputs; }
+    bool operator!= (const Options& o) const noexcept   { return ! (*this == o); }
+};
+
+//==============================================================================
 class Routing
 {
 public:
+    void setOptions (Options o)                     { options = o; }
+    Options getOptions() const noexcept             { return options; }
+
     /** The chain, top to bottom: INPUTS first, OUTPUTS last (Box::makeInputs,
         makeOutputs). Applies the edit rules (header comment) to the manual
         pins. */
@@ -446,12 +465,17 @@ private:
             return false;
         for (int i = t - 1; i >= 0; --i)
         {
-            const auto [outFirst, outCount] = boxes[(std::size_t) i].mainOutputs();
+            const auto& above = boxes[(std::size_t) i];
+            const auto [mainFirst, mainCount] = above.mainOutputs();
+            const int outFirst = options.extraOutputs ? 0 : mainFirst;
+            const int outCount = options.extraOutputs ? above.numOutputs() : mainCount;
             if (c < outCount)
             {
-                out = { boxes[(std::size_t) i].id, outFirst + c };
+                out = { above.id, outFirst + c };
                 return true;
             }
+            if (! options.around)
+                return false;   // only the box right above
         }
         return false;
     }
@@ -491,6 +515,7 @@ private:
 
     std::vector<Box> boxes;
     std::map<Pin, std::vector<Pin>> manual;
+    Options options;
 };
 
 } // namespace fxmenet::chain

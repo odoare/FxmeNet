@@ -510,6 +510,30 @@ SettingsPanel::SettingsPanel (FxmeNetAudioProcessor& p) : processor (p), routing
     resetRoutingButton.setTooltip ("Back to the default routing: each plugin fed by the one above it, in series, "
                                    "and the outputs by the last one.");
     resetRoutingButton.onClick = [this] { processor.getEngine().resetRouting(); };
+
+    aroundButton.setTooltip ("Default routing: a channel a plugin does not have goes around it to the next one "
+                             "that has it, or to the outputs (as a plain serial chain). Off: each plugin, and the "
+                             "outputs, are fed only by the one right above; channels no plugin processes are silent. "
+                             "Connections set by hand are not affected.");
+    extraOutputsButton.setTooltip ("Default routing: a plugin's extra outputs (aux buses) continue its main ones, "
+                                   "so 2 main + 2 extra outputs feed channels 1 to 4 below, and that bus is enabled "
+                                   "on the server. Off: only main outputs are connected by default. "
+                                   "Connections set by hand are not affected.");
+    auto applyOptions = [this]
+    {
+        fxmenet::chain::Options o;
+        o.around = aroundButton.getToggleState();
+        o.extraOutputs = extraOutputsButton.getToggleState();
+        processor.getEngine().setRoutingOptions (o);
+    };
+    aroundButton.onClick = applyOptions;
+    extraOutputsButton.onClick = applyOptions;
+    for (auto* b : { &aroundButton, &extraOutputsButton })
+    {
+        styleButton (*b);
+        b->setClickingTogglesState (true);
+        addAndMakeVisible (*b);
+    }
     addAndMakeVisible (routingView);
 
     rescanButton.setTooltip (tips::rescan);
@@ -566,6 +590,11 @@ void SettingsPanel::refresh()
     }
 
     routingView.refresh();
+    {
+        const auto o = processor.getEngine().getRoutingOptions();
+        aroundButton.setToggleState (o.around, juce::dontSendNotification);
+        extraOutputsButton.setToggleState (o.extraOutputs, juce::dontSendNotification);
+    }
 
     flushButton.setToggleState (processor.getEngine().getFlushOnReset(), juce::dontSendNotification);
     logButton.setToggleState (getLogEvents(), juce::dontSendNotification);
@@ -655,6 +684,7 @@ void SettingsPanel::paint (juce::Graphics& g)
     g.setFont (juce::Font (juce::FontOptions (12.5f)));
     g.drawText ("LOCAL PLUGINS (for the plugins' own editors)", localArea.withHeight (18), juce::Justification::centredLeft);
     g.drawText ("TRANSPORT", diagnosticsLabel, juce::Justification::centredLeft);
+    g.drawText ("ROUTING DEFAULTS", defaultsLabel, juce::Justification::centredLeft);
     g.setColour (theme::text);
     g.drawFittedText (latencyText, latencyArea, juce::Justification::centredLeft, 2);
     g.drawText (localText, localArea.withTrimmedTop (22).withHeight (24), juce::Justification::centredLeft, true);
@@ -676,6 +706,14 @@ void SettingsPanel::resized()
     buttons.removeFromRight (6);
     foldersButton.setBounds (buttons.removeFromRight (90).withHeight (24));
     localArea = localArea.withTrimmedRight (296);
+    r.removeFromBottom (8);
+
+    // The default rule's options, above.
+    auto defaults = r.removeFromBottom (24);
+    defaultsLabel = defaults.removeFromLeft (130);
+    aroundButton.setBounds (defaults.removeFromLeft (270));
+    defaults.removeFromLeft (6);
+    extraOutputsButton.setBounds (defaults.removeFromLeft (160));
     r.removeFromBottom (8);
 
     // Reset behaviour and the events log, above.

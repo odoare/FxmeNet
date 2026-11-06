@@ -459,6 +459,10 @@ public:
     bool connectPins (chain::Pin from, chain::Pin to)      { return editRouting ([&] { return routing.connect (from, to); }); }
     bool disconnectPins (chain::Pin from, chain::Pin to)   { return editRouting ([&] { return routing.disconnect (from, to); }); }
     void resetRouting()                                    { editRouting ([&] { routing.reset(); return true; }); }
+    /** The default rule's options (chain::Options), saved with the project. */
+    void setRoutingOptions (chain::Options o)              { editRouting ([&] { routing.setOptions (o); return true; }); }
+    chain::Options getRoutingOptions() const               { const std::lock_guard<std::mutex> l (lock); return routing.getOptions(); }
+
     bool setPinAutomatic (chain::Pin input)                { return editRouting ([&] { return routing.makeAutomatic (input); }); }
     bool clearPin (chain::Pin input)                       { return editRouting ([&] { return routing.clearInput (input); }); }
 

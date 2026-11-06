@@ -825,7 +825,13 @@ void FxmeNetAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
                 }
     }
 
-    // The routing: only the pins the user set (the rest follows the rules).
+    // The routing: the default rule's options, and only the pins the user
+    // set (the rest follows the rule).
+    {
+        const auto options = engine.getRoutingOptions();
+        root.setAttribute ("routeAround", options.around);
+        root.setAttribute ("routeExtraOutputs", options.extraOutputs);
+    }
     for (auto& m : engine.getRoutingPins())
     {
         auto* e = root.createNewChildElement ("ROUTE");
@@ -940,6 +946,10 @@ void FxmeNetAudioProcessor::setStateInformation (const void* data, int sizeInByt
             m.sources.push_back ({ (std::uint32_t) f->getStringAttribute ("box").getHexValue32(), f->getIntAttribute ("channel") });
         pins.push_back (std::move (m));
     }
+    fxmenet::chain::Options options;
+    options.around = xml->getBoolAttribute ("routeAround", options.around);
+    options.extraOutputs = xml->getBoolAttribute ("routeExtraOutputs", options.extraOutputs);
+    engine.setRoutingOptions (options);
     engine.setRoutingPins (pins);
 
     StreamSettings s;

@@ -2,7 +2,8 @@
 
 Status: agreed (2026-11-06), decisions in section 4. It replaces todo item
 15 (routing of a slot's extra buses) with a more general design. All five
-steps are written (A model, B protocol, C server, D client, E view). Section 5 describes how the server processes a
+steps are written and checked in Reaper (A model, B protocol, C server, D
+client, E view), latency compensation included (2026-11-06). Section 5 describes how the server processes a
 routed chain, section 6 what the client does.
 
 ## 1. The idea
@@ -97,6 +98,21 @@ sounds as it does today. Only aux and sidechain buses start unconnected
 (and so disabled, as today). One difference, an improvement: a channel
 that goes around a plugin is now delayed by that plugin's latency (2.1),
 where today it arrives early.
+
+Two switches (added 2026-11-06, "ROUTING DEFAULTS" in the stream and
+channels tab, saved with the project) change the default rule; connections
+set by hand are never affected:
+
+- **Channels go around plugins that lack them** (on by default, the rule
+  above). Off: a box is fed only by the box right above it, so channels no
+  plugin processes (with 8 DAW channels and stereo plugins, channels 3 to
+  8) do not pass around the plugins to the outputs: they are silent.
+- **Connect extra outputs** (off by default). On: a plugin's outputs count
+  across all its buses, its aux outputs continuing its main ones (2 main
+  and 2 extra outputs feed channels 1 to 4 below), and that bus is enabled
+  on the server. Extra inputs (sidechains) are still never connected by
+  default: enabling a sidechain with nothing meaningful on it changes what
+  many plugins do (2.2), while enabling an extra output does not.
 
 ### 2.4 The routing has to survive chain edits
 
@@ -241,6 +257,8 @@ masks are no longer saved with the project.
 - Right-click an input pin: "Back to the default routing" (that pin
   only) or "Disconnect".
 - "Reset routing" puts every pin back on the default rule.
+- Below the transport options, the two "ROUTING DEFAULTS" switches of 2.3
+  (the window's base height grew by 32 px for that row).
 
 A and C are most of the work. E is the visible part, but mostly
 straightforward once A exists.

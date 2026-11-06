@@ -30,6 +30,6 @@ namespace fxmenet::plugin::theme
 
     constexpr int topBarHeight = 34;
     constexpr int width        = 960;
-    constexpr int height       = 580 + topBarHeight;
+    constexpr int height       = 612 + topBarHeight;   // 580, + 32 for the routing defaults row
     constexpr int rowHeight    = 22;
 }

@@ -133,9 +133,12 @@ private:
     juce::TextButton resetRoutingButton { "Reset routing" };
     juce::TextButton rescanButton { "Rescan" }, fullRescanButton { "Full rescan" }, foldersButton { "Folders..." };
     juce::TextButton flushButton { "Silence in-flight audio at reset" }, logButton { "Log transport events" };
+    juce::TextButton aroundButton { "Channels go around plugins that lack them" },
+                     extraOutputsButton { "Connect extra outputs" };
     std::unique_ptr<juce::FileChooser> chooser;
     juce::String latencyText, localText, foldersText;
-    juce::Rectangle<int> blockLabel, budgetLabel, latencyArea, routingLabel, routingHint, localArea, foldersArea, diagnosticsLabel;
+    juce::Rectangle<int> blockLabel, budgetLabel, latencyArea, routingLabel, routingHint, localArea, foldersArea, diagnosticsLabel,
+                         defaultsLabel;
 };
 
 } // namespace fxmenet::plugin
