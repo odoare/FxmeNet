@@ -1,0 +1,61 @@
+
+Client :
+
+Windows 11 Machine
+Processor : Intel(R) Core(TM) i7-6700K CPU @ 4.00GHz, 4001 Mhz, 4 Core(s), 8 Logical Processor(s)
+Memory 32 Gb
+
+Server :
+
+Ubuntu 24.04 LTS Machine
+AMD Ryzen 5 pro 2400G with Radeon Vega graphics
+
+
+## The max viable case I could get at 1024x2 is
+24 stereo tracks with one FxmeNet plugin instance on each / All 17 FxmeFX plugins loaded in each FxmeNet instance / RME HDSP ASIO drivers FS=44100Hz Buffer=128
+Server CPU at 55% on each core
+Network charge at ~71Mbps*2
+Reaper CPU usage below 20%
+In this configuration I get concealed blocks sometimes (one every 5-10s)
+
+At 28 stereo tracks, I get 1-2 concealed blocks per second
+
+It has to be noted that at 24, and more often at 28, I get occasionnal peaks in the audio out, like a sudden dirac. Without this, one could eventually tolerate a few lost blocks, but these sounds are very annoying.
+
+## Second test
+
+32 stereo tracks with one FxmeNet plugin instance on each and only one instance of FxmeEqualizer, 6 bands used.
+Network at 95Mbps*2
+Htop indicates one server thread at 18.5%, and many other threads around 1.5%-1.9%.
+Reaper still using ~20% CPU
+No problem encoutered
+
+## Third test
+Only local processing same 24 tracks with 17 FxmeFX plugins. The CPU of the windows machine is at 75% per CPU.
+
+## Fourth test
+
+12 tracks local (with 17 plugins)
+12 tracks network (17 also), at 128x2
+
+No audible problem, but a few concealed blocks (one every 2s...)
+
+These are my first stress tests. On these machines, I think we cannt go higher.
+
+# Fifth
+
+24 tracks Fxmet at 17 plugins
+
+ASIO at 256 samples
+Fxmenet at 256x2
+
+Server CPU at 66% (one proc at 72%)
+Client CPU at 25%
+
+Almost no concealed blocks (~10 after 5min on one track)
+Seems to be the more robust case
+
+Network at 75Mbps*2
+
+
+
