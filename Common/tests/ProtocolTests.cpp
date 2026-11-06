@@ -6,7 +6,8 @@
     without JUCE and without a network: headers, transport, MIDI and audio
     blocks round-trip; malformed input is refused; messages split into
     datagrams come back whole whatever the order, and incomplete ones are
-    dropped as protocol.md section 3 says.
+    dropped as protocol.md section 3 says; one over the size limit is
+    dropped and counted once as too large.
 
     SPDX-License-Identifier: LGPL-3.0-or-later
   ------------------------------------------------------------------------------
@@ -318,17 +319,25 @@ int main()
             CHECK (done.size() == 1 && done[0].empty());
         }
 
-        // Malformed: a short non-last fragment, a message over the limit,
-        // garbage, a truncated header.
+        // Malformed: a short non-last fragment, garbage, a truncated header.
         {
-            Reassembler r (1400, 4096);
+            Reassembler r (1400, 1 << 18);
             Datagrams bad = { pieces[0] };
             bad[0].pop_back();
             CHECK (feed (r, bad).empty());
-            CHECK (feed (r, pieces).empty());           // 16 kB > the 4 kB limit
             CHECK (feed (r, { Bytes (40, 0xab) }).empty());
             CHECK (feed (r, { Bytes (pieces[0].begin(), pieces[0].begin() + 20) }).empty());
-            CHECK (r.getStatistics().malformed >= 4);
+            CHECK (r.getStatistics().malformed >= 3);
+            CHECK (r.getStatistics().tooLarge == 0);
+        }
+
+        // A message over the limit: dropped, counted once as too large
+        // (not once per fragment, not as malformed).
+        {
+            Reassembler r (1400, 4096);
+            CHECK (feed (r, pieces).empty());           // 16 kB > the 4 kB limit
+            CHECK (r.getStatistics().tooLarge == 1);
+            CHECK (r.getStatistics().malformed == 0);
         }
     }
 

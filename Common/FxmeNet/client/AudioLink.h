@@ -41,6 +41,7 @@
 #include <FxmeNet/client/ReplyRing.h>
 #include <FxmeNet/control/ControlMessages.h>
 #include <FxmeNet/transport/UdpTransport.h>
+#include <FxmeTools/net/TelemetryRegistry.h>
 
 #include <atomic>
 #include <map>
@@ -57,6 +58,8 @@ struct AudioStatistics
     std::atomic<std::uint64_t> sent { 0 }, retries { 0 }, received { 0 }, refused { 0 }, telemetry { 0 };
     std::atomic<std::uint64_t> offlineTimeouts { 0 };
     std::atomic<std::uint64_t> rescued { 0 };   ///< replies late for their block but caught by the real-time wait
+    std::atomic<std::uint64_t> udpDropped { 0 };   ///< messages lost in reassembly: incomplete, malformed or too large
+    std::atomic<std::uint64_t> udpTooLarge { 0 };  ///< of which over the size limit
     std::atomic<std::uint32_t> lastRttMicros { 0 }, maxRttMicros { 0 };
     std::atomic<std::uint32_t> processMicros { 0 };
     std::atomic<int> chainLatency { 0 };   ///< from the latest reply
@@ -115,6 +118,17 @@ public:
     };
 
     static constexpr int retryIntervalMs = 50;
+
+    /** The largest telemetry message received: up to maxTelemetryTaps tap
+        channels, each with a frame's worth of samples, plus room for the
+        other channels and headers. Telemetry does not follow the block
+        size: a host delivering large buffers in bursts makes the server's
+        taps hold more samples per frame than the 30 Hz steady state (seen
+        with Reaper on PulseAudio), and a frame over the limit is dropped
+        whole. */
+    static constexpr std::size_t maxTelemetryTaps = 16;
+    static constexpr std::size_t maxTelemetryMessage
+        = 4096 + maxTelemetryTaps * (32 + 4 * (std::size_t) fxme::net::TelemetryRegistry::maxTapSamplesPerFrame);
     static constexpr int offlineTimeoutMs = 5000;
 
     AudioLink (const Settings& s, AudioStatistics& statistics, TelemetryMailbox& telemetryMailbox)
@@ -151,7 +165,8 @@ public:
         t.sessionId = settings.sessionId;
         t.token = settings.token;
         t.datagramBudget = (std::size_t) settings.config.datagramBudget;
-        t.maxMessageSize = 64 + wire::maxMidiBytes + (std::size_t) (wire::maxChannels * n * 4);   // replies may carry MIDI
+        t.maxMessageSize = juce::jmax (64 + wire::maxMidiBytes + (std::size_t) (wire::maxChannels * n * 4),   // replies may carry MIDI
+                                       maxTelemetryMessage);
         transport = std::make_unique<UdpTransport> (socket, settings.host, settings.udpPort, t);
 
         if (! transport->send (wire::Kind::keepAlive, 0, nullptr, 0))
@@ -287,10 +302,26 @@ private:
 
     void run() override
     {
+        std::uint64_t droppedSeen = 0, tooLargeSeen = 0;   // this link's reassembler, already counted
         while (! threadShouldExit())
         {
             ReceivedMessage m;
-            if (! transport->receive (m, 100))
+            const bool got = transport->receive (m, 100);
+
+            const auto& rs = transport->getReassemblyStatistics();   // this thread's own
+            const auto dropped = rs.incomplete + rs.malformed + rs.tooLarge;
+            if (dropped != droppedSeen)
+            {
+                stats.udpDropped.fetch_add (dropped - droppedSeen, std::memory_order_relaxed);
+                droppedSeen = dropped;
+            }
+            if (rs.tooLarge != tooLargeSeen)
+            {
+                stats.udpTooLarge.fetch_add (rs.tooLarge - tooLargeSeen, std::memory_order_relaxed);
+                tooLargeSeen = rs.tooLarge;
+            }
+
+            if (! got)
                 continue;
 
             if (m.kind == wire::Kind::telemetry)

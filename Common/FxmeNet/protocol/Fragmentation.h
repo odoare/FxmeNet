@@ -95,7 +95,8 @@ public:
         std::uint64_t completed  = 0;
         std::uint64_t incomplete = 0;   ///< dropped for a missing fragment
         std::uint64_t duplicates = 0;
-        std::uint64_t malformed  = 0;
+        std::uint64_t malformed  = 0;   ///< datagrams refused as invalid
+        std::uint64_t tooLarge   = 0;   ///< messages over maxMessageSize, dropped (counted on fragment 0)
     };
 
     Reassembler (std::size_t datagramBudget, std::size_t maxMessageSize, int numSlots = 4)
@@ -136,8 +137,13 @@ public:
 
         const bool last = h.fragment == h.fragments - 1;
         const std::size_t offset = (std::size_t) h.fragment * budget;
-        if (h.fragments > maxFragments || (! last && length != budget) || length > budget
-            || offset + length > maxSize)
+        if (h.fragments > maxFragments || offset + length > maxSize)
+        {
+            if (h.fragment == 0)   // once per message, not per fragment
+                ++stats.tooLarge;
+            return false;
+        }
+        if ((! last && length != budget) || length > budget)
         {
             ++stats.malformed;
             return false;

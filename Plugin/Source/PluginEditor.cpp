@@ -160,6 +160,8 @@ void FxmeNetAudioProcessorEditor::timerCallback()
               + " ms)   round trip " + juce::String (st.lastRttMicros.load() / 1000.0, 2) + " ms"
               + "   concealed " + juce::String ((juce::int64) engine.getConcealedCount())
               + "   rescued " + juce::String ((juce::int64) st.rescued.load())
+              + "   UDP dropped " + juce::String ((juce::int64) st.udpDropped.load())
+              + (st.udpTooLarge.load() > 0 ? " (" + juce::String ((juce::int64) st.udpTooLarge.load()) + " too large)" : juce::String())
               + "   resets " + juce::String ((juce::int64) engine.getResetCount())
               + "   host ahead " + juce::String (engine.getHostAheadMs(), 0) + " ms"
               + "   parameters mapped " + juce::String (processor.getNumMapped()) + "/" + juce::String (fxmenet::plugin::poolSize);

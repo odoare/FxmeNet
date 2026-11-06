@@ -33,6 +33,84 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     main ones, silent unless an earlier, wider plugin wrote there. A
     per-slot routing (silence, a chain channel, or a DAW sidechain sent by
     the client) would make it explicit.
+16. Tier 1 plugins: send non-parameter state changes to the server. Today
+    `syncShadows` sends a shadow's state only when its state-change counter
+    moves, and only FxmeNet-aware (tier 2) plugins have one, so whatever a
+    tier 1 editor changes outside its parameters stays on the client. Seen
+    with Mango (2026-11-05): its lanes and blocks are state, the shadow shows
+    the pattern, the server's instance has none and passes the audio
+    through. Same for any loaded file, sequence or internal preset. Fix: for
+    tier 1 shadows, read `getStateInformation()` a few times a second while
+    the editor is open, and once when it closes; send the state (as tier 2
+    does, `engine.setSlotState`) when its hash differs from the last one
+    sent. The reference is taken when the server's state is applied, so
+    the first comparison sends nothing. Cost: one state read per tier 1
+    shadow and tick, on the message thread; a plugin with a huge state
+    should become tier 2 instead. `audioProcessorChanged` (the plugin
+    calling `updateHostDisplay`) is cheaper but most plugins do not call it
+    for such changes, Mango included.
+17. ModalDish as a tier 2 plugin (seen 2026-11-05: in FxmeNet the editor
+    works, a plate can be drawn and computed, but nothing sounds, neither
+    clicks, MIDI nor input audio). Causes: the shape, the boundaries and the
+    computed modes are state, built in the client's mirror and never sent,
+    so the server's instance has no modes (item 16, but polling does not
+    suit a state holding megabytes of mode cache); and saving the DAW
+    project fetches the server's empty state, so the design is lost. Mouse
+    strikes (`requestStrike`, an atomic mailbox read by the audio thread)
+    stay in the mirror, which never processes. Plan, three commits:
+    - a. In ModalDish: a `NetBridge`, and `net.notifyStateChanged()` when a
+      computation completes and when the shape or the boundaries change; the
+      tier 2 path then sends the state with its modal cache, and the server
+      restores the modes from it without recomputing. This alone brings
+      MIDI and input audio back.
+    - b. An event channel from client to server: in FxmeTools (`NetAbi.h`,
+      ABI 2, backward compatible) a call where the mirror queues a small
+      event and one where the server delivers it; in FxmeNet a control
+      message carrying them to the slot (protocol.md to update). Reusable by
+      any FX-Mechanics plugin whose editor triggers something.
+    - c. In ModalDish: `requestStrike` queues an event in a mirror, the
+      server's instance posts it into its strike mailbox. Optionally,
+      telemetry for its hit display and meters.
+    Cheaper alternative to b and c: strikes as hidden parameters (x, y,
+    velocity, a counter), no protocol change, but four more parameters
+    shown by DAWs.
+18. (written) Telemetry frames dropped by the client's UDP reassembler.
+    Seen 2026-11-05 with the Equalizer in FxmeNet, Reaper on its PulseAudio
+    driver with large buffers: the spectrum updated slowly (fine with JACK,
+    even at 128). Likely cause: the client's message limit followed the
+    session block N (`64 + maxMidiBytes + 64 x N x 4`, about 41 kB at
+    N = 128), while a telemetry frame carries up to 8192 samples per tap
+    (two taps, about 64 kB) when bursty audio fills the server's taps. Done:
+    the limit is now also at least `AudioLink::maxTelemetryMessage` (16 taps
+    of 8192 samples, about 530 kB; four reassembly slots, about 2 MB per
+    link); the reassembler counts a message over its limit once, as
+    `tooLarge` (it was one `malformed` per fragment); the client counts
+    reassembly losses (`udpDropped`, `udpTooLarge`) and shows them in the
+    statistics line ("UDP dropped N (M too large)"). To check(done on 2026-11-06):
+    build and run FxmeNetProtocolTests; in Reaper on PulseAudio with a large buffer, the
+    Equalizer's spectrum in FxmeNet now moves as with JACK, and "UDP
+    dropped" stays at or near 0 (it also counts genuinely lost datagrams).
+19. A slot's plugin editor in its own window, as DAWs do (user request
+    2026-11-05). Today `ParameterPanel::refresh` (Panels.cpp) puts the
+    shadow's editor in a viewport. Plan:
+    - a. Basic (about half a day): a "Window" button beside "Generic
+      controls" / "Plugin editor" opens the editor in a
+      `juce::DocumentWindow` that follows the editor's size; one window per
+      slot, several open at once (`setEditorShown (slotId, ...)` is already
+      per slot, so each gets its telemetry). A processor has one active
+      editor, so a slot's editor is in the panel or in its window, never
+      both: the panel then says so, with a button to bring it back, and
+      keeps "Map last touched". The windows belong to FxmeNet's editor and
+      close with it; `beforeShadowRemoved` closes a slot's window too (it
+      only reaches the panel today). Always on top by default: on Linux a
+      window opened from a plugin is not tied to the DAW's window and can
+      fall behind it. Check text entry in such a window
+      (`fxme::TextEntryFocusFixer`).
+    - b. Later: which windows were open and where, saved in FxmeNet's
+      state and reopened with the project.
+    - c. Later, optional: windows that outlive FxmeNet's editor (owned by
+      the processor, as Reaper's floating FX windows), with the lifetime
+      cases that brings (slot removed, session lost, processor deleted).
 13. Later, optional: mDNS publishing (`_fxmenet._tcp`) for system browsers.
 8. Phase 4: shadow editors and telemetry; port Compressor and Equalizer.
    - 8c (written): telemetry into the shadows. Build the plugin; in Reaper
