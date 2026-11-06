@@ -53,6 +53,7 @@ enum class Type : std::uint16_t
     slotMove        = 23,
     slotBypass      = 24,
     chainClear      = 25,
+    routing         = 26,
     paramSet        = 30,
     paramChanged    = 31,
     stateSet        = 32,
@@ -297,6 +298,59 @@ inline bool decode (const std::vector<std::uint8_t>& in, SlotState& m)
     const auto* p = r.take (n);
     if (p != nullptr)
         m.state.assign (p, p + n);
+    return r.ok();
+}
+
+/** ROUTING (doc/routing.md): every connection of the graph, from an
+    output pin to an input pin. Boxes are slot ids, plus routingInputs
+    (FxmeNet's inputs, as outputs) and routingOutputs (its outputs, as
+    inputs); channels are numbered across a box's buses, each bus counted at
+    its full width (SLOT_READY's buses). */
+constexpr std::uint32_t routingInputs = 0;
+constexpr std::uint32_t routingOutputs = 0xffffffffu;
+
+struct Route
+{
+    std::uint32_t fromBox = 0;
+    std::uint16_t fromChannel = 0;
+    std::uint32_t toBox = 0;
+    std::uint16_t toChannel = 0;
+
+    bool operator== (const Route& o) const noexcept
+    {
+        return fromBox == o.fromBox && fromChannel == o.fromChannel && toBox == o.toBox && toChannel == o.toChannel;
+    }
+};
+
+inline std::vector<std::uint8_t> encode (const std::vector<Route>& routes)
+{
+    std::vector<std::uint8_t> out;
+    ByteWriter w (out);
+    w.u32 ((std::uint32_t) routes.size());
+    for (const auto& c : routes)
+    {
+        w.u32 (c.fromBox);
+        w.u16 (c.fromChannel);
+        w.u32 (c.toBox);
+        w.u16 (c.toChannel);
+    }
+    return out;
+}
+
+inline bool decode (const std::vector<std::uint8_t>& in, std::vector<Route>& routes)
+{
+    ByteReader r (in.data(), in.size());
+    const auto n = r.u32();
+    if ((std::size_t) n * 12 > r.remaining())
+        return false;
+    routes.resize (n);
+    for (auto& c : routes)
+    {
+        c.fromBox = r.u32();
+        c.fromChannel = r.u16();
+        c.toBox = r.u32();
+        c.toChannel = r.u16();
+    }
     return r.ok();
 }
 

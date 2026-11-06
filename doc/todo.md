@@ -32,7 +32,10 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     [`routing.md`](routing.md). Steps:
     - A (written): the routing model, `Common/FxmeNet/chain/Routing.h`.
       Build and run FxmeNetRoutingTests.
-    - B: protocol (buses in SLOT_READY, ROUTING message, capability).
+    - B (written): protocol (buses in SLOT_READY, ROUTING message,
+      capability; protocol.md 4.5 and 4.6). Build and run
+      FxmeNetProtocolTests and FxmeNetControlTests; rebuild the server and
+      the plugin (nothing changes in use yet).
     - C: server (a buffer per plugin, sums, latency compensation, aux
       buses enabled when connected).
     - D: client engine and state (masks derived from the routing).

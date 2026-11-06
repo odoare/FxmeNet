@@ -128,6 +128,7 @@ juce::String Chain::addSlot (std::uint32_t slotId, int position,
     ready.latency = instance->getLatencySamples();
     ready.numInputs = instance->getTotalNumInputChannels();
     ready.numOutputs = instance->getTotalNumOutputChannels();
+    ready.buses = describeBuses (*instance);
     ready.params = describeParameters (*instance);
     ready.fxmenetAbi = 0;
     if (slot->net != nullptr)
@@ -272,6 +273,31 @@ void Chain::process (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi, b
 }
 
 //==============================================================================
+std::vector<control::BusInfo> describeBuses (juce::AudioProcessor& instance)
+{
+    std::vector<control::BusInfo> out;
+    for (const bool input : { true, false })
+        for (int i = 0; i < instance.getBusCount (input); ++i)
+            if (auto* bus = instance.getBus (input, i))
+            {
+                // Its full width even when disabled, so that the routing's
+                // channel numbers do not move when it is enabled.
+                int channels = bus->getNumberOfChannels();
+                if (channels == 0)
+                    channels = bus->getDefaultLayout().size();
+                if (channels == 0)
+                    channels = bus->getLastEnabledLayout().size();
+
+                control::BusInfo b;
+                b.name = bus->getName();
+                b.input = input;
+                b.channels = channels;
+                b.main = i == 0;
+                out.push_back (b);
+            }
+    return out;
+}
+
 std::vector<control::ParamInfo> describeParameters (juce::AudioPluginInstance& instance)
 {
     std::vector<control::ParamInfo> out;

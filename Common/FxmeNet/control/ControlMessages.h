@@ -18,6 +18,7 @@
 
 #include <juce_core/juce_core.h>
 
+#include <FxmeNet/chain/Routing.h>
 #include <FxmeNet/control/ControlFrame.h>
 
 #include <cstdint>
@@ -118,6 +119,9 @@ struct Hello
 };
 
 //==============================================================================
+/** In WELCOME's capabilities: the server applies ROUTING (doc/routing.md). */
+constexpr const char* capabilityRouting = "routing";
+
 struct Welcome
 {
     int version = 1;
@@ -342,11 +346,43 @@ struct ParamInfo
     }
 };
 
+/** One of a plugin's buses (in SLOT_READY), in the plugin's order: its
+    channel count is its full width, enabled or not, so that the routing's
+    channel numbers do not move when a bus is enabled. */
+struct BusInfo
+{
+    juce::String name;
+    bool input = true;
+    int channels = 0;
+    bool main = false;
+
+    juce::var toVar() const
+    {
+        auto* o = new juce::DynamicObject();
+        o->setProperty ("name", name);
+        o->setProperty ("input", input);
+        o->setProperty ("channels", channels);
+        o->setProperty ("main", main);
+        return o;
+    }
+
+    static BusInfo fromVar (const juce::var& v)
+    {
+        BusInfo b;
+        b.name = v["name"].toString();
+        b.input = (bool) json::get (v, "input", true);
+        b.channels = juce::jlimit (0, 1024, (int) json::get (v, "channels", 0));
+        b.main = (bool) json::get (v, "main", false);
+        return b;
+    }
+};
+
 struct SlotReady
 {
     std::uint32_t slotId = 0;
     int latency = 0;
-    int numInputs = 2, numOutputs = 2;
+    int numInputs = 2, numOutputs = 2;   ///< enabled channels, now
+    std::vector<BusInfo> buses;          ///< empty from older servers
     std::vector<ParamInfo> params;
     juce::MemoryBlock telemetrySchema;   ///< TelemetryCodec schema; empty when not FxmeNet-aware
     int fxmenetAbi = 0;
@@ -358,6 +394,10 @@ struct SlotReady
         o->setProperty ("latency", latency);
         o->setProperty ("numInputs", numInputs);
         o->setProperty ("numOutputs", numOutputs);
+        juce::Array<juce::var> b;
+        for (auto& bus : buses)
+            b.add (bus.toVar());
+        o->setProperty ("buses", b);
         juce::Array<juce::var> a;
         for (auto& p : params)
             a.add (p.toVar());
@@ -374,6 +414,9 @@ struct SlotReady
         s.latency = json::get (v, "latency", 0);
         s.numInputs = json::get (v, "numInputs", s.numInputs);
         s.numOutputs = json::get (v, "numOutputs", s.numOutputs);
+        if (auto* b = v["buses"].getArray())
+            for (auto& bus : *b)
+                s.buses.push_back (BusInfo::fromVar (bus));
         if (auto* a = v["params"].getArray())
             for (auto& p : *a)
                 s.params.push_back (ParamInfo::fromVar (p));
@@ -382,6 +425,44 @@ struct SlotReady
         return s;
     }
 };
+
+/** A loaded slot as a box of the routing model. Without buses (an older
+    server): one main bus each way, of its channel counts. */
+inline chain::Box toBox (const SlotReady& s)
+{
+    chain::Box box;
+    box.id = s.slotId;
+    if (s.buses.empty())
+    {
+        if (s.numInputs > 0)
+            box.inputs.push_back ({ "Main", s.numInputs, true });
+        if (s.numOutputs > 0)
+            box.outputs.push_back ({ "Main", s.numOutputs, true });
+        return box;
+    }
+    for (auto& b : s.buses)
+        (b.input ? box.inputs : box.outputs).push_back ({ b.name.toStdString(), b.channels, b.main });
+    return box;
+}
+
+static_assert (chain::inputsBox == routingInputs && chain::outputsBox == routingOutputs);
+
+/** Routing connections to and from the wire. */
+inline std::vector<Route> toRoutes (const std::vector<chain::Connection>& connections)
+{
+    std::vector<Route> out;
+    for (auto& c : connections)
+        out.push_back ({ c.from.box, (std::uint16_t) c.from.channel, c.to.box, (std::uint16_t) c.to.channel });
+    return out;
+}
+
+inline std::vector<chain::Connection> fromRoutes (const std::vector<Route>& routes)
+{
+    std::vector<chain::Connection> out;
+    for (auto& r : routes)
+        out.push_back ({ { r.fromBox, (int) r.fromChannel }, { r.toBox, (int) r.toChannel } });
+    return out;
+}
 
 //==============================================================================
 /** UTF-8 JSON text of a message, as a frame payload. */

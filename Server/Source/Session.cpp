@@ -272,6 +272,10 @@ void Session::handleFrame (const Frame& f, int gen)
             ack (f);
             break;
 
+        case Type::routing:
+            handleRouting (f);
+            break;
+
         case Type::telemetryActive:
             handleTelemetryActive (f);
             break;
@@ -410,6 +414,17 @@ void Session::handleState (const Frame& f)
     reply.state.assign ((const std::uint8_t*) block.getData(),
                         (const std::uint8_t*) block.getData() + block.getSize());
     connection->sendBinary (Type::state, f.requestId, encode (reply));
+}
+
+void Session::handleRouting (const Frame& f)
+{
+    std::vector<control::Route> routes;
+    if (! decode (f.payload, routes))
+        return fail (f, ErrorMessage::badRequest, "malformed ROUTING");
+
+    routing = std::move (routes);
+    routingReceived = true;
+    ack (f);
 }
 
 void Session::ack (const Frame& f)

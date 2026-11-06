@@ -193,6 +193,31 @@ int main()
         }
         CHECK (s2.telemetrySchema == s.telemetrySchema);
 
+        // Buses (protocol.md 4.5), and the slot as a routing box.
+        CHECK (s2.buses.empty());
+        const auto oldBox = toBox (s2);   // as from an older server: one main bus each way
+        CHECK (oldBox.id == 4 && oldBox.inputs.size() == 1 && oldBox.outputs.size() == 1);
+        CHECK (oldBox.numInputs() == 2 && oldBox.numOutputs() == 2 && oldBox.inputs[0].main);
+
+        s.buses = { { "Input", true, 2, true }, { "Sidechain", true, 2, false },
+                    { "Output", false, 2, true }, { "Aux out", false, 4, false } };
+        const auto s3 = SlotReady::fromVar (viaText (s.toVar()));
+        CHECK (s3.buses.size() == 4);
+        if (s3.buses.size() == 4)
+        {
+            CHECK (s3.buses[1].name == "Sidechain" && s3.buses[1].input && s3.buses[1].channels == 2 && ! s3.buses[1].main);
+            CHECK (! s3.buses[3].input && s3.buses[3].channels == 4);
+        }
+        const auto box = toBox (s3);
+        CHECK (box.inputs.size() == 2 && box.outputs.size() == 2);
+        CHECK (box.numInputs() == 4 && box.numOutputs() == 6);
+        CHECK (box.inputs[1].name == "Sidechain" && ! box.inputs[1].main && box.outputs[0].main);
+
+        // Connections to the wire and back.
+        const std::vector<fxmenet::chain::Connection> connections {
+            { { fxmenet::chain::inputsBox, 1 }, { 4, 3 } }, { { 4, 5 }, { fxmenet::chain::outputsBox, 0 } } };
+        CHECK (fromRoutes (toRoutes (connections)) == connections);
+
         // A newer peer's extra fields are ignored, missing ones keep defaults.
         juce::var extra (new juce::DynamicObject());
         extra.getDynamicObject()->setProperty ("blockSize", 64);

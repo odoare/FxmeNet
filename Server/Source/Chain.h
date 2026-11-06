@@ -166,6 +166,10 @@ private:
     JUCE_DECLARE_NON_COPYABLE (Chain)
 };
 
+/** The buses of an instance, each at its full width, for SLOT_READY
+    (protocol.md 4.5). */
+std::vector<control::BusInfo> describeBuses (juce::AudioProcessor&);
+
 /** The parameter list of an instance, for SLOT_READY (protocol.md 4.4). */
 std::vector<control::ParamInfo> describeParameters (juce::AudioPluginInstance&);
 

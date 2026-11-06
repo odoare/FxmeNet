@@ -90,6 +90,7 @@ private:
     void handleSlotAdd (const control::Frame&);
     void handleParamSet (const control::Frame&);
     void handleState (const control::Frame&);
+    void handleRouting (const control::Frame&);
 
     void ack (const control::Frame&);
     void fail (const control::Frame&, int code, const juce::String& text);
@@ -100,6 +101,14 @@ private:
     PluginCatalog& catalog;
 
     Chain chain;
+
+    /** The last ROUTING, as sent (doc/routing.md); empty until one came,
+        and then the chain stays serial. Kept whole: connections to a slot
+        still loading, or that do not fit the chain as it is, wait until
+        they do. Applied to the chain in step C. */
+    std::vector<control::Route> routing;
+    bool routingReceived = false;
+
     AudioWorker worker;
     control::Configure config;
     bool configured = false;

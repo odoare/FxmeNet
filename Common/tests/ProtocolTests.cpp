@@ -356,6 +356,7 @@ int main()
 
         std::vector<ParamChange> params { { 3, 7, 0.25f }, { 4, 0, 1.0f } };
         SlotState st { 3, { 1, 2, 3 } };
+        std::vector<Route> routes { { routingInputs, 0, 3, 0 }, { 3, 1, routingOutputs, 1 }, { 7, 65535, 9, 2 } };
 
         Bytes stream;
         writeFrame (stream, Type::hello, flagJson, 1, (const std::uint8_t*) "{}", 2);
@@ -365,6 +366,8 @@ int main()
         writeFrame (stream, Type::paramSet, 0, 0, paramBytes.data(), paramBytes.size());
         const auto stateBytes = encode (st);
         writeFrame (stream, Type::stateSet, 0, 3, stateBytes.data(), stateBytes.size());
+        const auto routeBytes = encode (routes);
+        writeFrame (stream, Type::routing, 0, 4, routeBytes.data(), routeBytes.size());
         writeFrame (stream, Type::bye, 0, 0, nullptr, 0);
 
         // The same frames whatever the read boundaries: one byte at a time,
@@ -380,12 +383,12 @@ int main()
                 while (a.next (f) == FrameAssembler::Result::frame)
                     frames.push_back (f);
             }
-            CHECK (frames.size() == 5);
-            if (frames.size() != 5)
+            CHECK (frames.size() == 6);
+            if (frames.size() != 6)
                 continue;
 
             CHECK (frames[0].type == Type::hello && frames[0].isJson() && frames[0].requestId == 1);
-            CHECK (frames[4].type == Type::bye && frames[4].payload.empty());
+            CHECK (frames[5].type == Type::bye && frames[5].payload.empty());
 
             SlotAdd got;
             CHECK (frames[1].type == Type::slotAdd && decode (frames[1].payload, got));
@@ -398,6 +401,10 @@ int main()
 
             SlotState gotState;
             CHECK (decode (frames[3].payload, gotState) && gotState.slotId == 3 && gotState.state == st.state);
+
+            std::vector<Route> gotRoutes;
+            CHECK (frames[4].type == Type::routing && frames[4].requestId == 4);
+            CHECK (decode (frames[4].payload, gotRoutes) && gotRoutes == routes);
         }
 
         // Corrupt lengths: below 8, over the limit.
@@ -423,6 +430,13 @@ int main()
             std::vector<ParamChange> badParams;
             Bytes lying { 255, 255, 0, 0 };   // 65535 changes, no data
             CHECK (! decode (lying, badParams));
+
+            std::vector<Route> badRoutes;
+            CHECK (! decode (lying, badRoutes));
+            Bytes cutRoutes (routeBytes.begin(), routeBytes.end() - 1);
+            CHECK (! decode (cutRoutes, badRoutes));
+            std::vector<Route> none;
+            CHECK (decode (encode (none), badRoutes) && badRoutes.empty());   // an empty graph
         }
     }
 

@@ -1,8 +1,8 @@
 # Routing between plugins (proposal)
 
 Status: agreed (2026-11-06), decisions in section 4. It replaces todo item
-15 (routing of a slot's extra buses) with a more general design. Step A
-(the routing model) is written; B to E are to do.
+15 (routing of a slot's extra buses) with a more general design. Steps A
+(the routing model) and B (protocol) are written; C to E are to do.
 
 ## 1. The idea
 
@@ -173,11 +173,15 @@ without audio.
 
 ### B. Protocol
 
+(Written; `doc/protocol.md` sections 4.5 and 4.6.)
+
 - SLOT_READY carries each plugin's buses: name, input or output, channel
   count, main or aux.
 - A new ROUTING message carries the whole graph, by slotId. The client sends
   it after any change, and again when a session resumes.
-- The "routing" capability (2.8).
+- The "routing" capability (2.8), defined but not advertised yet: the
+  server stores the ROUTING it receives and acknowledges it, and will
+  advertise the capability in step C, once it applies it.
 - `doc/protocol.md` updated.
 
 ### C. Server

@@ -83,7 +83,7 @@ state and parameter batches are binary.
 | Type | Name | From | Payload |
 | :--- | :--- | :--- | :--- |
 | 1 | `HELLO` | client | JSON: protocol versions supported, client name, OS, FxmeNet version, `resume` (sessionId + token of a session to take back after a reconnect, optional) |
-| 2 | `WELCOME` | server | JSON: protocol version chosen, sessionId, token, UDP port, server name, OS, capabilities (`["udp-audio"]`, later `"tcp-audio"`), or an error |
+| 2 | `WELCOME` | server | JSON: protocol version chosen, sessionId, token, UDP port, server name, OS, capabilities (`["udp-audio"]`, `"routing"` when it applies `ROUTING`, later `"tcp-audio"`), or an error |
 | 3 | `CONFIGURE` | client | JSON: sample rate, block size N, input and output channel counts, channel masks, telemetry rate (Hz, default 30), datagram budget |
 | 4 | `PING` / 5 `PONG` | either | binary: u64 sender clock (microseconds), echoed |
 | 6 | `ERROR` | either | JSON: code, text, requestId it answers |
@@ -91,11 +91,12 @@ state and parameter batches are binary.
 | 10 | `LIST_PLUGINS` | client | none |
 | 11 | `PLUGIN_LIST` | server | JSON: entries (section 4.3) |
 | 20 | `SLOT_ADD` | client | binary: slotId, position, plugin uid (u32), name, vendor, state blob (u32 length + bytes, may be empty) |
-| 21 | `SLOT_READY` | server | JSON: slotId, latency, channel layout, parameters (section 4.4), telemetry schema (base64 of the `TelemetryCodec` schema), FxmeNet ABI version or null |
+| 21 | `SLOT_READY` | server | JSON: slotId, latency, channel layout, buses (section 4.5), parameters (section 4.4), telemetry schema (base64 of the `TelemetryCodec` schema), FxmeNet ABI version or null |
 | 22 | `SLOT_REMOVE` | client | binary: slotId |
 | 23 | `SLOT_MOVE` | client | binary: slotId, new position |
 | 24 | `SLOT_BYPASS` | client | binary: slotId, u8 on |
 | 25 | `CHAIN_CLEAR` | client | none |
+| 26 | `ROUTING` | client | binary: count (u32), then (fromBox u32, fromChannel u16, toBox u32, toChannel u16); section 4.6 |
 | 30 | `PARAM_SET` | client | binary: count, then (slotId u32, index u32, normalised value f32) |
 | 31 | `PARAM_CHANGED` | server | same layout: changes the plugin made itself |
 | 32 | `STATE_SET` | client | binary: slotId, state blob |
@@ -105,7 +106,7 @@ state and parameter batches are binary.
 `SLOT_READY` answers `SLOT_ADD`, `PLUGIN_LIST` answers `LIST_PLUGINS`,
 `STATE` answers `STATE_GET`, `PONG` answers `PING`, and `ERROR` answers
 anything that failed. Every other request (`CONFIGURE`, `SLOT_REMOVE`,
-`SLOT_MOVE`, `SLOT_BYPASS`, `CHAIN_CLEAR`, `STATE_SET`, `TELEMETRY_ACTIVE`)
+`SLOT_MOVE`, `SLOT_BYPASS`, `CHAIN_CLEAR`, `ROUTING`, `STATE_SET`, `TELEMETRY_ACTIVE`)
 is acknowledged on success by a frame of its own type with an empty payload
 and the same `requestId`. `PARAM_SET` is never acknowledged (a stream of
 changes); a failed one gets an `ERROR`. Chain
@@ -139,6 +140,51 @@ value (normalised; `value` added 2026-11-02, a reader missing it takes the
 default), number of steps (0 = continuous), automatable, bypass, group path, and the
 text of up to 32 sample values for stepped ones. Enough for the tier 0 generic
 editor and the automation pool; values always travel normalised.
+
+### 4.5 Buses (in `SLOT_READY`)
+
+Added 2026-11-06, for routing. `buses`: the plugin's buses, inputs then
+outputs, each in the plugin's order:
+
+```json
+{ "name": "Sidechain", "input": true, "channels": 2, "main": false }
+```
+
+`channels` is the bus's full width, enabled or not (a disabled bus counts
+its default layout), so a routing's channel numbers do not move when a bus
+is enabled. `main` is the first bus each way. `numInputs` and `numOutputs`
+still give the channels enabled now. A reader without `buses` (an older
+server) takes one main bus each way, of `numInputs` and `numOutputs`
+channels.
+
+### 4.6 Routing
+
+Added 2026-11-06; design in [`routing.md`](routing.md). `ROUTING` carries
+the whole graph between the chain's plugins, every connection from an
+output pin to an input pin: the client resolves its rules (default routing,
+manual pins) and the server only applies the result. Boxes are slot ids,
+plus 0 for the session's inputs (FxmeNet's input channels, seen as
+outputs) and 0xffffffff for its outputs (seen as inputs). A box's channels
+are numbered across its buses in the order of section 4.5, each bus at its
+full width.
+
+- Several connections into one input pin are summed; one output pin may
+  feed several inputs.
+- The server keeps the last `ROUTING` whole and applies it to the chain as
+  it is: a connection to a slot not loaded (yet), to a pin that does not
+  exist, or not going downward in the chain is ignored until it makes
+  sense. So a `ROUTING` sent right after `SLOT_ADD` or `SLOT_MOVE` is never
+  refused for arriving first.
+- Latency compensation: each plugin's inputs are aligned on the latest of
+  them, each connection delayed as needed, and the session's latency is
+  that of the path reaching the outputs last.
+- A bus other than the main ones is enabled only while one of its channels
+  is connected.
+- Until a session receives `ROUTING` its chain is serial, as before
+  (each plugin in place on the first channels of one shared buffer).
+- The client sends `ROUTING` only to a server whose `WELCOME` lists the
+  `"routing"` capability, after each change of the graph and again when a
+  session is rebuilt; a resumed session keeps it.
 
 ## 5. Audio
 
