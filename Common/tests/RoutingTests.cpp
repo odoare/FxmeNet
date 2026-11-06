@@ -19,13 +19,29 @@
       - random chains and edits: every connection valid, delays never
         negative, everything meeting at a box aligned.
 
+    And the engine (Common/FxmeNet/chain/RoutingEngine.h), with fake
+    plugins that only delay, apply a gain and spread their inputs over
+    their outputs:
+      - the default routing gives exactly what the old serial chain gave
+        (one shared buffer, each plugin in place), on random chains;
+      - parallel paths aligned: dry plus wet, a channel going around a
+        plugin with latency;
+      - a plan rebuilt at every block (delay lines taken over) gives the
+        same output as one plan; a latency change settles on the new delay;
+      - disabled buses ignored, an enabled sidechain fed, a muted slot
+        silent, unconnected outputs silent, delays cleared on reset;
+      - the connections that fit a chain, the buses wanted.
+
     SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-FXME-Commercial
   ------------------------------------------------------------------------------
 */
 
 #include <FxmeNet/chain/Routing.h>
+#include <FxmeNet/chain/RoutingEngine.h>
 
+#include <cmath>
 #include <cstdio>
+#include <memory>
 #include <random>
 
 namespace
@@ -46,6 +62,95 @@ namespace
     }
 
     #define CHECK(cond) check ((cond), #cond, __LINE__)
+
+    /** A fake plugin: output k is gain x input (k mod ins), delayed by
+        `latency`; without inputs, gain x a ramp of its own. Processes in
+        place, leaving the channels past its outputs alone (as a plugin
+        leaves the buffer's extra channels). */
+    struct Fake
+    {
+        int ins = 2, outs = 2, latency = 0;
+        float gain = 1.0f;
+        std::vector<std::vector<float>> history;   ///< per input, the last `latency` samples
+        std::vector<float> temp;
+        long counter = 0;
+
+        Fake (int i, int o, int l, float g) : ins (i), outs (o), latency (l), gain (g) {}
+
+        int width() const   { return std::max ({ 1, ins, outs }); }
+
+        void setLatency (int l)
+        {
+            latency = l;
+            history.clear();
+        }
+
+        void process (float* const* ch, int numChannels, int n)
+        {
+            if (history.size() != (std::size_t) ins)
+                history.assign ((std::size_t) ins, std::vector<float> ((std::size_t) latency, 0.0f));
+            std::vector<std::vector<float>> delayed ((std::size_t) ins);
+            for (int c = 0; c < ins && c < numChannels; ++c)
+            {
+                auto& h = history[(std::size_t) c];
+                h.insert (h.end(), ch[c], ch[c] + n);
+                delayed[(std::size_t) c].assign (h.begin(), h.begin() + n);
+                h.erase (h.begin(), h.begin() + n);
+            }
+            for (int k = 0; k < outs && k < numChannels; ++k)
+                for (int i = 0; i < n; ++i)
+                    ch[k][i] = ins > 0 ? gain * delayed[(std::size_t) (k % ins)][(std::size_t) i]
+                                       : gain * (float) ((counter + i) % 97) / 97.0f;
+            counter += n;
+        }
+    };
+
+    Box fakeBox (std::uint32_t id, const Fake& f)
+    {
+        Box b;
+        b.id = id;
+        if (f.ins > 0)
+            b.inputs.push_back ({ "Main", f.ins, true });
+        if (f.outs > 0)
+            b.outputs.push_back ({ "Main", f.outs, true });
+        return b;
+    }
+
+    /** A random test signal per channel. */
+    std::vector<std::vector<float>> signal (int channels, int length, std::mt19937& rng)
+    {
+        std::uniform_real_distribution<float> d (-1.0f, 1.0f);
+        std::vector<std::vector<float>> out ((std::size_t) channels, std::vector<float> ((std::size_t) length));
+        for (auto& ch : out)
+            for (auto& x : ch)
+                x = d (rng);
+        return out;
+    }
+
+    /** Runs a plan over a whole signal, block by block; returns OUTPUTS. */
+    template <typename MakePlan>
+    std::vector<std::vector<float>> runPlan (const std::vector<std::vector<float>>& in, int numOutputs, int n,
+                                             std::vector<Fake>& fakes, MakePlan&& makePlan)
+    {
+        const int length = in.empty() ? 0 : (int) in[0].size();
+        std::vector<std::vector<float>> out ((std::size_t) numOutputs, std::vector<float> ((std::size_t) length, 0.0f));
+        std::unique_ptr<RoutingPlan> plan;
+        for (int start = 0, block = 0; start < length; start += n, ++block)
+        {
+            plan = makePlan (block, plan.get());
+            std::vector<const float*> inputs;
+            for (auto& ch : in)
+                inputs.push_back (ch.data() + start);
+            plan->process (inputs.data(), (int) inputs.size(), n, [&fakes] (int slot, float* const* ch, int w, int count)
+            {
+                fakes[(std::size_t) slot].process (ch, w, count);
+            });
+            for (int c = 0; c < numOutputs; ++c)
+                if (auto* o = plan->getOutput (c))
+                    std::copy (o, o + n, out[(std::size_t) c].begin() + start);
+        }
+        return out;
+    }
 
     /** A plugin box: main buses of `in` and `out` channels, plus aux inputs
         (each `auxWidth` wide) and aux outputs. */
@@ -404,6 +509,216 @@ int main()
             back.setManual (r.getManual());
             CHECK (back.getConnections() == r.getConnections());
         }
+    }
+
+    //--------------------------------------------------------------------------
+    std::printf ("Engine: the default routing is the old serial chain\n");
+    {
+        std::mt19937 rng (99);
+        auto pick = [&rng] (int lo, int hi) { return std::uniform_int_distribution<int> (lo, hi) (rng); };
+        bool same = true;
+        for (int round = 0; round < 200; ++round)
+        {
+            const int ins = pick (1, 6), outs = pick (1, 6), n = 32 * pick (1, 4);
+            std::vector<Fake> spec;
+            for (int i = pick (0, 5); i > 0; --i)
+                spec.emplace_back (pick (0, 4), pick (0, 4), 0, 0.25f + 0.25f * (float) pick (0, 6));
+            const auto in = signal (ins, n * 6, rng);
+
+            // The old way: one 64-channel buffer, each plugin in place.
+            auto oldFakes = spec;
+            std::vector<std::vector<float>> expected ((std::size_t) outs, std::vector<float> (in[0].size(), 0.0f));
+            for (int start = 0; start < (int) in[0].size(); start += n)
+            {
+                std::vector<std::vector<float>> work (64, std::vector<float> ((std::size_t) n, 0.0f));
+                for (int c = 0; c < ins; ++c)
+                    std::copy (in[(std::size_t) c].begin() + start, in[(std::size_t) c].begin() + start + n, work[(std::size_t) c].begin());
+                for (auto& f : oldFakes)
+                {
+                    std::vector<float*> view;
+                    for (int c = 0; c < f.width(); ++c)
+                        view.push_back (work[(std::size_t) c].data());
+                    f.process (view.data(), f.width(), n);
+                }
+                for (int c = 0; c < outs; ++c)
+                    std::copy (work[(std::size_t) c].begin(), work[(std::size_t) c].end(), expected[(std::size_t) c].begin() + start);
+            }
+
+            // Through the routing's default graph.
+            std::vector<Box> boxes { Box::makeInputs (ins) };
+            std::vector<SlotLayout> layouts;
+            for (std::size_t i = 0; i < spec.size(); ++i)
+            {
+                boxes.push_back (fakeBox ((std::uint32_t) i + 1, spec[i]));
+                layouts.push_back (SlotLayout::full (boxes.back()));
+            }
+            boxes.push_back (Box::makeOutputs (outs));
+            Routing r;
+            r.setBoxes (boxes);
+            auto newFakes = spec;
+            const auto got = runPlan (in, outs, n, newFakes, [&] (int, RoutingPlan* previous)
+            {
+                return std::make_unique<RoutingPlan> (ins, outs, layouts, r.getConnections(), n, previous);
+            });
+            same = same && got == expected;
+        }
+        CHECK (same);
+    }
+
+    std::printf ("Engine: parallel paths aligned\n");
+    {
+        std::mt19937 rng (7);
+        const int n = 64;
+        const auto in = signal (4, n * 20, rng);
+
+        // Dry plus wet: the dry path waits for the wet one.
+        std::vector<Fake> fakes { Fake (1, 1, 100, 0.5f) };
+        std::vector<SlotLayout> layouts { SlotLayout::full (fakeBox (1, fakes[0]), 100) };
+        const std::vector<Connection> dryWet {
+            { { I, 0 }, { 1, 0 } }, { { 1, 0 }, { O, 0 } }, { { I, 0 }, { O, 0 } } };
+        int planLatency = -1;
+        auto out = runPlan (in, 1, n, fakes, [&] (int, RoutingPlan* previous)
+        {
+            auto p = std::make_unique<RoutingPlan> (1, 1, layouts, dryWet, n, previous);
+            planLatency = p->getLatency();
+            return p;
+        });
+        CHECK (planLatency == 100);
+        bool aligned = true;
+        for (std::size_t i = 0; i < out[0].size(); ++i)
+            aligned = aligned && std::abs (out[0][i] - (i >= 100 ? 1.5f * in[0][i - 100] : 0.0f)) < 1.0e-6f;
+        CHECK (aligned);
+
+        // The same graph rebuilt at every block (delay lines taken over):
+        // the same output. Rebuilt without them: not the same.
+        std::vector<Fake> third { Fake (1, 1, 100, 0.5f) };
+        const auto rebuiltOut = runPlan (in, 1, n, third, [&] (int, RoutingPlan* previous)
+        {
+            return std::make_unique<RoutingPlan> (1, 1, layouts, dryWet, n, previous);
+        });
+        CHECK (rebuiltOut == out);
+        std::vector<Fake> fresh { Fake (1, 1, 100, 0.5f) };
+        const auto freshOut = runPlan (in, 1, n, fresh, [&] (int, RoutingPlan*)
+        {
+            return std::make_unique<RoutingPlan> (1, 1, layouts, dryWet, n, nullptr);
+        });
+        CHECK (freshOut != out);
+
+        // A latency change: the plugin goes from 100 to 150 samples at block
+        // 10; once both paths have caught up, the dry one follows.
+        std::vector<Fake> changing { Fake (1, 1, 100, 0.5f) };
+        const auto changed = runPlan (in, 1, n, changing, [&] (int block, RoutingPlan* previous)
+        {
+            if (block == 10)
+                changing[0].setLatency (150);
+            auto l = layouts;
+            l[0].latency = changing[0].latency;
+            return std::make_unique<RoutingPlan> (1, 1, l, dryWet, n, previous);
+        });
+        bool settled = true;
+        for (std::size_t i = 10 * n + 150 + n; i < changed[0].size(); ++i)
+            settled = settled && std::abs (changed[0][i] - 1.5f * in[0][i - 150]) < 1.0e-6f;
+        CHECK (settled);
+
+        // A channel around a narrower plugin waits for it: 4 channels into
+        // A (latency 10), then X (2 channels, latency 100).
+        std::vector<Fake> chainFakes { Fake (4, 4, 10, 0.5f), Fake (2, 2, 100, 2.0f) };
+        std::vector<Box> boxes { Box::makeInputs (4), fakeBox (1, chainFakes[0]), fakeBox (2, chainFakes[1]), Box::makeOutputs (4) };
+        Routing r;
+        r.setBoxes (boxes);
+        std::vector<SlotLayout> chainLayouts { SlotLayout::full (boxes[1], 10), SlotLayout::full (boxes[2], 100) };
+        const auto around = runPlan (in, 4, n, chainFakes, [&] (int, RoutingPlan* previous)
+        {
+            auto p = std::make_unique<RoutingPlan> (4, 4, chainLayouts, r.getConnections(), n, previous);
+            planLatency = p->getLatency();
+            return p;
+        });
+        CHECK (planLatency == 110);
+        bool allAligned = true;
+        for (int c = 0; c < 4; ++c)
+            for (std::size_t i = 0; i < around[0].size(); ++i)
+            {
+                const float expected = i >= 110 ? (c < 2 ? 1.0f : 0.5f) * in[(std::size_t) c][i - 110] : 0.0f;
+                allAligned = allAligned && std::abs (around[(std::size_t) c][i] - expected) < 1.0e-6f;
+            }
+        CHECK (allAligned);
+    }
+
+    std::printf ("Engine: buses, mute, unconnected outputs, reset\n");
+    {
+        const int n = 16;
+        Box side;
+        side.id = 1;
+        side.inputs = { { "Main", 2, true }, { "Sidechain", 2, false } };
+        side.outputs = { { "Main", 2, true } };
+        const std::vector<Connection> toSide { { { I, 0 }, { 1, 0 } }, { { I, 2 }, { 1, 2 } }, { { 1, 0 }, { O, 0 } } };
+
+        std::vector<float> a (n, 1.0f), b (n, 2.0f), c3 (n, 3.0f);
+        const float* inputs[] = { a.data(), b.data(), c3.data() };
+
+        // Sidechain disabled: its pins are ignored, the buffer has 2 channels.
+        SlotLayout disabled = SlotLayout::full (side);
+        disabled.inputWidths = { 2, 0 };
+        RoutingPlan p1 (3, 2, { disabled }, toSide, n);
+        CHECK (p1.getSlotWidth (0) == 2);
+        int seenWidth = 0;
+        p1.process (inputs, 3, n, [&] (int, float* const*, int w, int) { seenWidth = w; });
+        CHECK (seenWidth == 2);
+
+        // Enabled: buffer channel 2 holds input 3.
+        RoutingPlan p2 (3, 2, { SlotLayout::full (side) }, toSide, n);
+        CHECK (p2.getSlotWidth (0) == 4);
+        float sideSample = 0.0f, mainSample = 0.0f;
+        p2.process (inputs, 3, n, [&] (int, float* const* ch, int, int) { mainSample = ch[0][5]; sideSample = ch[2][5]; });
+        CHECK (mainSample == 1.0f && sideSample == 3.0f);
+        CHECK (p2.getOutput (0)[3] == 1.0f);            // what the slot left on its output 1
+        CHECK (p2.getOutput (1)[3] == 0.0f);            // output 2: nothing connected
+        CHECK (p2.getOutput (2) == nullptr && p2.getNumOutputs() == 2);
+
+        // Muted: not called, silent.
+        SlotLayout muted = SlotLayout::full (side);
+        muted.muted = true;
+        RoutingPlan p3 (3, 2, { muted }, toSide, n);
+        bool called = false;
+        p3.process (inputs, 3, n, [&] (int, float* const*, int, int) { called = true; });
+        CHECK (! called && p3.getOutput (0)[0] == 0.0f);
+
+        // Reset: the delay lines are emptied.
+        std::vector<Fake> fakes { Fake (1, 1, 20, 1.0f) };
+        const std::vector<Connection> dryWet { { { I, 0 }, { 1, 0 } }, { { 1, 0 }, { O, 0 } }, { { I, 0 }, { O, 0 } } };
+        RoutingPlan p4 (1, 1, { SlotLayout::full (fakeBox (1, fakes[0]), 20) }, dryWet, n);
+        auto run = [&] { p4.process (inputs, 1, n, [&] (int s, float* const* ch, int w, int k) { fakes[(std::size_t) s].process (ch, w, k); }); };
+        for (int i = 0; i < 4; ++i)
+            run();
+        CHECK (p4.getOutput (0)[0] == 2.0f);   // dry 1 + wet 1, both delayed
+        p4.clearDelays();
+        fakes[0].setLatency (20);
+        run();
+        CHECK (p4.getOutput (0)[0] == 0.0f);   // both paths empty again
+    }
+
+    std::printf ("Engine: fitting connections, wanted buses\n");
+    {
+        Box side;
+        side.id = 1;
+        side.inputs = { { "Main", 2, true }, { "Sidechain", 2, false } };
+        side.outputs = { { "Main", 2, true }, { "Aux", 2, false } };
+        const std::vector<Box> boxes { Box::makeInputs (4), side, Box::makeOutputs (2) };
+        const std::vector<Connection> sent {
+            { { I, 0 }, { 1, 0 } }, { { I, 0 }, { 1, 0 } },     // twice
+            { { 1, 0 }, { 1, 1 } },                               // same box
+            { { O, 0 }, { 1, 0 } },                               // upward
+            { { 5, 0 }, { O, 0 } },                               // no such slot (yet)
+            { { I, 9 }, { 1, 0 } },                               // no such pin
+            { { I, 2 }, { 1, 3 } } };
+        const auto fit = fittingConnections (boxes, sent);
+        CHECK (fit.size() == 2 && fit[1] == (Connection { { I, 2 }, { 1, 3 } }));
+
+        std::vector<bool> ins, outs;
+        wantedBuses (side, fit, ins, outs);
+        CHECK (ins == std::vector<bool> ({ true, true }) && outs == std::vector<bool> ({ true, false }));
+        wantedBuses (side, {}, ins, outs);
+        CHECK (ins == std::vector<bool> ({ true, false }));
     }
 
     std::printf ("%d checks, %d failure(s)\n", checks, failures);

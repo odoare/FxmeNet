@@ -36,8 +36,11 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
       capability; protocol.md 4.5 and 4.6). Build and run
       FxmeNetProtocolTests and FxmeNetControlTests; rebuild the server and
       the plugin (nothing changes in use yet).
-    - C: server (a buffer per plugin, sums, latency compensation, aux
-      buses enabled when connected).
+    - C (written): server (a buffer per plugin, sums, latency
+      compensation, aux buses enabled when connected; routing.md section
+      5). Build and run FxmeNetRoutingTests; rebuild the server. Nothing
+      changes in use until D: the client sends no ROUTING yet, so chains
+      stay serial (the server now lists "routing" in WELCOME).
     - D: client engine and state (masks derived from the routing).
     - E: the view, in a reorganized stream and channels view.
 16. (written) Tier 1 plugins: send non-parameter state changes to the

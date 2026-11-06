@@ -100,14 +100,7 @@ private:
     const std::uint64_t sessionToken;
     PluginCatalog& catalog;
 
-    Chain chain;
-
-    /** The last ROUTING, as sent (doc/routing.md); empty until one came,
-        and then the chain stays serial. Kept whole: connections to a slot
-        still loading, or that do not fit the chain as it is, wait until
-        they do. Applied to the chain in step C. */
-    std::vector<control::Route> routing;
-    bool routingReceived = false;
+    Chain chain;   ///< also keeps the last ROUTING (Chain::setRouting)
 
     AudioWorker worker;
     control::Configure config;

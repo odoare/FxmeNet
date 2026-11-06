@@ -2,7 +2,8 @@
 
 Status: agreed (2026-11-06), decisions in section 4. It replaces todo item
 15 (routing of a slot's extra buses) with a more general design. Steps A
-(the routing model) and B (protocol) are written; C to E are to do.
+(the routing model), B (protocol) and C (server) are written; D and E are
+to do. Section 5 describes how the server processes a routed chain.
 
 ## 1. The idea
 
@@ -186,6 +187,8 @@ without audio.
 
 ### C. Server
 
+(Written; details in section 5.)
+
 - Each plugin gets its own buffer instead of the shared work buffer. For
   each plugin in order: gather its inputs (copy or sum, through the
   compensation delays), process, keep its outputs for the boxes below.
@@ -195,7 +198,8 @@ without audio.
   the plugin concerned.
 - The latency taken from the longest path.
 - An engine test with test processors that only add a delay or a gain,
-  checking sums and alignment across parallel paths.
+  checking sums and alignment across parallel paths (in
+  `Common/tests/RoutingTests.cpp`, with the model's tests).
 
 ### D. Client engine and state
 
@@ -228,3 +232,124 @@ straightforward once A exists.
 4. The default rule (2.3) and the edit rules (2.4) as written. The default
    rule was then stated from the inputs (2.3) when writing step A, for the
    mono-to-stereo case; the behaviour agreed (today's chain) is unchanged.
+
+## 5. Server internals
+
+How the server processes a routed chain (step C). The code is in
+`Common/FxmeNet/chain/RoutingEngine.h` (JUCE-free, tested with fake
+plugins) and `Server/Source/Chain.cpp` (which drives it).
+
+### 5.1 Serial until routed
+
+A session processes its chain in series, as before, until it receives a
+`ROUTING`: one 64-channel work buffer, each plugin in place on its first
+channels. Older clients never send one, so nothing changes for them. From
+the first `ROUTING` on, the chain is routed for the rest of the session
+(a resumed session included). The server announces the `"routing"`
+capability in `WELCOME`.
+
+### 5.2 What the server keeps
+
+`Chain::setRouting` keeps the connections exactly as received. Each time
+the chain changes (a plugin added, removed or moved, a new format) the
+connections that fit the chain as it is are picked again
+(`fittingConnections`: boxes that exist, pins in range, going downward,
+no duplicate), so a `ROUTING` that arrived before a plugin finished loading
+takes effect once it has.
+
+For each slot the server also keeps its box (its buses at full width, as
+sent in `SLOT_READY`) and the bus layout it last asked the plugin for.
+
+### 5.3 The plan
+
+Everything the audio thread needs is computed on the message thread into
+a `RoutingPlan`, published with the chain's snapshot (the same atomic swap
+as the serial chain: the audio thread never waits, the message thread frees
+an old snapshot only once the audio thread has let go of it). A plan
+holds:
+
+- one buffer per box, N samples per channel, allocated when the plan is
+  built: INPUTS (a copy of the session's inputs), one per slot (as wide as
+  the plugin's enabled channels, the buffer its `processBlock` receives),
+  OUTPUTS (the result);
+- for each pin, its channel in its box's buffer. Pins count every bus at
+  full width; a slot's buffer has only its enabled buses, in order, so a
+  pin of a disabled bus (or past the width a plugin actually gave a bus)
+  maps to nothing and its connections are ignored;
+- for each input channel of each box, its sources ("taps"): a pointer to
+  the source's buffer channel, or a delay line and a delay;
+- the timing: each slot's latency as it was when the plan was built, and
+  the graph's latency.
+
+The plan is rebuilt after any chain edit, any `ROUTING`, any bus layout
+change, and any latency change (5.6). Building it allocates; running it
+does not.
+
+### 5.4 One block
+
+1. INPUTS: the session's input channels are copied in (absent ones, not in
+   the client's input mask, are silent).
+2. Each slot, top to bottom: its buffer is cleared, each input channel is
+   gathered (the sum of its taps), the plugin processes the buffer in place
+   (`processBlock`, or `processBlockBypassed` when bypassed: the plugin's
+   own bypass, which passes each input channel to the same output). A muted
+   slot (5.7) is not called and its outputs stay silent.
+3. OUTPUTS is gathered the same way, and copied back into the worker's
+   buffer, which sends it to the client. Channels nothing feeds are silent.
+
+As soon as a box's buffer is final, the delay lines of its output pins
+that have any are written. MIDI goes through the plugins in chain order, as
+before (each plugin gets what the one above left).
+
+### 5.5 Latency compensation
+
+From the slots' latencies, `computeTiming` gives each box an arrival time:
+the latest of (source's arrival + source's latency) over its sources, 0
+for a box fed by nothing. Each connection is delayed by the difference
+between its box's arrival and its source's, so everything summed at a box
+is aligned. The graph's latency is OUTPUTS' arrival; the server reports it
+in every audio reply, as it reported the summed latency before, and the
+client adjusts its own latency as it already does.
+
+Delays are done by delay lines, one per source pin that has delayed
+connections (written once per block, read once per connection, each at its
+own delay). A line is sized for twice its largest delay plus a block,
+rounded up to a power of two. A new plan takes over the delay lines of the
+plan it replaces when they are large enough, so rebuilding a plan (another
+plugin added, a latency change) does not empty the delayed paths; a line
+that has to grow starts silent. When the client resets the stream (its
+reset parity, protocol.md 5.4), the delay lines are emptied along with the
+plugins' reset.
+
+### 5.6 Latency changes
+
+A plugin can change its latency while running. After each plugin's
+`processBlock` the audio thread compares its latency with the one the plan
+was built with; if it differs it sets a flag, and the session's timer
+(at the telemetry rate, 30 Hz by default) rebuilds the plan. Between the change and the
+rebuild, at most a few blocks are misaligned, then the delays follow.
+
+### 5.7 Switching aux buses
+
+A bus other than the main ones is enabled only while one of its channels is
+connected (2.2). When the connections that fit the chain call for a
+different layout for some slots:
+
+1. those slots are muted and a plan without them is published; publishing
+   returns once the audio thread has let go of the previous snapshot, so
+   from then on it no longer calls those plugins;
+2. each of them is released, given its new layout (`setBusesLayout`: a
+   bus switched on gets the layout it last had, or its default one) and
+   prepared again;
+3. they are unmuted and a final plan is published.
+
+The other slots keep playing throughout; the slots concerned are silent for
+the few blocks this takes, and lose their internal state (a reverb's tail).
+A plugin that refuses the layout keeps its own; the layout asked for is
+remembered, so it is not asked again until the routing asks for another.
+Main buses are left as they are.
+
+In serial mode the server keeps the plugin's default layout, as before. So
+the first `ROUTING` disables the aux buses some plugins enable by default
+(TAL Reverb 4's second input) until one is connected: by design (2.2), but
+audible on those plugins.

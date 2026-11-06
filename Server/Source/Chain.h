@@ -2,7 +2,9 @@
   ------------------------------------------------------------------------------
     Chain.h
 
-    A session's chain of plugin slots, processed in series.
+    A session's chain of plugin slots: processed in series, or through a
+    routing graph once the client sent one (ROUTING; doc/routing.md
+    section 5, Common/FxmeNet/chain/RoutingEngine.h).
 
     Edits (add, remove, move, bypass, clear, prepare) happen on the message
     thread and are published as an immutable Snapshot through an atomic
@@ -14,6 +16,16 @@
     the last snapshot holding it goes: on the message thread, as VST3 hosting
     requires.
 
+    Routed, each snapshot also carries a RoutingPlan built from the slots,
+    their bus layouts and latencies, and the connections that fit the chain
+    (the ROUTING is kept whole: what does not fit yet waits). The plan is
+    rebuilt at each edit, when the routing changes, and when a plugin's
+    latency changes (the audio thread notices, the session's timer calls
+    refreshLatencies). A slot whose aux buses must be switched on or off is
+    first muted (a plan without it is published, which waits until the
+    audio thread has let go of the old one), then its layout changed and
+    prepared again, then unmuted: the other slots keep playing.
+
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-FXME-Commercial
   ------------------------------------------------------------------------------
@@ -24,6 +36,7 @@
 #include <juce_audio_processors_headless/juce_audio_processors_headless.h>
 
 #include <FxmeTools/net/NetAbi.h>
+#include <FxmeNet/chain/RoutingEngine.h>
 #include <FxmeNet/control/ControlMessages.h>
 #include <FxmeNet/protocol/Wire.h>
 
@@ -80,6 +93,11 @@ public:
         std::atomic<bool> bypassed { false };
         int numChannels = 2;                     ///< max of the instance's inputs and outputs
 
+        // Routing, message thread.
+        chain::Box box;                          ///< its buses at full width (SLOT_READY's)
+        std::vector<bool> wantedIn, wantedOut;   ///< the bus layout last asked for
+        bool muted = false;                      ///< left out of the plan while its layout changes
+
         // Message thread only.
         std::unique_ptr<ParamWatcher> watcher;
         bool telemetryActive = false;            ///< the client's editor for it is open
@@ -94,8 +112,20 @@ public:
     //==============================================================================
     // Message thread.
 
-    /** Sets the processing format and prepares every slot for it. */
-    void prepare (double sampleRate, int blockSize);
+    /** Sets the processing format (and the session's channel counts, for
+        the routing) and prepares every slot for it. The audio thread is
+        stopped. */
+    void prepare (double sampleRate, int blockSize, int numInputs, int numOutputs);
+
+    /** The client's routing (ROUTING), kept whole; from then on the chain is
+        routed. Switches aux buses on and off as needed. */
+    void setRouting (std::vector<chain::Connection> connections);
+
+    bool isRouted() const noexcept              { return routed; }
+
+    /** Rebuilds the plan if a plugin's latency changed (routed only). From
+        the session's timer. */
+    void refreshLatencies();
 
     /** Takes an instance (already created), sets it up as a source (role,
         play head, state, prepareToPlay) and inserts it at `position`
@@ -136,7 +166,8 @@ public:
         this point of the stream: protocol.md section 5.1). */
     void process (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi, bool offline, bool reset = false);
 
-    /** The chain's current latency, summed over the slots (any thread). */
+    /** The chain's current latency: summed over the slots, or the routing
+        graph's (any thread). */
     int getLatency() const noexcept             { return latency.load(); }
 
     /** The widest slot's channel count, as of the last publish. */
@@ -148,9 +179,22 @@ private:
     struct Snapshot
     {
         std::vector<SlotPtr> slots;
+        std::unique_ptr<chain::RoutingPlan> plan;   ///< null: in series
     };
 
-    void publish();
+    /** Publishes the slots (and the plan, routed). False when the audio
+        thread still held the old snapshot after 2 s (it was leaked). */
+    bool publish();
+
+    /** Routed: switches buses as the routing needs (muting what changes),
+        then publishes. Not routed: publishes. */
+    void update();
+
+    /** Sets a slot's buses on or off as wanted and prepares it again. */
+    void applyBuses (Slot&, const std::vector<bool>& in, const std::vector<bool>& out);
+
+    std::vector<chain::Box> boxes() const;
+    void processRouted (Snapshot&, juce::AudioBuffer<float>&, juce::MidiBuffer&, bool offline, bool reset);
     int indexOf (std::uint32_t slotId) const;
 
     std::vector<SlotPtr> slots;            // the message thread's view
@@ -160,6 +204,10 @@ private:
     SessionPlayHead playHead;
     double sampleRate = 48000.0;
     int blockSize = 128;
+    int numInputs = 2, numOutputs = 2;
+    bool routed = false;
+    std::vector<chain::Connection> routing;
+    std::atomic<bool> latencyStale { false };   ///< set by the audio thread
     std::atomic<int> latency { 0 };
     std::atomic<int> requiredChannels { 2 };
 

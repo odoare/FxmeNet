@@ -118,6 +118,7 @@ void Session::sendWelcome (std::uint32_t requestId, bool resumed)
     w.serverName = server.getConfig().name;
     w.os = juce::SystemStats::getOperatingSystemName();
     w.resumed = resumed;
+    w.capabilities.add (control::capabilityRouting);
     if (connection != nullptr)
         connection->sendJson (Type::welcome, requestId, w.toVar());
 }
@@ -147,6 +148,7 @@ juce::String Session::describeActivity()
 //==============================================================================
 void Session::timerCallback()
 {
+    chain.refreshLatencies();
     pumpTelemetry();
     flushParamChanges();
 }
@@ -316,7 +318,7 @@ void Session::handleConfigure (const Frame& f)
         reassembler.reset();
     }
     worker.stop();
-    chain.prepare (c.sampleRate, c.blockSize);
+    chain.prepare (c.sampleRate, c.blockSize, c.numInputs, c.numOutputs);
     config = c;
     configured = true;
     worker.start (config, sessionId, sessionToken);
@@ -422,8 +424,7 @@ void Session::handleRouting (const Frame& f)
     if (! decode (f.payload, routes))
         return fail (f, ErrorMessage::badRequest, "malformed ROUTING");
 
-    routing = std::move (routes);
-    routingReceived = true;
+    chain.setRouting (control::fromRoutes (routes));
     ack (f);
 }
 
