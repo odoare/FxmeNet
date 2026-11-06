@@ -175,6 +175,10 @@ public:
         return true;
     }
 
+    /** Audio thread, before send(): the inputs the routing uses (bit c:
+        input c); the others are not sent. All by default. */
+    void setInputsUsed (std::uint64_t mask) noexcept   { inputsUsed = mask; }
+
     std::uint32_t getGeneration() const noexcept    { return settings.generation; }
     const Settings& getSettings() const noexcept    { return settings; }
 
@@ -195,16 +199,18 @@ public:
         const auto k = base + streamBlock;
         nextWire = juce::jmax (nextWire, k + 1);
 
+        // The configured inputs, less those the routing does not use.
+        const auto mask = inputMask & inputsUsed;
         int count = 0;
         for (int c = 0; c < settings.numInputs && c < wire::maxChannels; ++c)
-            if ((inputMask & (std::uint64_t (1) << c)) != 0)
+            if ((mask & (std::uint64_t (1) << c)) != 0)
                 sendPointers[(std::size_t) count++] = block[c];
 
         auto& r = requests[(std::size_t) (k % (std::uint64_t) slots)];
         wire::BlockInfo info;
         info.block = k;
         info.samples = (std::uint16_t) n;
-        info.mask = inputMask;
+        info.mask = mask;
         info.hasTransport = transportInfo != nullptr;
         if (transportInfo != nullptr)
             info.transport = *transportInfo;
@@ -369,6 +375,7 @@ private:
     std::uint64_t base = 0, nextWire = 0;   // audio thread
     int n = 128, slots = 64;
     std::uint64_t inputMask = 0;
+    std::uint64_t inputsUsed = ~std::uint64_t (0);   ///< audio thread
 
     juce::DatagramSocket socket;
     std::unique_ptr<UdpTransport> transport;

@@ -329,7 +329,7 @@ void AudioWorker::processBlock (const wire::BlockView& v, std::uint16_t flags)
     wire::BlockInfo info;
     info.block = v.info.block;
     info.samples = (std::uint16_t) n;
-    info.mask = config.outputMask;
+    info.mask = config.outputMask & chain.getOutputsFed();   // routed: unfed outputs are not sent
     info.chainLatency = (std::uint32_t) juce::jmax (0, chain.getLatency());
 
     int out = 0;

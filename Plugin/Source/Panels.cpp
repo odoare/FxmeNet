@@ -528,6 +528,23 @@ SettingsPanel::SettingsPanel (FxmeNetAudioProcessor& p) : processor (p)
     foldersButton.setTooltip (tips::pluginFolders);
     foldersButton.onClick = [this] { foldersMenu(); };
 
+    dryPathButton.setTooltip ("Test (until the routing view): each input also goes straight to the same output, "
+                              "in parallel with the chain, delayed to stay aligned with it.");
+    resetRoutingButton.setTooltip ("Back to the default routing: each plugin fed by the one above, in series.");
+    dryPathButton.onClick = [this]
+    {
+        auto& engine = processor.getEngine();
+        const int n = juce::jmin (processor.getPreparedInputs(), processor.getPreparedOutputs());
+        for (int c = 0; c < n; ++c)
+            engine.connectPins ({ fxmenet::chain::inputsBox, c }, { fxmenet::chain::outputsBox, c });
+    };
+    resetRoutingButton.onClick = [this] { processor.getEngine().resetRouting(); };
+    for (auto* b : { &dryPathButton, &resetRoutingButton })
+    {
+        styleButton (*b);
+        addAndMakeVisible (*b);
+    }
+
     flushButton.setTooltip (tips::flushOnReset);
     logButton.setTooltip (tips::logEvents);
     for (auto* b : { &flushButton, &logButton })
@@ -604,6 +621,35 @@ void SettingsPanel::refresh()
     {
         latencyText = text;
         repaint (latencyArea);
+    }
+
+    {
+        // The routing as the server gets it: S<slot id>:<channel>, from 1.
+        juce::String rt;
+        if (! engine.isRoutingAvailable())
+            rt = "This server does not route (an older version): the chain runs in series.";
+        else
+        {
+            auto name = [] (const fxmenet::chain::Pin& p)
+            {
+                const auto box = p.box == fxmenet::chain::inputsBox ? juce::String ("IN")
+                               : p.box == fxmenet::chain::outputsBox ? juce::String ("OUT")
+                               : "S" + juce::String ((int) p.box) + ":";
+                return box + juce::String (p.channel + 1);
+            };
+            const auto connections = engine.getServerRouting();
+            rt << (int) connections.size() << " connections, " << (int) engine.getRoutingPins().size()
+               << " input pins set by hand:";
+            for (auto& c : connections)
+                rt << "  " << name (c.from) << ">" << name (c.to);
+        }
+        dryPathButton.setEnabled (engine.isRoutingAvailable());
+        resetRoutingButton.setEnabled (engine.isRoutingAvailable());
+        if (rt != routingText)
+        {
+            routingText = rt;
+            repaint (routingArea);
+        }
     }
 
     flushButton.setToggleState (processor.getEngine().getFlushOnReset(), juce::dontSendNotification);
@@ -698,6 +744,8 @@ void SettingsPanel::paint (juce::Graphics& g)
     g.drawText ("OUTPUTS received from the server", outputsLabel, juce::Justification::centredLeft);
     g.drawText ("LOCAL PLUGINS (for the plugins' own editors)", localArea.withHeight (18), juce::Justification::centredLeft);
     g.drawText ("TRANSPORT", diagnosticsLabel, juce::Justification::centredLeft);
+    g.drawText ("ROUTING (test)", routingLabel, juce::Justification::centredLeft);
+    g.drawFittedText (routingText, routingArea, juce::Justification::topLeft, 3, 1.0f);
     g.setColour (theme::text);
     g.drawFittedText (latencyText, latencyArea, juce::Justification::centredLeft, 2);
     g.drawText (localText, localArea.withTrimmedTop (22).withHeight (24), juce::Justification::centredLeft, true);
@@ -719,6 +767,16 @@ void SettingsPanel::resized()
     buttons.removeFromRight (6);
     foldersButton.setBounds (buttons.removeFromRight (90).withHeight (24));
     localArea = localArea.withTrimmedRight (296);
+    r.removeFromBottom (8);
+
+    // Routing (temporary), above.
+    auto routingRow = r.removeFromBottom (58);
+    auto routingButtons = routingRow.removeFromTop (24);
+    routingLabel = routingButtons.removeFromLeft (110);
+    dryPathButton.setBounds (routingButtons.removeFromLeft (110));
+    routingButtons.removeFromLeft (6);
+    resetRoutingButton.setBounds (routingButtons.removeFromLeft (110));
+    routingArea = routingRow.withTrimmedTop (4);
     r.removeFromBottom (8);
 
     // Reset behaviour and the events log, above.

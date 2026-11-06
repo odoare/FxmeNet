@@ -170,6 +170,10 @@ public:
         graph's (any thread). */
     int getLatency() const noexcept             { return latency.load(); }
 
+    /** The outputs the chain feeds (bit c: output c): all in series, those
+        the routing connects when routed (any thread). */
+    std::uint64_t getOutputsFed() const noexcept   { return outputsFed.load(); }
+
     /** The widest slot's channel count, as of the last publish. */
     int getRequiredChannels() const noexcept    { return requiredChannels.load(); }
 
@@ -209,6 +213,7 @@ private:
     std::vector<chain::Connection> routing;
     std::atomic<bool> latencyStale { false };   ///< set by the audio thread
     std::atomic<int> latency { 0 };
+    std::atomic<std::uint64_t> outputsFed { ~std::uint64_t (0) };
     std::atomic<int> requiredChannels { 2 };
 
     JUCE_DECLARE_NON_COPYABLE (Chain)

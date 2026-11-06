@@ -93,7 +93,7 @@ void Chain::prepare (double newSampleRate, int newBlockSize, int newInputs, int 
         s->instance->releaseResources();
         s->instance->prepareToPlay (sampleRate, blockSize);
     }
-    publish();   // a plan for the new block size
+    update();   // a plan for the new format; buses again (the channel counts may let more connections fit)
 }
 
 void Chain::setRouting (std::vector<chain::Connection> connections)
@@ -338,6 +338,7 @@ bool Chain::publish()
         next->plan = std::make_unique<chain::RoutingPlan> (numInputs, numOutputs, layouts, routing, blockSize,
                                                            previous != nullptr ? previous->plan.get() : nullptr);
         latency.store (next->plan->getLatency());
+        outputsFed.store (next->plan->getOutputsFed());
     }
 
     auto* old = current.exchange (next);

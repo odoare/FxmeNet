@@ -180,6 +180,10 @@ full width.
   that of the path reaching the outputs last.
 - A bus other than the main ones is enabled only while one of its channels
   is connected.
+- Channel masks: the client leaves the inputs the routing does not use out
+  of its audio requests (each request carries its mask, 5.2), and a routed
+  server leaves out of its replies the outputs nothing feeds (5.3); the
+  missing channels are silence. Neither needs a new `CONFIGURE`.
 - Until a session receives `ROUTING` its chain is serial, as before
   (each plugin in place on the first channels of one shared buffer).
 - The client sends `ROUTING` only to a server whose `WELCOME` lists the

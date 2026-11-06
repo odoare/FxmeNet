@@ -512,6 +512,41 @@ int main()
     }
 
     //--------------------------------------------------------------------------
+    std::printf ("The client's model and the server's view\n");
+    {
+        // As ClientEngine keeps it: INPUTS and OUTPUTS 64 wide, every slot
+        // whose buses are known; resolved for a server with 2 inputs and 2
+        // outputs, and only the slots loaded there.
+        auto modelBoxes = [] (std::vector<Box> plugins)   { return chain (64, std::move (plugins), 64); };
+        auto serverBoxes = [] (std::vector<Box> plugins)  { return chain (2, std::move (plugins), 2); };
+
+        Routing model;
+        model.setBoxes (modelBoxes ({ plugin (1, 2, 2, 1), plugin (2, 2, 2) }));
+        CHECK (model.connect ({ I, 2 }, { 1, 2 }));     // the DAW's channel 3 into the sidechain
+        CHECK (model.connect ({ I, 0 }, { O, 0 }));     // dry path
+
+        Routing server = model;
+        server.setBoxes (serverBoxes ({ plugin (1, 2, 2, 1), plugin (2, 2, 2) }));
+        CHECK (server.sourcesOf ({ 1, 2 }).empty());     // no channel 3 on this host: not sent
+        CHECK (fedBy (server, { O, 0 }, { { 2, 0 }, { I, 0 } }));
+        CHECK (server.getInputsUsed() == 3);
+        CHECK (model.isManual ({ 1, 2 }) && fedBy (model, { 1, 2 }, { { I, 2 } }));   // kept in the model
+
+        // Plugin 2 missing on the server: bridged there, kept in the model.
+        server = model;
+        server.setBoxes (serverBoxes ({ plugin (1, 2, 2, 1) }));
+        CHECK (fedBy (server, { O, 1 }, { { 1, 1 } }));
+        CHECK (model.findBox (2) != nullptr);
+
+        // A project saved and loaded before the host is prepared: the
+        // model's ends do not depend on it, so the pins survive.
+        Routing loaded;
+        loaded.setBoxes (modelBoxes ({ plugin (1, 2, 2, 1), plugin (2, 2, 2) }));
+        loaded.setManual (model.getManual());
+        CHECK (loaded.getConnections() == model.getConnections());
+    }
+
+    //--------------------------------------------------------------------------
     std::printf ("Engine: the default routing is the old serial chain\n");
     {
         std::mt19937 rng (99);

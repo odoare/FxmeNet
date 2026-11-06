@@ -41,7 +41,15 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
       5). Build and run FxmeNetRoutingTests; rebuild the server. Nothing
       changes in use until D: the client sends no ROUTING yet, so chains
       stay serial (the server now lists "routing" in WELCOME).
-    - D: client engine and state (masks derived from the routing).
+    - D (written): client engine and state (routing.md section 6). Build
+      and run FxmeNetRoutingTests; rebuild the server and the plugin. In
+      Reaper: an existing project sounds as before; Settings, "ROUTING
+      (test)" lists the connections the server gets. "Add dry path" with
+      a latency plugin (a lookahead compressor, a linear-phase EQ):
+      the dry signal is mixed in, aligned (no comb filtering), the
+      reported latency unchanged. Save, reload: still there. "Reset
+      routing": back to series. A plugin with a sidechain: its sidechain
+      stays disabled (the input of channels 3 and 4 is no longer sent).
     - E: the view, in a reorganized stream and channels view.
 16. (written) Tier 1 plugins: send non-parameter state changes to the
     server. Before, `syncShadows` sent a shadow's state only when its

@@ -2,8 +2,9 @@
 
 Status: agreed (2026-11-06), decisions in section 4. It replaces todo item
 15 (routing of a slot's extra buses) with a more general design. Steps A
-(the routing model), B (protocol) and C (server) are written; D and E are
-to do. Section 5 describes how the server processes a routed chain.
+(the routing model), B (protocol), C (server) and D (client) are written;
+E (the view) is to do. Section 5 describes how the server processes a
+routed chain, section 6 what the client does.
 
 ## 1. The idea
 
@@ -203,9 +204,14 @@ without audio.
 
 ### D. Client engine and state
 
+(Written; details in section 6. Until the view exists, the settings view
+has two temporary test buttons, "Add dry path" and "Reset routing", and a
+summary of what the server gets.)
+
 - The routing lives in the client's model, is saved in the project, and is
   sent on connect and on resume.
-- The input and output masks are derived from it.
+- The input and output masks are derived from it (per block, without a
+  reconfiguration: 6.4).
 - Chain edits (insert, remove, move) apply the rules of 2.4.
 - The local copies of the plugins (shadows) get the same bus layout as on
   the server.
@@ -353,3 +359,77 @@ In serial mode the server keeps the plugin's default layout, as before. So
 the first `ROUTING` disables the aux buses some plugins enable by default
 (TAL Reverb 4's second input) until one is connected: by design (2.2), but
 audible on those plugins.
+
+## 6. Client internals
+
+What FxmeNetPlugin does (step D), in `Common/FxmeNet/client/ClientEngine.h`
+and the plugin's processor.
+
+### 6.1 The model and the server's view
+
+The engine holds the routing model (`chain::Routing`, section 2.3 and 2.4
+rules) over:
+
+- every slot whose buses it knows: from `SLOT_READY`, or saved with the
+  project (6.3), so that a project's routing holds before the server has
+  answered;
+- INPUTS and OUTPUTS 64 channels wide, whatever the host gives, so that a
+  project loaded before the host is prepared (or on a host with fewer
+  channels) keeps its pins.
+
+What the server gets is that model resolved on the chain the server really
+has: a copy of the model is given the server's boxes (INPUTS and OUTPUTS
+at the host's channel counts, as in `CONFIGURE`, and only the slots loaded
+on the server). The edit rules then do the rest: a slot missing on the
+server is bridged as if bypassed for good, pins on channels the host does
+not have are dropped. The model itself is never changed by that, so the
+missing plugin's routing comes back with it.
+
+### 6.2 When the routing is sent
+
+The resolved connections are recomputed after every change that can
+affect them (a slot loaded, refused, removed or moved, the chain replaced
+by a project load, a routing edit, new host channel counts) and sent as
+`ROUTING` when they differ from the last ones sent. Only to a server whose
+`WELCOME` lists `"routing"`; each new connection sends it again once the
+chain is in place (a resumed session too: harmless, the server keeps the
+same). A `ROUTING` that fails or is refused is sent again at the next
+change or connection.
+
+Adding a slot changes nothing until its `SLOT_READY`: its buses are not
+known before. On a server without the capability nothing is sent and the
+chain stays serial, as before.
+
+### 6.3 Saved with the project
+
+In the plugin's state:
+
+- each `SLOT` gets `BUS` children (input, name, channels, main), its
+  buses as last known;
+- one `ROUTE` element per manual input pin (box id in hex, channel), with
+  a `FROM` child per source. Pins left to the rules are not saved: they
+  follow the chain.
+
+Projects saved before have neither: their slots get their buses from the
+server as they load, and the routing is the default one (the serial
+chain).
+
+### 6.4 Inputs and outputs not used
+
+Every audio request carries its own channel mask (protocol.md 5.2), so the
+inputs the routing does not use are simply left out of each request: the
+configured mask (the input toggles) less the unused ones, set per block on
+the audio thread. No `CONFIGURE`, so no interruption when a connection to
+INPUTS is made or removed. Likewise a routed server leaves the outputs
+nothing feeds out of its replies (protocol.md 4.6), and the client plays
+the missing channels as silence, as it already did.
+
+### 6.5 The local copies' buses
+
+The plugins' local copies (shadows, for their own editors) get the same
+bus layout as on the server: on each timer tick the processor works out
+the buses each slot needs from the server's routing (`wantedBuses`, the
+same function the server uses) and, when that changes, the copy is
+released, given the layout and prepared again. So an editor that shows its
+sidechain sees it enabled exactly when the server's instance has it.
+

@@ -341,6 +341,17 @@ public:
 
     int getNumOutputs() const noexcept      { return nodes.back().width; }
 
+    /** OUTPUTS' channels that something feeds (bit c: channel c). */
+    std::uint64_t getOutputsFed() const noexcept
+    {
+        std::uint64_t mask = 0;
+        const auto& out = nodes.back();
+        for (int c = 0; c < out.width && c < 64; ++c)
+            if (! out.inputs[(std::size_t) c].empty())
+                mask |= std::uint64_t (1) << c;
+        return mask;
+    }
+
     /** Empties the delay lines (the stream was reset). Audio thread. */
     void clearDelays() noexcept
     {

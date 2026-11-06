@@ -163,9 +163,47 @@ public:
 
     bool editorWasOpen = false;   ///< processor: its last look (a last check when it closes)
 
+    //==============================================================================
+    /** The buses to enable, as on the server (doc/routing.md 5.7): main
+        buses always, the others when the routing connects them. Prepares
+        the instance again when the layout changes; asked once per change
+        (a refused layout is not asked again). */
+    void setWantedBuses (const std::vector<bool>& in, const std::vector<bool>& out)
+    {
+        if (in == wantedIn && out == wantedOut)
+            return;
+        wantedIn = in;
+        wantedOut = out;
+
+        auto layout = instance->getBusesLayout();
+        bool changed = false;
+        for (const bool input : { true, false })
+        {
+            const auto& wanted = input ? in : out;
+            auto& sets = input ? layout.inputBuses : layout.outputBuses;
+            for (int i = 0; i < sets.size() && i < (int) wanted.size(); ++i)
+            {
+                auto* bus = instance->getBus (input, i);
+                if (bus == nullptr || wanted[(std::size_t) i] == ! sets[i].isDisabled())
+                    continue;
+                changed = true;
+                if (! wanted[(std::size_t) i])
+                    sets.getReference (i) = juce::AudioChannelSet::disabled();
+                else
+                    sets.getReference (i) = ! bus->getLastEnabledLayout().isDisabled() ? bus->getLastEnabledLayout()
+                                                                                       : bus->getDefaultLayout();
+            }
+        }
+        if (! changed)
+            return;
+        instance->releaseResources();
+        instance->setBusesLayout (layout);   // refused: it keeps its own
+        instance->prepareToPlay (preparedRate, preparedBlock);
+    }
+
 private:
     Shadow (std::unique_ptr<juce::AudioPluginInstance> loaded, double sampleRate, int blockSize)
-        : instance (std::move (loaded))
+        : instance (std::move (loaded)), preparedRate (sampleRate), preparedBlock (blockSize)
     {
         if (auto* vst3 = instance->getVST3Client())
             net = fxme::net::queryNetPlugin (vst3->getIComponentPtr());
@@ -243,6 +281,10 @@ private:
     std::unique_ptr<juce::AudioPluginInstance> instance;
     fxme::net::INetPlugin* net = nullptr;
     std::vector<juce::uint32> touched;   ///< when the editor last moved each parameter
+
+    double preparedRate = 48000.0;
+    int preparedBlock = 128;
+    std::vector<bool> wantedIn, wantedOut;   ///< setWantedBuses
 
     std::size_t referenceHash = 0;       ///< takeStateReference / takeStateChange
     std::vector<float> referenceValues;

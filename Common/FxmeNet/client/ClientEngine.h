@@ -25,6 +25,18 @@
     unless the chain is dirty. Every connection sends CONFIGURE, which
     restarts the server's block numbering, and gets a new AudioLink.
 
+    Routing (doc/routing.md): the client holds the routing model (its
+    rules, the user's manual pins) over every slot whose buses it knows
+    (from SLOT_READY, or saved with the project), with INPUTS and OUTPUTS
+    64 channels wide so that a project keeps its pins whatever the host's
+    channel count. What the server gets is that model resolved on the chain
+    the server really has: the host's channel counts, and only the slots
+    loaded there (a slot missing on the server is bridged, as if bypassed
+    for good, rule 2.4). It is sent (ROUTING) to a server announcing the
+    "routing" capability, whenever it changes and after each (re)build of
+    the session. FxmeNet's inputs that feed nothing are left out of each
+    audio request (its channel mask), with no reconfiguration.
+
     Audio: BlockStream re-blocks and keeps the latency; blocks go to the
     current AudioLink, published to the audio thread with a hazard pointer
     (the connection thread waits until the audio thread no longer uses a
@@ -43,6 +55,7 @@
 
 #include <FxmeNet/client/AudioLink.h>
 #include <FxmeNet/client/BlockStream.h>
+#include <FxmeNet/chain/Routing.h>
 #include <FxmeNet/control/ControlConnection.h>
 
 #include <array>
@@ -77,6 +90,11 @@ struct SlotModel
     bool loaded = false;     ///< SLOT_READY received: `info` is valid
     juce::String error;      ///< why it is not loaded
     control::SlotReady info;
+
+    /** Its buses for the routing: from SLOT_READY, or saved with the
+        project (so the routing holds before the server answers). */
+    chain::Box box;
+    bool hasBox = false;
 };
 
 class ClientEngine : private juce::Thread
@@ -151,6 +169,7 @@ public:
             settings.budgetBlocks = juce::jlimit (1, 32, s.budgetBlocks);
             ++prepareGeneration;   // the current link is out of date
             reconfigureRequested = true;
+            refreshRouting();      // the server's INPUTS and OUTPUTS follow the host
         }
 
         const int n = settings.blockSize;
@@ -280,6 +299,8 @@ public:
             copy.loaded = s.loaded;
             copy.error = s.error;
             copy.info = s.info;
+            copy.box = s.box;
+            copy.hasBox = s.hasBox;
             out.push_back (std::move (copy));
         }
         return out;
@@ -330,6 +351,7 @@ public:
                 sendSlotValue (control::Type::slotRemove, slotId, 0);
             else if (! ready)
                 dirty = true;
+            refreshRouting();
         }
         notify();
     }
@@ -349,6 +371,7 @@ public:
                 sendSlotValue (control::Type::slotMove, slotId, (std::uint32_t) serverPosition (newPosition));
             else if (! ready)
                 dirty = true;
+            refreshRouting();
         }
         notify();
     }
@@ -406,10 +429,47 @@ public:
                 s.info = {};
                 nextSlotId = juce::jmax (nextSlotId, s.slotId + 1);
             }
+            routing.reset();   // the saved routing follows (setRoutingPins)
             dirty = true;
+            refreshRouting();
         }
         wake.signal();
         notify();
+    }
+
+    //==============================================================================
+    // Routing (doc/routing.md). Not on the audio thread.
+
+    /** True when the server applies ROUTING (its WELCOME said so). */
+    bool isRoutingAvailable() const noexcept     { return serverRoutes.load(); }
+
+    /** The routing model, over every slot whose buses are known (INPUTS
+        and OUTPUTS 64 channels wide): for the view. */
+    chain::Routing getRouting() const            { const std::lock_guard<std::mutex> l (lock); return routing; }
+
+    /** The connections as the server gets them (its chain, the host's
+        channels). */
+    std::vector<chain::Connection> getServerRouting() const
+    {
+        const std::lock_guard<std::mutex> l (lock);
+        return serverConnections;
+    }
+
+    /** The user's edits; false when not valid. */
+    bool connectPins (chain::Pin from, chain::Pin to)      { return editRouting ([&] { return routing.connect (from, to); }); }
+    bool disconnectPins (chain::Pin from, chain::Pin to)   { return editRouting ([&] { return routing.disconnect (from, to); }); }
+    void resetRouting()                                    { editRouting ([&] { routing.reset(); return true; }); }
+
+    /** The manual pins, to save with the project, and back (after setSlots). */
+    std::vector<chain::ManualInput> getRoutingPins() const
+    {
+        const std::lock_guard<std::mutex> l (lock);
+        return routing.getManual();
+    }
+
+    void setRoutingPins (const std::vector<chain::ManualInput>& pins)
+    {
+        editRouting ([&] { routing.setManual (pins); return true; });
     }
 
     /** Fetches every loaded slot's state from the server (STATE_GET), so the
@@ -778,6 +838,7 @@ private:
             if (! send)
                 return;
 
+            link->setInputsUsed (e.routedInputs.load (std::memory_order_relaxed));
             const auto* midi = e.stream.getBlockMidi();
             const auto midiBytes = e.stream.getBlockMidiBytes();
             if (transport == nullptr)
@@ -941,6 +1002,8 @@ private:
             const std::lock_guard<std::mutex> l (lock);
             serverName = welcome.serverName;
             serverOs = welcome.os;
+            serverRoutes = welcome.capabilities.contains (control::capabilityRouting);
+            routingSent = false;   // a new connection: sent again once the chain is there
         }
 
         if (! configure (hostName) || ! syncChain (welcome.resumed))
@@ -1048,6 +1111,7 @@ private:
                         if (slot.onServer && slot.telemetryWanted)
                             sendFrame (control::Type::telemetryActive, 0, encode (control::SlotValue { slot.slotId, 1 }));
                     ready = true;
+                    refreshRouting();
                     return true;
                 }
                 ready = false;
@@ -1104,10 +1168,16 @@ private:
                         s->loaded = done.loaded;
                         s->error = done.error;
                         s->info = done.info;
+                        if (done.loaded)
+                        {
+                            s->box = control::toBox (done.info);
+                            s->hasBox = true;
+                        }
                     }
                 if (! dirty)
                 {
                     ready = true;
+                    refreshRouting();
                     break;
                 }
             }
@@ -1292,15 +1362,74 @@ private:
                     slot->loaded = true;
                     slot->error = {};
                     slot->info = control::SlotReady::fromVar (control::fromPayload (f->payload));
+                    slot->box = control::toBox (slot->info);
+                    slot->hasBox = true;
+                    refreshRouting();
                 }
                 else if (slot != nullptr)
                 {
                     slot->onServer = slot->loaded = false;
                     slot->error = control::ErrorMessage::fromVar (control::fromPayload (f->payload)).text;
+                    refreshRouting();
                 }
             }
             notify();
         });
+    }
+
+    /** With `lock` held: the routing's boxes, top to bottom. The model's:
+        every slot whose buses are known, INPUTS and OUTPUTS at 64 channels.
+        The server's: its INPUTS and OUTPUTS (CONFIGURE's counts) and the
+        slots loaded there. */
+    std::vector<chain::Box> routingBoxes (bool server) const
+    {
+        std::vector<chain::Box> b { chain::Box::makeInputs (server ? juce::jmax (1, host.numInputs) : wire::maxChannels) };
+        for (auto& s : slots)
+            if (s.hasBox && (! server || (s.onServer && s.loaded)))
+                b.push_back (s.box);
+        b.push_back (chain::Box::makeOutputs (server ? juce::jmax (1, host.numOutputs) : wire::maxChannels));
+        return b;
+    }
+
+    /** With `lock` held: the model follows the chain, the server's routing
+        is resolved from it, and sent when it changed (header comment). */
+    void refreshRouting()
+    {
+        routing.setBoxes (routingBoxes (false));
+        auto resolved = routing;
+        resolved.setBoxes (routingBoxes (true));
+        serverConnections = resolved.getConnections();
+        routedInputs.store (serverRoutes ? resolved.getInputsUsed() : ~std::uint64_t (0));
+
+        if (! ready || ! serverRoutes || (routingSent && serverConnections == lastRoutingSent))
+            return;
+        lastRoutingSent = serverConnections;
+        routingSent = true;
+        dirty |= ! sendAsync (control::Type::routing, 0, encode (control::toRoutes (serverConnections)),
+                              [this] (const control::Frame* f)
+        {
+            if (f == nullptr || f->type == control::Type::error)
+            {
+                const std::lock_guard<std::mutex> l (lock);
+                routingSent = false;   // sent again at the next change or connection
+            }
+        });
+    }
+
+    /** A routing edit, then refreshRouting(). */
+    template <typename Edit>
+    bool editRouting (Edit&& edit)
+    {
+        bool ok;
+        {
+            const std::lock_guard<std::mutex> l (lock);
+            ok = edit();
+            if (ok)
+                refreshRouting();
+        }
+        if (ok)
+            notify();
+        return ok;
     }
 
     /** With `lock` held: SLOT_REMOVE, SLOT_MOVE or SLOT_BYPASS. */
@@ -1380,6 +1509,14 @@ private:
     bool dirty = false;
     std::atomic<bool> ready { false };
     std::vector<control::PluginEntry> catalog;
+
+    // Routing, under `lock` (routedInputs and serverRoutes also read without).
+    chain::Routing routing;
+    std::vector<chain::Connection> serverConnections, lastRoutingSent;
+    bool routingSent = false;
+    std::atomic<bool> serverRoutes { false };
+    std::atomic<std::uint64_t> routedInputs { ~std::uint64_t (0) };
+
     juce::String statusText { "Not connected" }, serverName, serverOs;
     std::atomic<Status> status { Status::idle };
 

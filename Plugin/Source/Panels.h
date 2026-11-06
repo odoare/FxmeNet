@@ -133,6 +133,12 @@ private:
     juce::TextButton allInputs { "All" }, allOutputs { "All" };
     juce::TextButton rescanButton { "Rescan" }, fullRescanButton { "Full rescan" }, foldersButton { "Folders..." };
     juce::TextButton flushButton { "Silence in-flight audio at reset" }, logButton { "Log transport events" };
+
+    // Routing, temporary (doc/routing.md step D): until the routing view
+    // (step E), a dry path to test parallel processing, and a summary.
+    juce::TextButton dryPathButton { "Add dry path" }, resetRoutingButton { "Reset routing" };
+    juce::String routingText;
+    juce::Rectangle<int> routingLabel, routingArea;
     std::unique_ptr<juce::FileChooser> chooser;
     int shownInputs = -1, shownOutputs = -1;
     juce::String latencyText, localText, foldersText;

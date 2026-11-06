@@ -11,6 +11,8 @@
 #include "PluginEditor.h"
 #include "AppSettings.h"
 
+#include <FxmeNet/chain/RoutingEngine.h>   // wantedBuses, as on the server
+
 using fxmenet::client::ClientEngine;
 using fxmenet::client::SlotModel;
 using fxmenet::control::ParamChange;
@@ -568,6 +570,8 @@ void FxmeNetAudioProcessor::syncShadows()
         statePollTick = 0;
 
     const auto slots = engine.getSlotInfos();
+    const bool routed = engine.isRoutingAvailable();
+    const auto routing = routed ? engine.getServerRouting() : std::vector<fxmenet::chain::Connection> {};
     std::vector<std::uint32_t> gone;
     for (auto& [id, shadow] : shadows)
     {
@@ -585,6 +589,14 @@ void FxmeNetAudioProcessor::syncShadows()
 
         for (auto& p : slot->info.params)
             shadow->setQuietly (p.index, ClientEngine::currentValue (*slot, p));
+
+        // The same buses as on the server (a sidechain connected or not).
+        if (routed && slot->hasBox)
+        {
+            std::vector<bool> in, out;
+            fxmenet::chain::wantedBuses (slot->box, routing, in, out);
+            shadow->setWantedBuses (in, out);
+        }
 
         // A non-parameter change in its editor: FxmeNet-aware plugins say
         // so; the others are watched while their editor is open, and once
@@ -814,6 +826,30 @@ void FxmeNetAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
             p->setAttribute ("index", (int) index);
             p->setAttribute ("value", (double) v.value);
         }
+        if (s.hasBox)   // its buses: the routing holds before the server answers
+            for (const bool input : { true, false })
+                for (auto& b : input ? s.box.inputs : s.box.outputs)
+                {
+                    auto* bus = e->createNewChildElement ("BUS");
+                    bus->setAttribute ("input", input);
+                    bus->setAttribute ("name", juce::String (b.name));
+                    bus->setAttribute ("channels", b.channels);
+                    bus->setAttribute ("main", b.main);
+                }
+    }
+
+    // The routing: only the pins the user set (the rest follows the rules).
+    for (auto& m : engine.getRoutingPins())
+    {
+        auto* e = root.createNewChildElement ("ROUTE");
+        e->setAttribute ("box", fxmenet::control::json::hex32 (m.input.box));
+        e->setAttribute ("channel", m.input.channel);
+        for (auto& src : m.sources)
+        {
+            auto* f = e->createNewChildElement ("FROM");
+            f->setAttribute ("box", fxmenet::control::json::hex32 (src.box));
+            f->setAttribute ("channel", src.channel);
+        }
     }
 
     {
@@ -862,6 +898,14 @@ void FxmeNetAudioProcessor::setStateInformation (const void* data, int sizeInByt
             s.state.assign ((const std::uint8_t*) state.getData(), (const std::uint8_t*) state.getData() + state.getDataSize());
         for (auto* p : e->getChildWithTagNameIterator ("PARAM"))
             s.params[(std::uint32_t) p->getIntAttribute ("index")] = { (float) p->getDoubleAttribute ("value"), 0 };
+        for (auto* b : e->getChildWithTagNameIterator ("BUS"))
+        {
+            fxmenet::chain::Bus bus { b->getStringAttribute ("name").toStdString(),
+                                      juce::jlimit (0, 1024, b->getIntAttribute ("channels")), b->getBoolAttribute ("main") };
+            (b->getBoolAttribute ("input") ? s.box.inputs : s.box.outputs).push_back (bus);
+            s.hasBox = true;
+        }
+        s.box.id = s.slotId;
         if (s.slotId != 0)
             slots.push_back (std::move (s));
     }
@@ -899,6 +943,17 @@ void FxmeNetAudioProcessor::setStateInformation (const void* data, int sizeInByt
     updateHostDisplay (ChangeDetails().withParameterInfoChanged (true));
 
     engine.setSlots (std::move (slots));
+
+    std::vector<fxmenet::chain::ManualInput> pins;
+    for (auto* e : xml->getChildWithTagNameIterator ("ROUTE"))
+    {
+        fxmenet::chain::ManualInput m;
+        m.input = { (std::uint32_t) e->getStringAttribute ("box").getHexValue32(), e->getIntAttribute ("channel") };
+        for (auto* f : e->getChildWithTagNameIterator ("FROM"))
+            m.sources.push_back ({ (std::uint32_t) f->getStringAttribute ("box").getHexValue32(), f->getIntAttribute ("channel") });
+        pins.push_back (std::move (m));
+    }
+    engine.setRoutingPins (pins);
 
     StreamSettings s;
     s.blockSize = xml->getIntAttribute ("blockSize", s.blockSize);
