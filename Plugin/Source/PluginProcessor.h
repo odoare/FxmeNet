@@ -200,6 +200,8 @@ private:
     void applyServerParameterChanges();
     void followChain();
     void syncShadows();
+    static constexpr int statePollTicks = 10;   ///< tier 1 states read at 5 Hz (the timer runs at 50)
+    int statePollTick = 0;
     void deliverTelemetry();
     void removeShadow (std::uint32_t slotId);
 

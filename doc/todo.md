@@ -33,22 +33,29 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     main ones, silent unless an earlier, wider plugin wrote there. A
     per-slot routing (silence, a chain channel, or a DAW sidechain sent by
     the client) would make it explicit.
-16. Tier 1 plugins: send non-parameter state changes to the server. Today
-    `syncShadows` sends a shadow's state only when its state-change counter
-    moves, and only FxmeNet-aware (tier 2) plugins have one, so whatever a
-    tier 1 editor changes outside its parameters stays on the client. Seen
-    with Mango (2026-11-05): its lanes and blocks are state, the shadow shows
-    the pattern, the server's instance has none and passes the audio
-    through. Same for any loaded file, sequence or internal preset. Fix: for
-    tier 1 shadows, read `getStateInformation()` a few times a second while
-    the editor is open, and once when it closes; send the state (as tier 2
-    does, `engine.setSlotState`) when its hash differs from the last one
-    sent. The reference is taken when the server's state is applied, so
-    the first comparison sends nothing. Cost: one state read per tier 1
-    shadow and tick, on the message thread; a plugin with a huge state
-    should become tier 2 instead. `audioProcessorChanged` (the plugin
-    calling `updateHostDisplay`) is cheaper but most plugins do not call it
-    for such changes, Mango included.
+16. (written) Tier 1 plugins: send non-parameter state changes to the
+    server. Before, `syncShadows` sent a shadow's state only when its
+    state-change counter moved, and only FxmeNet-aware (tier 2) plugins have
+    one, so whatever a tier 1 editor changed outside its parameters stayed
+    on the client. Seen with Mango (2026-11-05): its lanes and blocks are
+    state, the shadow showed the pattern, the server's instance had none
+    and passed the audio through. Done (Shadow.h, `takeStateReference` and
+    `takeStateChange`): for tier 1 shadows, `syncShadows` reads the state
+    at 5 Hz while the editor is open, and once when it closes, and sends it
+    (`engine.setSlotState`) when it differs from the reference, which is
+    taken when the server's state is applied and moves with each change.
+    Parameters are part of that state but travel on their own, so when
+    parameters moved too, the state is read again with the reference's
+    parameter values put back for a moment: if that gives the reference,
+    only parameters changed and nothing is sent (otherwise each knob move,
+    or the DAW's automation, would reload the whole state on the server).
+    Cost: one state read per open tier 1 editor and poll, two when
+    parameters moved; a plugin with a huge state should become tier 2.
+    To check: build the plugin; in Reaper, Mango in FxmeNet, draw a
+    pattern in its editor: the server's instance plays it (with the editor
+    still open, within a fifth of a second); save, reload the project: the
+    pattern is there. Turning a knob in a tier 1 editor while it plays
+    stays smooth (a state reload per move would be heard as resets).
 17. ModalDish as a tier 2 plugin (seen 2026-11-05: in FxmeNet the editor
     works, a plate can be drawn and computed, but nothing sounds, neither
     clicks, MIDI nor input audio). Causes: the shape, the boundaries and the

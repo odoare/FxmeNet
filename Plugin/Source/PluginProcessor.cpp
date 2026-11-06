@@ -525,6 +525,8 @@ fxmenet::plugin::Shadow* FxmeNetAudioProcessor::getShadow (std::uint32_t slotId,
                 if (! state.empty())
                     s->getInstance().setStateInformation (state.data(), (int) state.size());
                 s->lastStateChangeCount = s->getStateChangeCount();   // our own load is no change
+                if (s->getNet() == nullptr)
+                    s->takeStateReference();
                 s->stateReceived = true;
             }
         });
@@ -561,6 +563,10 @@ void FxmeNetAudioProcessor::syncShadows()
     if (shadows.empty())
         return;
 
+    const bool pollTick = ++statePollTick >= statePollTicks;
+    if (pollTick)
+        statePollTick = 0;
+
     const auto slots = engine.getSlotInfos();
     std::vector<std::uint32_t> gone;
     for (auto& [id, shadow] : shadows)
@@ -580,16 +586,31 @@ void FxmeNetAudioProcessor::syncShadows()
         for (auto& p : slot->info.params)
             shadow->setQuietly (p.index, ClientEngine::currentValue (*slot, p));
 
-        // A non-parameter change in its editor (FxmeNet-aware plugins say so).
-        const auto count = shadow->getStateChangeCount();
-        if (count != shadow->lastStateChangeCount)
+        // A non-parameter change in its editor: FxmeNet-aware plugins say
+        // so; the others are watched while their editor is open, and once
+        // when it closes (Shadow.h).
+        juce::MemoryBlock block;
+        bool changed = false;
+        if (shadow->getNet() != nullptr)
         {
-            shadow->lastStateChangeCount = count;
-            juce::MemoryBlock block;
-            shadow->getInstance().getStateInformation (block);
+            const auto count = shadow->getStateChangeCount();
+            if (count != shadow->lastStateChangeCount)
+            {
+                shadow->lastStateChangeCount = count;
+                shadow->getInstance().getStateInformation (block);
+                changed = true;
+            }
+        }
+        else
+        {
+            const bool open = shadow->getInstance().getActiveEditor() != nullptr;
+            if ((open && pollTick) || (! open && shadow->editorWasOpen))
+                changed = shadow->takeStateChange (block);
+            shadow->editorWasOpen = open;
+        }
+        if (changed)
             engine.setSlotState (id, std::vector<std::uint8_t> ((const std::uint8_t*) block.getData(),
                                                                 (const std::uint8_t*) block.getData() + block.getSize()));
-        }
     }
     for (auto id : gone)
         removeShadow (id);

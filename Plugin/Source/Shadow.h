@@ -17,6 +17,19 @@
         `touchHoldMs` is left alone, so that a value on its way to the server
         does not snap the control back.
 
+    Non-parameter state (a pattern, a loaded file, an internal preset)
+    reaches the server as a whole state (STATE_SET). An FxmeNet-aware plugin
+    says when it changes (getStateChangeCount). Any other plugin is watched
+    by takeStateChange(), called a few times a second while its editor is
+    open: its state compared with a reference taken when the server's state
+    was applied (takeStateReference) and moved at each change. Parameters
+    are part of that state but travel on their own (PARAM_SET), so a change
+    that coincides with parameter moves is tested again with the
+    reference's parameter values put back for a moment: when that state is
+    the reference, the parameters were all that changed and nothing is
+    sent (otherwise each knob move would reload the whole state on the
+    server).
+
     Message thread only, apart from the parameter listener (which may be
     called on another thread, and then posts to the message thread).
 
@@ -34,6 +47,7 @@
 
 #include <functional>
 #include <memory>
+#include <string_view>
 #include <vector>
 
 namespace fxmenet::plugin
@@ -104,6 +118,51 @@ public:
     std::uint32_t lastStateChangeCount = 0;   ///< what the processor last acted on
     bool stateReceived = false;               ///< the server's state was applied
 
+    //==============================================================================
+    /** Plugins that are not FxmeNet-aware: the current state becomes the
+        reference, so nothing is to send. When the server's state was
+        applied. */
+    void takeStateReference()
+    {
+        juce::MemoryBlock block;
+        instance->getStateInformation (block);
+        referenceHash = hashOf (block);
+        referenceValues = currentValues();
+    }
+
+    /** Plugins that are not FxmeNet-aware: true, and the state in `out`,
+        when it changed since the reference in more than its parameters;
+        the reference then moves to it (header comment). */
+    bool takeStateChange (juce::MemoryBlock& out)
+    {
+        juce::MemoryBlock block;
+        instance->getStateInformation (block);
+        const auto hash = hashOf (block);
+        if (hash == referenceHash)
+            return false;
+
+        const auto values = currentValues();
+        bool parametersOnly = false;
+        if (values != referenceValues)
+        {
+            // setValue: the listeners are not called, so nothing is reported.
+            setValues (referenceValues, values);
+            juce::MemoryBlock withReferenceValues;
+            instance->getStateInformation (withReferenceValues);
+            setValues (values, referenceValues);
+            parametersOnly = hashOf (withReferenceValues) == referenceHash;
+        }
+
+        referenceHash = hash;
+        referenceValues = values;
+        if (parametersOnly)
+            return false;
+        out = std::move (block);
+        return true;
+    }
+
+    bool editorWasOpen = false;   ///< processor: its last look (a last check when it closes)
+
 private:
     Shadow (std::unique_ptr<juce::AudioPluginInstance> loaded, double sampleRate, int blockSize)
         : instance (std::move (loaded))
@@ -159,9 +218,34 @@ private:
         });
     }
 
+    static std::size_t hashOf (const juce::MemoryBlock& block)
+    {
+        return std::hash<std::string_view>() (std::string_view ((const char*) block.getData(), block.getSize()));
+    }
+
+    std::vector<float> currentValues() const
+    {
+        std::vector<float> v;
+        for (auto* p : instance->getParameters())
+            v.push_back (p->getValue());
+        return v;
+    }
+
+    /** Sets the parameters whose value in `to` differs from `from`. */
+    void setValues (const std::vector<float>& to, const std::vector<float>& from)
+    {
+        auto& params = instance->getParameters();
+        for (int i = 0; i < params.size() && i < (int) to.size() && i < (int) from.size(); ++i)
+            if (! juce::exactlyEqual (to[(std::size_t) i], from[(std::size_t) i]))
+                params[i]->setValue (to[(std::size_t) i]);
+    }
+
     std::unique_ptr<juce::AudioPluginInstance> instance;
     fxme::net::INetPlugin* net = nullptr;
     std::vector<juce::uint32> touched;   ///< when the editor last moved each parameter
+
+    std::size_t referenceHash = 0;       ///< takeStateReference / takeStateChange
+    std::vector<float> referenceValues;
 
     JUCE_DECLARE_WEAK_REFERENCEABLE (Shadow)
     JUCE_DECLARE_NON_COPYABLE (Shadow)
