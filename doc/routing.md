@@ -1,9 +1,8 @@
 # Routing between plugins (proposal)
 
 Status: agreed (2026-11-06), decisions in section 4. It replaces todo item
-15 (routing of a slot's extra buses) with a more general design. Steps A
-(the routing model), B (protocol), C (server) and D (client) are written;
-E (the view) is to do. Section 5 describes how the server processes a
+15 (routing of a slot's extra buses) with a more general design. All five
+steps are written (A model, B protocol, C server, D client, E view). Section 5 describes how the server processes a
 routed chain, section 6 what the client does.
 
 ## 1. The idea
@@ -204,9 +203,7 @@ without audio.
 
 ### D. Client engine and state
 
-(Written; details in section 6. Until the view exists, the settings view
-has two temporary test buttons, "Add dry path" and "Reset routing", and a
-summary of what the server gets.)
+(Written; details in section 6.)
 
 - The routing lives in the client's model, is saved in the project, and is
   sent on connect and on resume.
@@ -219,13 +216,31 @@ summary of what the server gets.)
 
 ### E. The view
 
-It goes in the stream and channels view (decision 3), which is
-reorganized around it; it replaces the input and output toggles there.
+(Written, `Plugin/Source/RoutingView.cpp`.) In the "Stream & channels"
+tab, reorganized: block size, network budget and latency on top, the
+routing in the middle (scrollable, most of the room), the transport
+options and the local plugins at the bottom. The input and output toggle
+buttons are gone: the routing decides what is sent and received, and the
+masks are no longer saved with the project.
 
-- The vertical stack of 1, scrollable.
-- Dragging from a pin, or from a bus label (all its channels in order).
-- Right-click on a connection to delete it; the reset button.
-- The total latency shown.
+- The stack of section 1: INPUTS (the host's input channels), one box per
+  plugin in chain order (its number and name; "bypassed", or "not loaded
+  on the server: bypassed", on the right), OUTPUTS (the host's output
+  channels).
+- Input pins on a box's top edge, output pins on its bottom edge, grouped
+  by bus with the bus name. Pins of an aux bus nothing is connected to are
+  hollow: that bus is disabled on the server.
+- Connections are curves, bright when their input pin was set by hand,
+  dim when it follows the default rule. Hovering one shows its two ends.
+- Drag from a pin onto a pin (either way round; the output must be above
+  the input). Drag from a bus name onto a bus name or a pin: its channels
+  connect in order, as far as both have channels. While dragging, the
+  pins it would reach are ringed.
+- Shift-click a connection to remove it (it turns red while shift is
+  held over it), as in Reaper.
+- Right-click an input pin: "Back to the default routing" (that pin
+  only) or "Disconnect".
+- "Reset routing" puts every pin back on the default rule.
 
 A and C are most of the work. E is the visible part, but mostly
 straightforward once A exists.
@@ -235,6 +250,9 @@ straightforward once A exists.
 1. Fan-in: several sources into one input are summed.
 2. Unconnected FxmeNet outputs are silent.
 3. The view goes in the stream and channels view, reorganized around it.
+   A connection is removed by shift-click (Reaper's habit). No fallback
+   for servers without routing: client and server are always updated
+   together while FxmeNet is in development.
 4. The default rule (2.3) and the edit rules (2.4) as written. The default
    rule was then stated from the inputs (2.3) when writing step A, for the
    mono-to-stereo case; the behaviour agreed (today's chain) is unchanged.

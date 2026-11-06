@@ -27,6 +27,7 @@
 #include <JuceHeader.h>
 
 #include "PluginProcessor.h"
+#include "RoutingView.h"
 
 namespace fxmenet::plugin
 {
@@ -121,7 +122,6 @@ public:
     void resized() override;
 
 private:
-    void rebuildChannels (int inputs, int outputs);
     void apply();
 
     /** The menu of the extra plugin folders: add one, remove one. */
@@ -129,20 +129,13 @@ private:
 
     FxmeNetAudioProcessor& processor;
     juce::ComboBox blockBox, budgetBox;
-    juce::OwnedArray<juce::TextButton> inputButtons, outputButtons;
-    juce::TextButton allInputs { "All" }, allOutputs { "All" };
+    RoutingView routingView;
+    juce::TextButton resetRoutingButton { "Reset routing" };
     juce::TextButton rescanButton { "Rescan" }, fullRescanButton { "Full rescan" }, foldersButton { "Folders..." };
     juce::TextButton flushButton { "Silence in-flight audio at reset" }, logButton { "Log transport events" };
-
-    // Routing, temporary (doc/routing.md step D): until the routing view
-    // (step E), a dry path to test parallel processing, and a summary.
-    juce::TextButton dryPathButton { "Add dry path" }, resetRoutingButton { "Reset routing" };
-    juce::String routingText;
-    juce::Rectangle<int> routingLabel, routingArea;
     std::unique_ptr<juce::FileChooser> chooser;
-    int shownInputs = -1, shownOutputs = -1;
     juce::String latencyText, localText, foldersText;
-    juce::Rectangle<int> blockLabel, budgetLabel, latencyArea, inputsLabel, outputsLabel, localArea, foldersArea, diagnosticsLabel;
+    juce::Rectangle<int> blockLabel, budgetLabel, latencyArea, routingLabel, routingHint, localArea, foldersArea, diagnosticsLabel;
 };
 
 } // namespace fxmenet::plugin

@@ -24,13 +24,6 @@ namespace
 {
     constexpr int defaultControlPort = 54322;
 
-    juce::String hex64 (std::uint64_t v)    { return fxmenet::control::json::hex64 (v); }
-
-    std::uint64_t parseHex64 (const juce::String& s, std::uint64_t fallback)
-    {
-        return s.isEmpty() ? fallback : (std::uint64_t) s.getHexValue64();
-    }
-
     /** "host" or "host:port". */
     std::pair<juce::String, int> splitServer (const juce::String& s)
     {
@@ -98,8 +91,6 @@ void FxmeNetAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
     ClientEngine::Settings e;
     e.blockSize = s.blockSize;
     e.budgetBlocks = s.budgetBlocks;
-    e.inputMask = s.inputMask;
-    e.outputMask = s.outputMask;
     engine.prepare (sampleRate, samplesPerBlock, preparedInputs, preparedOutputs, e);
     setLatencySamples (engine.getLatency());
 }
@@ -124,8 +115,6 @@ void FxmeNetAudioProcessor::applyStreamSettings (const StreamSettings& s)
     ClientEngine::Settings e;
     e.blockSize = s.blockSize;
     e.budgetBlocks = s.budgetBlocks;
-    e.inputMask = s.inputMask;
-    e.outputMask = s.outputMask;
 
     suspendProcessing (true);   // waits for a processBlock in progress
     engine.prepare (rate, block, ins, outs, e);
@@ -807,8 +796,6 @@ void FxmeNetAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
         root.setAttribute ("server", server);
         root.setAttribute ("blockSize", stream.blockSize);
         root.setAttribute ("budgetBlocks", stream.budgetBlocks);
-        root.setAttribute ("inputMask", hex64 (stream.inputMask));
-        root.setAttribute ("outputMask", hex64 (stream.outputMask));
     }
 
     for (auto& s : engine.getSlots())
@@ -958,8 +945,6 @@ void FxmeNetAudioProcessor::setStateInformation (const void* data, int sizeInByt
     StreamSettings s;
     s.blockSize = xml->getIntAttribute ("blockSize", s.blockSize);
     s.budgetBlocks = xml->getIntAttribute ("budgetBlocks", s.budgetBlocks);
-    s.inputMask = parseHex64 (xml->getStringAttribute ("inputMask"), s.inputMask);
-    s.outputMask = parseHex64 (xml->getStringAttribute ("outputMask"), s.outputMask);
     applyStreamSettings (s);
 
     connectTo (xml->getStringAttribute ("server"));

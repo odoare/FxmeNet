@@ -15,6 +15,7 @@
 
 #include <iostream>
 #include <map>
+#include <thread>
 
 namespace fxmenet::server
 {
@@ -23,7 +24,7 @@ namespace
 {
     const juce::String beginMarker = "FXMENET-SCAN-BEGIN";
     const juce::String endMarker   = "FXMENET-SCAN-END";
-    constexpr int childTimeoutMs   = 30000;
+    constexpr int childTimeoutMs   = 60000;   ///< a bundle of 194 plugins (LSP) takes about 10 s
 
     using catalog::pluginBinary;
 }
@@ -98,16 +99,23 @@ bool PluginCatalog::scanInChild (const juce::String& file, juce::Array<Entry>& r
         return false;
     }
 
-    // The result is a few kB, well within a pipe's buffer, so the child
-    // never blocks writing it before we read.
-    if (! child.waitForProcessToFinish (childTimeoutMs))
-    {
+    // Read while it runs: a bundle of many plugins writes more than a
+    // pipe holds (LSP's 194 plugins: 80 kB, against 64 kB), and a child
+    // blocked on a full pipe never finishes (it was then killed as hung,
+    // and the bundle cached as failed). The reader returns at the end of
+    // the output: the child exiting, or killed.
+    juce::String output;
+    std::thread reader ([&child, &output] { output = child.readAllProcessOutput(); });
+    const bool finished = child.waitForProcessToFinish (childTimeoutMs);
+    if (! finished)
         child.kill();
+    reader.join();
+    if (! finished)
+    {
         log ("  skipped " + file + ": hung for " + juce::String (childTimeoutMs / 1000) + " s while loaded");
         return false;
     }
 
-    const auto output = child.readAllProcessOutput();
     const auto text = output.fromFirstOccurrenceOf (beginMarker, false, false)
                             .upToFirstOccurrenceOf (endMarker, false, false).trim();
     auto xml = juce::parseXML (text);

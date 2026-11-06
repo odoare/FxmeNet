@@ -355,6 +355,12 @@ int main()
         CHECK (r.isManual ({ 1, 1 }) && r.sourcesOf ({ 1, 1 }).empty());
         CHECK (r.getInputsUsed() == 1);
 
+        // One pin: cleared, then back to the rule.
+        CHECK (r.clearInput ({ O, 0 }) && r.sourcesOf ({ O, 0 }).empty());
+        CHECK (r.makeAutomatic ({ O, 0 }) && fedBy (r, { O, 0 }, { { 2, 0 } }));
+        CHECK (! r.makeAutomatic ({ O, 0 }));          // not manual any more
+        CHECK (! r.clearInput ({ O, 9 }) && ! r.clearInput ({ I, 0 }));   // no such input
+
         r.reset();
         CHECK (r.getManual().empty() && fedBy (r, { 1, 1 }, { { I, 1 } }));
     }

@@ -459,6 +459,8 @@ public:
     bool connectPins (chain::Pin from, chain::Pin to)      { return editRouting ([&] { return routing.connect (from, to); }); }
     bool disconnectPins (chain::Pin from, chain::Pin to)   { return editRouting ([&] { return routing.disconnect (from, to); }); }
     void resetRouting()                                    { editRouting ([&] { routing.reset(); return true; }); }
+    bool setPinAutomatic (chain::Pin input)                { return editRouting ([&] { return routing.makeAutomatic (input); }); }
+    bool clearPin (chain::Pin input)                       { return editRouting ([&] { return routing.clearInput (input); }); }
 
     /** The manual pins, to save with the project, and back (after setSlots). */
     std::vector<chain::ManualInput> getRoutingPins() const

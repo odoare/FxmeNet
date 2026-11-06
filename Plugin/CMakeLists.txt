@@ -28,6 +28,7 @@ target_sources(FxmeNetPlugin PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
     Source/Panels.cpp
+    Source/RoutingView.cpp
     Source/LocalCatalog.cpp
 )
 

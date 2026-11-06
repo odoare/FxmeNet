@@ -121,18 +121,16 @@ public:
     int getNumMapped() const;
 
     //==============================================================================
-    // Stream settings: N, D and the channel masks (bit c: channel c sent, or
-    // received). Changing them reconfigures the session (a moment of dry audio).
+    // Stream settings: N and D (the channels sent and received follow the
+    // routing). Changing them reconfigures the session (a moment of dry audio).
 
     struct StreamSettings
     {
-        int blockSize = 128, budgetBlocks = 2;
-        std::uint64_t inputMask = ~std::uint64_t (0), outputMask = ~std::uint64_t (0);
+        int blockSize = 128, budgetBlocks = 2;   // the channels sent and received follow the routing
 
         bool operator== (const StreamSettings& o) const noexcept
         {
-            return blockSize == o.blockSize && budgetBlocks == o.budgetBlocks
-                && inputMask == o.inputMask && outputMask == o.outputMask;
+            return blockSize == o.blockSize && budgetBlocks == o.budgetBlocks;
         }
     };
 

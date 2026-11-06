@@ -306,6 +306,20 @@ public:
         return true;
     }
 
+    /** One input pin back to the default rule; false when it was not manual. */
+    bool makeAutomatic (Pin input)      { return manual.erase (input) != 0; }
+
+    /** One input pin fed by nothing (manual, empty); false when it does not
+        exist. */
+    bool clearInput (Pin input)
+    {
+        const int t = indexOf (input.box);
+        if (t < 0 || input.channel < 0 || input.channel >= boxes[(std::size_t) t].numInputs())
+            return false;
+        manual[input] = {};
+        return true;
+    }
+
     /** Back to the default routing everywhere. */
     void reset()            { manual.clear(); }
 

@@ -493,7 +493,7 @@ void MappingPanel::resized()
 //==============================================================================
 // SettingsPanel
 
-SettingsPanel::SettingsPanel (FxmeNetAudioProcessor& p) : processor (p)
+SettingsPanel::SettingsPanel (FxmeNetAudioProcessor& p) : processor (p), routingView (p)
 {
     int id = 1;
     for (int n : { 32, 64, 128, 256, 512, 1024 })
@@ -507,43 +507,17 @@ SettingsPanel::SettingsPanel (FxmeNetAudioProcessor& p) : processor (p)
     addAndMakeVisible (blockBox);
     addAndMakeVisible (budgetBox);
 
-    allInputs.setTooltip (tips::allChannels);
-    allOutputs.setTooltip (tips::allChannels);
-    allInputs.onClick = [this]
-    {
-        for (auto* b : inputButtons)
-            b->setToggleState (true, juce::dontSendNotification);
-        apply();
-    };
-    allOutputs.onClick = [this]
-    {
-        for (auto* b : outputButtons)
-            b->setToggleState (true, juce::dontSendNotification);
-        apply();
-    };
+    resetRoutingButton.setTooltip ("Back to the default routing: each plugin fed by the one above it, in series, "
+                                   "and the outputs by the last one.");
+    resetRoutingButton.onClick = [this] { processor.getEngine().resetRouting(); };
+    addAndMakeVisible (routingView);
+
     rescanButton.setTooltip (tips::rescan);
     fullRescanButton.setTooltip (tips::fullRescan);
     rescanButton.onClick = [this] { processor.getLocalCatalog().rescan (false); };
     fullRescanButton.onClick = [this] { processor.getLocalCatalog().rescan (true); };
     foldersButton.setTooltip (tips::pluginFolders);
     foldersButton.onClick = [this] { foldersMenu(); };
-
-    dryPathButton.setTooltip ("Test (until the routing view): each input also goes straight to the same output, "
-                              "in parallel with the chain, delayed to stay aligned with it.");
-    resetRoutingButton.setTooltip ("Back to the default routing: each plugin fed by the one above, in series.");
-    dryPathButton.onClick = [this]
-    {
-        auto& engine = processor.getEngine();
-        const int n = juce::jmin (processor.getPreparedInputs(), processor.getPreparedOutputs());
-        for (int c = 0; c < n; ++c)
-            engine.connectPins ({ fxmenet::chain::inputsBox, c }, { fxmenet::chain::outputsBox, c });
-    };
-    resetRoutingButton.onClick = [this] { processor.getEngine().resetRouting(); };
-    for (auto* b : { &dryPathButton, &resetRoutingButton })
-    {
-        styleButton (*b);
-        addAndMakeVisible (*b);
-    }
 
     flushButton.setTooltip (tips::flushOnReset);
     logButton.setTooltip (tips::logEvents);
@@ -560,43 +534,15 @@ SettingsPanel::SettingsPanel (FxmeNetAudioProcessor& p) : processor (p)
     };
     logButton.onClick = [this] { setLogEvents (logButton.getToggleState()); };
 
-    for (auto* b : { &allInputs, &allOutputs, &rescanButton, &fullRescanButton, &foldersButton })
+    for (auto* b : { &resetRoutingButton, &rescanButton, &fullRescanButton, &foldersButton })
     {
         styleButton (*b);
         addAndMakeVisible (*b);
     }
 }
 
-void SettingsPanel::rebuildChannels (int inputs, int outputs)
-{
-    shownInputs = inputs;
-    shownOutputs = outputs;
-    inputButtons.clear();
-    outputButtons.clear();
-
-    auto make = [this] (juce::OwnedArray<juce::TextButton>& into, int count, const char* tip)
-    {
-        for (int c = 0; c < count; ++c)
-        {
-            auto* b = into.add (new juce::TextButton (juce::String (c + 1)));
-            styleButton (*b);
-            b->setClickingTogglesState (true);
-            b->setTooltip (tip);
-            b->onClick = [this] { apply(); };
-            addAndMakeVisible (b);
-        }
-    };
-    make (inputButtons, inputs, tips::inputChannel);
-    make (outputButtons, outputs, tips::outputChannel);
-    resized();
-}
-
 void SettingsPanel::refresh()
 {
-    const int ins = processor.getPreparedInputs(), outs = processor.getPreparedOutputs();
-    if (ins != shownInputs || outs != shownOutputs)
-        rebuildChannels (ins, outs);
-
     const auto s = processor.getStreamSettings();
     int blockIndex = 0;
     for (int i = 0; i < blockBox.getNumItems(); ++i)
@@ -605,10 +551,6 @@ void SettingsPanel::refresh()
     blockBox.setSelectedItemIndex (blockIndex, juce::dontSendNotification);
     budgetBox.setSelectedId (s.budgetBlocks, juce::dontSendNotification);
 
-    for (int c = 0; c < inputButtons.size(); ++c)
-        inputButtons[c]->setToggleState (((s.inputMask >> c) & 1) != 0, juce::dontSendNotification);
-    for (int c = 0; c < outputButtons.size(); ++c)
-        outputButtons[c]->setToggleState (((s.outputMask >> c) & 1) != 0, juce::dontSendNotification);
 
     auto& engine = processor.getEngine();
     const double rate = processor.getSampleRate() > 0.0 ? processor.getSampleRate() : 48000.0;
@@ -623,34 +565,7 @@ void SettingsPanel::refresh()
         repaint (latencyArea);
     }
 
-    {
-        // The routing as the server gets it: S<slot id>:<channel>, from 1.
-        juce::String rt;
-        if (! engine.isRoutingAvailable())
-            rt = "This server does not route (an older version): the chain runs in series.";
-        else
-        {
-            auto name = [] (const fxmenet::chain::Pin& p)
-            {
-                const auto box = p.box == fxmenet::chain::inputsBox ? juce::String ("IN")
-                               : p.box == fxmenet::chain::outputsBox ? juce::String ("OUT")
-                               : "S" + juce::String ((int) p.box) + ":";
-                return box + juce::String (p.channel + 1);
-            };
-            const auto connections = engine.getServerRouting();
-            rt << (int) connections.size() << " connections, " << (int) engine.getRoutingPins().size()
-               << " input pins set by hand:";
-            for (auto& c : connections)
-                rt << "  " << name (c.from) << ">" << name (c.to);
-        }
-        dryPathButton.setEnabled (engine.isRoutingAvailable());
-        resetRoutingButton.setEnabled (engine.isRoutingAvailable());
-        if (rt != routingText)
-        {
-            routingText = rt;
-            repaint (routingArea);
-        }
-    }
+    routingView.refresh();
 
     flushButton.setToggleState (processor.getEngine().getFlushOnReset(), juce::dontSendNotification);
     logButton.setToggleState (getLogEvents(), juce::dontSendNotification);
@@ -723,13 +638,6 @@ void SettingsPanel::apply()
     s.blockSize = blockBox.getText().getIntValue() > 0 ? blockBox.getText().getIntValue() : s.blockSize;
     s.budgetBlocks = budgetBox.getSelectedId() > 0 ? budgetBox.getSelectedId() : s.budgetBlocks;
 
-    // Channels beyond the host's keep their bit: a wider layout later gets them.
-    for (int c = 0; c < inputButtons.size(); ++c)
-        s.inputMask = inputButtons[c]->getToggleState() ? s.inputMask | (std::uint64_t (1) << c)
-                                                        : s.inputMask & ~(std::uint64_t (1) << c);
-    for (int c = 0; c < outputButtons.size(); ++c)
-        s.outputMask = outputButtons[c]->getToggleState() ? s.outputMask | (std::uint64_t (1) << c)
-                                                          : s.outputMask & ~(std::uint64_t (1) << c);
     processor.setStreamSettings (s);
 }
 
@@ -740,12 +648,13 @@ void SettingsPanel::paint (juce::Graphics& g)
     g.setColour (theme::dimText);
     g.drawText ("Block size N", blockLabel, juce::Justification::centredLeft);
     g.drawText ("Network budget D", budgetLabel, juce::Justification::centredLeft);
-    g.drawText ("INPUTS sent to the server", inputsLabel, juce::Justification::centredLeft);
-    g.drawText ("OUTPUTS received from the server", outputsLabel, juce::Justification::centredLeft);
+    g.drawText ("ROUTING", routingLabel, juce::Justification::centredLeft);
+    g.setFont (juce::Font (juce::FontOptions (11.0f)));
+    g.drawText ("Drag between pins or bus names; shift-click a connection to remove it; right-click an input pin.",
+                routingHint, juce::Justification::centredLeft, true);
+    g.setFont (juce::Font (juce::FontOptions (12.5f)));
     g.drawText ("LOCAL PLUGINS (for the plugins' own editors)", localArea.withHeight (18), juce::Justification::centredLeft);
     g.drawText ("TRANSPORT", diagnosticsLabel, juce::Justification::centredLeft);
-    g.drawText ("ROUTING (test)", routingLabel, juce::Justification::centredLeft);
-    g.drawFittedText (routingText, routingArea, juce::Justification::topLeft, 3, 1.0f);
     g.setColour (theme::text);
     g.drawFittedText (latencyText, latencyArea, juce::Justification::centredLeft, 2);
     g.drawText (localText, localArea.withTrimmedTop (22).withHeight (24), juce::Justification::centredLeft, true);
@@ -769,16 +678,6 @@ void SettingsPanel::resized()
     localArea = localArea.withTrimmedRight (296);
     r.removeFromBottom (8);
 
-    // Routing (temporary), above.
-    auto routingRow = r.removeFromBottom (58);
-    auto routingButtons = routingRow.removeFromTop (24);
-    routingLabel = routingButtons.removeFromLeft (110);
-    dryPathButton.setBounds (routingButtons.removeFromLeft (110));
-    routingButtons.removeFromLeft (6);
-    resetRoutingButton.setBounds (routingButtons.removeFromLeft (110));
-    routingArea = routingRow.withTrimmedTop (4);
-    r.removeFromBottom (8);
-
     // Reset behaviour and the events log, above.
     auto diagnostics = r.removeFromBottom (24);
     diagnosticsLabel = diagnostics.removeFromLeft (90);
@@ -795,23 +694,15 @@ void SettingsPanel::resized()
     budgetBox.setBounds (row.removeFromLeft (110));
     r.removeFromTop (6);
     latencyArea = r.removeFromTop (34);
-    r.removeFromTop (10);
+    r.removeFromTop (8);
 
-    constexpr int cell = 34, perRow = 16;
-    auto layoutGrid = [&] (juce::Rectangle<int>& area, juce::Rectangle<int>& label, juce::TextButton& all,
-                           juce::OwnedArray<juce::TextButton>& buttons)
-    {
-        auto head = area.removeFromTop (22);
-        all.setBounds (head.removeFromRight (50));
-        label = head;
-        area.removeFromTop (4);
-        const int rowsNeeded = (buttons.size() + perRow - 1) / perRow;
-        for (int i = 0; i < buttons.size(); ++i)
-            buttons[i]->setBounds (area.getX() + (i % perRow) * (cell + 2), area.getY() + (i / perRow) * 24, cell, 22);
-        area.removeFromTop (rowsNeeded * 24 + 10);
-    };
-    layoutGrid (r, inputsLabel, allInputs, inputButtons);
-    layoutGrid (r, outputsLabel, allOutputs, outputButtons);
+    // The routing: the rest.
+    auto head = r.removeFromTop (24);
+    resetRoutingButton.setBounds (head.removeFromRight (110));
+    routingLabel = head.removeFromLeft (70);
+    routingHint = head.withTrimmedRight (8);
+    r.removeFromTop (4);
+    routingView.setBounds (r);
 }
 
 } // namespace fxmenet::plugin
