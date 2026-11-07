@@ -155,7 +155,13 @@ bool Server::start()
     acceptThread = std::make_unique<AcceptThread> (*this);
     acceptThread->startThread();
     udpThread = std::make_unique<UdpThread> (*this);
-    udpThread->startThread (juce::Thread::Priority::high);
+    // Above the sessions' audio threads (8): while they process, the
+    // socket must still be emptied, or the kernel drops datagrams.
+    if (! udpThread->startRealtimeThread (juce::Thread::RealtimeOptions{}.withPriority (9)))
+    {
+        udpThread->startThread (juce::Thread::Priority::high);
+        log ("warning: real-time priority refused for the UDP thread (see the audio threads' warning)");
+    }
     if (config.discovery)
     {
         auto d = std::make_unique<DiscoveryThread> (*this);

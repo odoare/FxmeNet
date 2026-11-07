@@ -52,6 +52,21 @@ public:
         std::atomic<std::uint64_t> resets { 0 };          ///< chain resets asked for by the client
         std::atomic<std::uint32_t> lastProcessMicros { 0 };
         std::atomic<std::uint32_t> maxProcessMicros { 0 };
+
+        // Since the last takeWindow() (the activity line, every 10 s).
+        std::atomic<std::uint32_t> windowMaxProcessMicros { 0 };
+        std::atomic<std::uint32_t> windowMaxTurnaroundMicros { 0 };  ///< arrival to reply sent
+
+        /** Real-time blocks whose reply left more than one (two) block
+            durations after the request arrived: the server fell behind. */
+        std::atomic<std::uint64_t> overOneBlock { 0 };
+        std::atomic<std::uint64_t> overTwoBlocks { 0 };
+    };
+
+    /** The window maxima since the last call, reset to 0. */
+    struct Window
+    {
+        std::uint32_t maxProcessMicros = 0, maxTurnaroundMicros = 0;
     };
 
     AudioWorker (Chain& chainToProcess, const juce::DatagramSocket& sharedSocket);
@@ -86,6 +101,16 @@ public:
 
     const Statistics& getStatistics() const noexcept   { return stats; }
 
+    Window takeWindow() noexcept
+    {
+        return { stats.windowMaxProcessMicros.exchange (0), stats.windowMaxTurnaroundMicros.exchange (0) };
+    }
+
+    /** False when the system refused real-time scheduling (on Linux: no
+        rtprio limit for the user); the thread then runs as an ordinary one.
+        Valid after start(). */
+    bool isRealtime() const noexcept   { return realtime; }
+
     /** The largest request the session's format allows (for the reassembler). */
     static std::size_t maxRequestSize (const control::Configure&);
 
@@ -95,6 +120,7 @@ private:
         std::uint16_t flags = 0;
         std::vector<std::uint8_t> body;
         std::size_t size = 0;
+        std::int64_t arrived = 0;   ///< high-resolution ticks, when queued
     };
 
     struct Held
@@ -122,7 +148,7 @@ private:
 
     void run() override;
     void handle (const Entry&);
-    void processBlock (const wire::BlockView&, std::uint16_t flags);
+    void processBlock (const wire::BlockView&, std::uint16_t flags, std::int64_t arrived);
     void send (const std::vector<std::uint8_t>& body);
     void drainHeld();
     void releaseStaleHeld();
@@ -133,6 +159,8 @@ private:
     control::Configure config;
     std::uint32_t sessionId = 0;
     std::uint64_t token = 0;
+    bool realtime = false;
+    double blockSeconds = 0.0;   ///< one block's duration
 
     std::array<UdpPeer, 2> peers;
     std::atomic<int> activePeer { -1 };
