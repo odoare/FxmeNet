@@ -1,0 +1,1062 @@
+2026-11-07 10:01:40  fxmenet-server 0.1.0 "olivier" on Linux
+2026-11-07 10:01:40  scanning VST3 in /home/olivierdoare/.vst3;/usr/local/lib/vst3;/usr/lib/vst3
+2026-11-07 10:01:40    Dynette 0.1.0 (FX-Mechanics), uid 1772bb39
+2026-11-07 10:01:40    FxmeGate 0.5.1 (FX-Mechanics), uid 1a5ac12a, FxmeNet-aware
+2026-11-07 10:01:40    FxmeFreeze 0.5.1 (FX-Mechanics), uid 196bc72a, FxmeNet-aware
+2026-11-07 10:01:40    FxmeTube 0.5.1 (FX-Mechanics), uid 276eaf2a, FxmeNet-aware
+2026-11-07 10:01:40    OtoDelay 0.1.0 (FX-Mechanics), uid 228db151
+2026-11-07 10:01:40    OtoMonitor 0.1.0 (FX-Mechanics), uid 228dba53
+2026-11-07 10:01:40    OtoComp 0.1.0 (FX-Mechanics), uid 228db055
+2026-11-07 10:01:40    FxmeEqualizer 0.5.1 (FX-Mechanics), uid 186ac231, FxmeNet-aware
+2026-11-07 10:01:40    FxmeDeEsser 0.6.0 (FX-Mechanics), uid 175ec038, FxmeNet-aware
+2026-11-07 10:01:40    FxmeConvolReverb 0.5.1 (FX-Mechanics), uid 166bb23b, FxmeNet-aware
+2026-11-07 10:01:40    FxmeOct 0.5.1 (FX-Mechanics), uid 225cc13b, FxmeNet-aware
+2026-11-07 10:01:40    FxmeCab 0.5.1 (FX-Mechanics), uid 165aaf33, FxmeNet-aware
+2026-11-07 10:01:40    FxmeTape 0.6.0 (FX-Mechanics), uid 275abd2a, FxmeNet-aware
+2026-11-07 10:01:40    SpectralDede 0.1.0 (FX-Mechanics), uid 175eb12a
+2026-11-07 10:01:40    FxmeStereoDelay 0.5.1 (FX-Mechanics), uid 265db231, FxmeNet-aware
+2026-11-07 10:01:40    AmbiRR2 0.1.0 (FX-Mechanics), uid 1466bf17
+2026-11-07 10:01:40    Mango 0.3.0 (FX-Mechanics), uid 2067b434
+2026-11-07 10:01:40    FxmeLimiter 0.5.1 (FX-Mechanics), uid 1f62ba39, FxmeNet-aware
+2026-11-07 10:01:40    FxmeReverb 0.5.1 (FX-Mechanics), uid 196fbf27, FxmeNet-aware
+2026-11-07 10:01:40    FxmeCompressor 0.5.1 (FX-Mechanics), uid 1668ba35, FxmeNet-aware
+2026-11-07 10:01:40    FxmeCrusher 0.6.0 (FX-Mechanics), uid 166bc02d, FxmeNet-aware
+2026-11-07 10:01:40    FxmeChorus 0.5.1 (FX-Mechanics), uid 1661bc37, FxmeNet-aware
+2026-11-07 10:01:40    FxmeFlanger 0.5.1 (FX-Mechanics), uid 1965bb2c, FxmeNet-aware
+2026-11-07 10:01:40    FxmeTransient 0.5.1 (FX-Mechanics), uid 276bbb38, FxmeNet-aware
+2026-11-07 10:01:40    FxmePhaser 0.5.1 (FX-Mechanics), uid 2361c037, FxmeNet-aware
+2026-11-07 10:01:40    ZamGEQ31 4.5.0 (Damien Zammit), uid ec641cc5
+2026-11-07 10:01:40    ZamTube 4.5.0 (Damien Zammit), uid ff83afc5
+2026-11-07 10:01:40    ZamDynamicEQ 4.5.0 (Damien Zammit), uid ce73d6c5
+2026-11-07 10:01:40    ZamComp 4.5.0 (Damien Zammit), uid b089a0c5
+2026-11-07 10:01:40    ZamGateX2 4.5.0 (Damien Zammit), uid 0f631cc5
+2026-11-07 10:01:40    ZamDelay 4.5.0 (Damien Zammit), uid 3373d6c5
+2026-11-07 10:01:40    ZamGate 4.5.0 (Damien Zammit), uid 2b161cc5
+2026-11-07 10:01:40    ZaMaximX2 4.5.0 (Damien Zammit), uid 0fdfd6c5
+2026-11-07 10:01:40    ZamNoise 4.5.0 (Damien Zammit), uid d7c8f5c5
+2026-11-07 10:01:40    ZamEcho 4.5.0 (Damien Zammit), uid 1c92d6c5
+2026-11-07 10:01:40    ZamHeadX2 4.5.0 (Damien Zammit), uid 0d733bc5
+2026-11-07 10:01:40    ZamCompX2 4.5.0 (Damien Zammit), uid 0ee6a0c5
+2026-11-07 10:01:40    ZamEQ2 4.5.0 (Damien Zammit), uid 0f05dec5
+2026-11-07 10:01:40    ZamPhono 4.5.0 (Damien Zammit), uid b8e7d6c5
+2026-11-07 10:01:40    ZaMultiCompX2 4.5.0 (Damien Zammit), uid 0e8ad6c5
+2026-11-07 10:01:40    ZamGrains 4.5.0 (Damien Zammit), uid edd0d6c5
+2026-11-07 10:01:40    ZamAutoSat 4.5.0 (Damien Zammit), uid 2b1790c5
+2026-11-07 10:01:40    ZamVerb 4.5.0 (Damien Zammit), uid ff26edc5
+2026-11-07 10:01:40    ZaMultiComp 4.5.0 (Damien Zammit), uid 1d8ad6c5
+2026-11-07 10:01:40    plugdata-fx 0.9.2 (plugdata), uid 5be8a20e
+2026-11-07 10:01:40  45 plugins (0 examined, 47 from the cache, 0 failed)
+2026-11-07 10:01:40  listening: control TCP 54322, audio UDP 54321, discovery UDP 54320
+2026-11-07 10:02:55  session 1 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:02:55  session 1: 44100 Hz, block 128, 2 in / 2 out, real-time audio thread
+2026-11-07 10:02:55  session 1: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:02:55  session 1: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:02:55  session 1: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:02:55  session 1: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:02:55  session 1: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:02:55  session 1: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:02:55  session 1: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:02:55  session 1: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:02:55  session 1: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:02:55  session 1: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:02:55  session 1: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:02:55  session 1: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:02:55  session 1: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:02:55  session 1: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:02:55  session 1: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:02:55  session 1: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:02:55  session 1: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:00  session 1: 1074 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 0 | process 219 us, max 10 s 7180 us, max 7180 us | turnaround max 10 s 7251 us, over 1 block 2, over 2 blocks 1 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:10  session 1: 44100 Hz, block 128, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:10  session 1: 1226 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 0 | process 460 us, max 10 s 670 us, max 7180 us | turnaround max 10 s 1462 us, over 1 block 2, over 2 blocks 1 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:20  session 1: 4732 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 345 us, max 10 s 3531 us, max 7180 us | turnaround max 10 s 4217 us, over 1 block 19, over 2 blocks 1 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:21  session 1: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:30  session 2 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:30  session 2: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:30  session 2: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:30  session 2: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:30  session 2: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:30  session 2: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:30  session 2: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:30  session 2: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:30  session 2: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:30  session 2: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:30  session 2: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:30  session 2: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:30  session 2: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:30  session 2: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:30  session 2: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:30  session 2: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:30  session 2: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:30  session 2: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:30  session 2: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:30  session 1: 6561 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 446 us, max 10 s 1426 us, max 7180 us | turnaround max 10 s 1764 us, over 1 block 19, over 2 blocks 1 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:30  session 2: 95 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 0 | process 468 us, max 10 s 6900 us, max 6900 us | turnaround max 10 s 6968 us, over 1 block 1, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:31  session 3 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:31  session 3: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:31  session 3: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:31  session 3: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:31  session 3: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:31  session 3: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:31  session 3: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:31  session 3: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:31  session 3: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:31  session 3: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:31  session 3: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:31  session 3: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:31  session 3: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:31  session 3: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:31  session 3: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:31  session 3: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:31  session 3: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:31  session 3: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:31  session 3: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:31  session 4 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:31  session 4: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:31  session 4: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:31  session 4: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:31  session 4: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:31  session 4: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:31  session 4: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:31  session 4: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:31  session 4: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:31  session 4: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:31  session 4: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:31  session 4: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:31  session 4: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:31  session 5 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:31  session 5: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:31  session 4: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:31  session 5: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:31  session 4: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:31  session 5: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:31  session 4: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:31  session 5: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:31  session 4: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:31  session 5: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:31  session 4: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:31  session 5: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:31  session 4: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:31  session 5: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:31  session 5: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:31  session 5: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:31  session 5: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:31  session 5: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:31  session 5: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:31  session 5: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:31  session 5: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:31  session 6 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:31  session 5: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:31  session 6: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:31  session 5: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:31  session 6: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:31  session 5: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:31  session 6: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:31  session 5: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:31  session 6: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:31  session 6: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:31  session 6: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:31  session 6: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:31  session 6: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:31  session 6: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:31  session 6: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:31  session 6: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:31  session 6: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:31  session 6: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:31  session 6: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:31  session 6: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:31  session 6: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:31  session 6: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:31  session 6: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:31  session 7 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:31  session 7: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:31  session 7: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:31  session 7: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:31  session 7: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:31  session 7: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:31  session 7: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:31  session 7: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:31  session 7: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:31  session 7: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:32  session 7: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:32  session 7: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:32  session 7: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:32  session 7: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:32  session 7: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:32  session 8 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:32  session 7: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:32  session 8: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:32  session 7: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:32  session 8: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:32  session 7: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:32  session 8: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:32  session 7: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:32  session 8: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:32  session 8: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:32  session 8: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:32  session 8: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:32  session 8: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:32  session 8: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:32  session 8: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:32  session 8: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:32  session 8: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:32  session 8: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:32  session 8: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:32  session 8: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:32  session 8: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:32  session 8: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:32  session 8: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:32  session 9 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:32  session 9: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:32  session 9: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:32  session 9: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:32  session 9: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:32  session 9: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:32  session 9: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:32  session 9: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:32  session 9: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:32  session 9: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:32  session 9: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:32  session 9: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:32  session 9: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:32  session 10 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:32  session 9: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:32  session 10: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:32  session 9: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:32  session 10: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:32  session 9: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:32  session 10: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:32  session 9: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:32  session 10: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:32  session 9: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:32  session 10: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:32  session 9: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:32  session 10: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:32  session 10: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:32  session 10: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:32  session 10: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:32  session 10: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:32  session 10: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:32  session 10: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:32  session 10: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:32  session 10: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:32  session 10: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:32  session 10: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:32  session 11 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:32  session 10: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:32  session 11: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:32  session 10: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:32  session 11: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:32  session 11: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:32  session 11: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:32  session 11: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:32  session 11: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:32  session 11: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:32  session 11: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:32  session 11: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:32  session 11: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:32  session 11: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:32  session 11: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:32  session 11: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:32  session 11: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:32  session 11: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:32  session 11: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:32  session 11: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:32  session 11: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:32  session 12 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:32  session 12: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:32  session 12: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:32  session 12: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:32  session 12: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:32  session 12: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:33  session 12: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:33  session 12: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:33  session 12: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:33  session 12: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:33  session 12: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:33  session 12: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:33  session 12: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:33  session 12: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:33  session 12: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:33  session 13 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:33  session 12: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:33  session 13: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:33  session 12: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:33  session 12: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:33  session 13: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:33  session 12: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:33  session 13: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:33  session 13: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:33  session 13: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:33  session 13: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:33  session 13: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:33  session 13: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:33  session 13: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:33  session 13: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:33  session 13: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:33  session 13: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:33  session 13: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:33  session 13: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:33  session 13: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:33  session 14 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:33  session 14: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:33  session 13: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:33  session 13: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:33  session 14: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:33  session 13: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:33  session 14: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:33  session 14: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:33  session 14: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:33  session 14: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:33  session 14: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:33  session 14: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:33  session 14: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:33  session 14: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:33  session 15 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:33  session 15: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:33  session 15: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:33  session 15: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:33  session 14: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:33  session 15: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:33  session 14: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:33  session 15: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:33  session 14: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:33  session 15: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:33  session 14: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:33  session 15: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:33  session 14: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:33  session 15: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:33  session 14: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:33  session 15: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:33  session 14: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:33  session 15: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:33  session 14: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:33  session 15: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:33  session 15: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:33  session 15: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:33  session 15: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:33  session 15: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:33  session 15: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:33  session 15: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:33  session 15: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:33  session 16 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:33  session 16: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:33  session 16: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:33  session 16: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:33  session 16: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:33  session 16: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:33  session 16: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:33  session 16: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:33  session 16: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:33  session 16: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:33  session 16: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:34  session 16: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:34  session 16: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:34  session 16: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:34  session 16: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:34  session 16: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:34  session 16: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:34  session 16: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:34  session 16: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:34  session 17 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:34  session 17: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:34  session 17: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:34  session 17: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:34  session 17: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:34  session 17: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:34  session 17: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:34  session 17: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:34  session 17: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:34  session 17: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:34  session 17: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:34  session 17: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:34  session 18 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:34  session 17: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:34  session 18: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:34  session 17: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:34  session 18: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:34  session 17: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:34  session 18: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:34  session 17: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:34  session 18: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:34  session 17: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:34  session 18: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:34  session 17: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:34  session 18: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:34  session 17: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:34  session 18: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:34  session 18: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:34  session 18: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:34  session 18: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:34  session 18: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:34  session 18: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:34  session 18: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:34  session 18: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:34  session 18: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:34  session 18: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:34  session 18: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:34  session 18: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:34  session 19 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:34  session 19: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:34  session 19: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:34  session 19: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:34  session 19: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:34  session 19: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:34  session 19: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:34  session 19: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:34  session 19: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:34  session 19: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:34  session 19: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:34  session 19: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:34  session 19: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:34  session 19: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:34  session 19: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:34  session 20 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:34  session 20: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:34  session 19: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:34  session 19: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:34  session 20: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:34  session 19: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:34  session 19: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:34  session 20: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:34  session 20: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:34  session 20: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:35  session 20: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:35  session 20: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:35  session 20: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:35  session 20: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:35  session 20: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:35  session 20: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:35  session 20: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:35  session 20: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:35  session 20: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:35  session 20: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:35  session 21 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:35  session 21: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:35  session 20: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:35  session 20: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:35  session 21: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:35  session 20: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:35  session 21: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:35  session 21: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:35  session 21: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:35  session 21: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:35  session 21: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:35  session 21: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:35  session 21: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:35  session 21: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:35  session 22 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:35  session 22: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:35  session 22: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:35  session 22: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:35  session 21: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:35  session 22: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:35  session 21: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:35  session 22: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:35  session 21: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:35  session 22: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:35  session 21: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:35  session 22: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:35  session 21: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:35  session 22: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:35  session 21: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:35  session 22: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:35  session 21: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:35  session 22: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:35  session 21: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:35  session 22: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:35  session 22: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:35  session 22: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:35  session 22: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:35  session 22: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:35  session 22: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:35  session 22: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:35  session 22: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:35  session 23 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:35  session 23: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:35  session 23: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:35  session 23: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:35  session 23: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:35  session 23: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:35  session 23: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:35  session 23: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:35  session 23: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:35  session 23: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:35  session 23: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:36  session 23: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:36  session 23: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:36  session 23: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:36  session 23: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:36  session 23: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:36  session 23: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:36  session 23: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:36  session 23: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:36  session 24 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:36  session 24: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:36  session 24: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:36  session 24: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:36  session 24: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:36  session 24: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:36  session 24: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:36  session 24: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:36  session 24: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:36  session 24: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:36  session 24: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:36  session 25 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:36  session 25: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:36  session 25: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:36  session 25: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:36  session 25: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:36  session 25: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:36  session 25: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:36  session 24: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:36  session 25: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:36  session 24: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:36  session 25: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:36  session 24: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:36  session 25: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:36  session 24: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:36  session 25: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:36  session 24: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:36  session 24: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:36  session 26 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:36  session 26: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:36  session 24: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:36  session 24: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:36  session 26: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:36  session 26: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:36  session 26: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:36  session 26: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:36  session 26: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:36  session 25: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:36  session 26: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:36  session 25: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:36  session 26: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:36  session 25: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:36  session 26: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:36  session 25: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:36  session 26: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:37  session 25: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:37  session 27 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:37  session 25: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:37  session 27: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:37  session 25: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:37  session 25: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:37  session 27: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:37  session 27: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:37  session 27: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:37  session 27: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:37  session 27: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:37  session 26: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:37  session 28 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 10:03:37  session 27: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:37  session 28: 44100 Hz, block 256, 2 in / 2 out, real-time audio thread
+2026-11-07 10:03:37  session 26: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:37  session 27: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:37  session 26: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:37  session 28: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 10:03:37  session 27: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:37  session 26: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:37  session 28: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 10:03:37  session 27: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:37  session 26: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:37  session 28: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 10:03:37  session 26: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:37  session 26: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:37  session 28: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 10:03:37  session 26: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:37  session 28: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 10:03:37  session 28: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 10:03:37  session 27: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:37  session 28: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 10:03:37  session 27: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:37  session 28: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 10:03:37  session 27: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:37  session 28: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 10:03:37  session 27: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:37  session 27: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:37  session 27: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:37  session 27: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:37  session 27: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:37  session 28: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 10:03:37  session 28: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 10:03:37  session 28: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 10:03:37  session 28: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 10:03:37  session 28: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 10:03:37  session 28: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 10:03:37  session 28: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 10:03:37  session 28: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 10:03:41  session 1: 8293 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 2 | process 1141 us, max 10 s 3186 us, max 7180 us | turnaround max 10 s 4769 us, over 1 block 19, over 2 blocks 1 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 2: 1825 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1038 us, max 10 s 3683 us, max 6900 us | turnaround max 10 s 4637 us, over 1 block 1, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 3: 1719 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1037 us, max 10 s 4429 us, max 4429 us | turnaround max 10 s 4470 us, over 1 block 0, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 4: 1674 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1031 us, max 10 s 6657 us, max 6657 us | turnaround max 10 s 6704 us, over 1 block 1, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 5: 1640 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1013 us, max 10 s 7991 us, max 7991 us | turnaround max 10 s 8047 us, over 1 block 1, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 6: 1605 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1100 us, max 10 s 7366 us, max 7366 us | turnaround max 10 s 7407 us, over 1 block 1, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 7: 1570 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 951 us, max 10 s 5475 us, max 5475 us | turnaround max 10 s 5533 us, over 1 block 0, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 8: 1537 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1051 us, max 10 s 6316 us, max 6316 us | turnaround max 10 s 6366 us, over 1 block 1, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 9: 1493 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 995 us, max 10 s 4774 us, max 4774 us | turnaround max 10 s 4813 us, over 1 block 0, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 10: 1495 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 884 us, max 10 s 5651 us, max 5651 us | turnaround max 10 s 5705 us, over 1 block 0, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 11: 1424 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 999 us, max 10 s 5273 us, max 5273 us | turnaround max 10 s 5329 us, over 1 block 0, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 12: 1388 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1198 us, max 10 s 5508 us, max 5508 us | turnaround max 10 s 5544 us, over 1 block 0, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 13: 1351 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1132 us, max 10 s 6003 us, max 6003 us | turnaround max 10 s 6056 us, over 1 block 1, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 14: 1314 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1280 us, max 10 s 6423 us, max 6423 us | turnaround max 10 s 6456 us, over 1 block 1, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 15: 1279 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1205 us, max 10 s 6030 us, max 6030 us | turnaround max 10 s 6072 us, over 1 block 1, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 16: 1254 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1242 us, max 10 s 6416 us, max 6416 us | turnaround max 10 s 6460 us, over 1 block 1, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 17: 1182 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1185 us, max 10 s 4862 us, max 4862 us | turnaround max 10 s 4895 us, over 1 block 0, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 18: 1142 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1010 us, max 10 s 4932 us, max 4932 us | turnaround max 10 s 4971 us, over 1 block 0, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 19: 1093 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1224 us, max 10 s 6035 us, max 6035 us | turnaround max 10 s 6073 us, over 1 block 1, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 20: 1048 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1074 us, max 10 s 7291 us, max 7291 us | turnaround max 10 s 7347 us, over 1 block 1, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 21: 999 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1273 us, max 10 s 7716 us, max 7716 us | turnaround max 10 s 7758 us, over 1 block 1, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 22: 958 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1189 us, max 10 s 6090 us, max 6090 us | turnaround max 10 s 6124 us, over 1 block 1, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 23: 892 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1121 us, max 10 s 6936 us, max 6936 us | turnaround max 10 s 7005 us, over 1 block 1, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 24: 835 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 985 us, max 10 s 6534 us, max 6534 us | turnaround max 10 s 6585 us, over 1 block 1, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 25: 804 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1152 us, max 10 s 5512 us, max 5512 us | turnaround max 10 s 5554 us, over 1 block 0, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 26: 730 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1214 us, max 10 s 6369 us, max 6369 us | turnaround max 10 s 6426 us, over 1 block 1, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 27: 680 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1085 us, max 10 s 5353 us, max 5353 us | turnaround max 10 s 5391 us, over 1 block 0, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:41  session 28: 652 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1184 us, max 10 s 6165 us, max 6165 us | turnaround max 10 s 6206 us, over 1 block 1, over 2 blocks 0 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 1: 9978 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 2 | process 1039 us, max 10 s 12849 us, max 12849 us | turnaround max 10 s 25280 us, over 1 block 101, over 2 blocks 48 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 2: 3512 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 942 us, max 10 s 12788 us, max 12788 us | turnaround max 10 s 28601 us, over 1 block 92, over 2 blocks 59 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 3: 3406 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 876 us, max 10 s 8726 us, max 8726 us | turnaround max 10 s 29431 us, over 1 block 91, over 2 blocks 52 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 4: 3363 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 826 us, max 10 s 11061 us, max 11061 us | turnaround max 10 s 31220 us, over 1 block 95, over 2 blocks 52 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 5: 3330 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1006 us, max 10 s 7652 us, max 7991 us | turnaround max 10 s 32839 us, over 1 block 90, over 2 blocks 55 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 6: 3296 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1003 us, max 10 s 22767 us, max 22767 us | turnaround max 10 s 31568 us, over 1 block 100, over 2 blocks 57 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 7: 3255 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 951 us, max 10 s 11719 us, max 11719 us | turnaround max 10 s 32206 us, over 1 block 96, over 2 blocks 55 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 8: 3222 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 840 us, max 10 s 20751 us, max 20751 us | turnaround max 10 s 29787 us, over 1 block 84, over 2 blocks 45 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 9: 3178 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1031 us, max 10 s 7321 us, max 7321 us | turnaround max 10 s 29241 us, over 1 block 93, over 2 blocks 46 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 10: 3180 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 968 us, max 10 s 13921 us, max 13921 us | turnaround max 10 s 33530 us, over 1 block 82, over 2 blocks 40 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 11: 3110 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 824 us, max 10 s 8772 us, max 8772 us | turnaround max 10 s 31970 us, over 1 block 89, over 2 blocks 43 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 12: 3074 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1030 us, max 10 s 35510 us, max 35510 us | turnaround max 10 s 35548 us, over 1 block 90, over 2 blocks 43 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 13: 3037 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 894 us, max 10 s 22165 us, max 22165 us | turnaround max 10 s 33529 us, over 1 block 78, over 2 blocks 34 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 14: 3000 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1036 us, max 10 s 9785 us, max 9785 us | turnaround max 10 s 23777 us, over 1 block 73, over 2 blocks 21 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 15: 2965 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 882 us, max 10 s 20516 us, max 20516 us | turnaround max 10 s 23609 us, over 1 block 98, over 2 blocks 41 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 16: 2940 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 967 us, max 10 s 7112 us, max 7112 us | turnaround max 10 s 25204 us, over 1 block 89, over 2 blocks 36 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 17: 2868 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 866 us, max 10 s 7549 us, max 7549 us | turnaround max 10 s 22584 us, over 1 block 90, over 2 blocks 35 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 18: 2828 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1119 us, max 10 s 25289 us, max 25289 us | turnaround max 10 s 31325 us, over 1 block 81, over 2 blocks 32 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 19: 2779 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 808 us, max 10 s 22193 us, max 22193 us | turnaround max 10 s 27218 us, over 1 block 80, over 2 blocks 32 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 20: 2734 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1003 us, max 10 s 24818 us, max 24818 us | turnaround max 10 s 32449 us, over 1 block 89, over 2 blocks 33 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 21: 2685 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1027 us, max 10 s 20039 us, max 20039 us | turnaround max 10 s 33802 us, over 1 block 88, over 2 blocks 34 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 22: 2644 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 824 us, max 10 s 20339 us, max 20339 us | turnaround max 10 s 23841 us, over 1 block 87, over 2 blocks 34 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 23: 2578 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1062 us, max 10 s 15785 us, max 15785 us | turnaround max 10 s 28948 us, over 1 block 102, over 2 blocks 46 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 24: 2521 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 852 us, max 10 s 22539 us, max 22539 us | turnaround max 10 s 33010 us, over 1 block 93, over 2 blocks 43 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 25: 2490 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 872 us, max 10 s 7336 us, max 7336 us | turnaround max 10 s 21348 us, over 1 block 109, over 2 blocks 51 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 26: 2415 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1034 us, max 10 s 17025 us, max 17025 us | turnaround max 10 s 27313 us, over 1 block 93, over 2 blocks 49 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 27: 2365 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 849 us, max 10 s 7069 us, max 7069 us | turnaround max 10 s 26396 us, over 1 block 81, over 2 blocks 40 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:03:51  session 28: 2337 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1016 us, max 10 s 23990 us, max 23990 us | turnaround max 10 s 32412 us, over 1 block 89, over 2 blocks 47 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 1: 11707 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 2 | process 821 us, max 10 s 18789 us, max 18789 us | turnaround max 10 s 32471 us, over 1 block 206, over 2 blocks 120 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 2: 5241 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 739 us, max 10 s 9226 us, max 12788 us | turnaround max 10 s 33740 us, over 1 block 196, over 2 blocks 128 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 3: 5135 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 873 us, max 10 s 16978 us, max 16978 us | turnaround max 10 s 38298 us, over 1 block 194, over 2 blocks 124 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 4: 5092 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 911 us, max 10 s 12352 us, max 12352 us | turnaround max 10 s 31247 us, over 1 block 190, over 2 blocks 117 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 5: 5059 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 904 us, max 10 s 12175 us, max 12175 us | turnaround max 10 s 34566 us, over 1 block 186, over 2 blocks 124 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 6: 5025 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 923 us, max 10 s 13866 us, max 22767 us | turnaround max 10 s 34636 us, over 1 block 198, over 2 blocks 126 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 7: 4984 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 837 us, max 10 s 20646 us, max 20646 us | turnaround max 10 s 29778 us, over 1 block 181, over 2 blocks 92 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 8: 4951 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 835 us, max 10 s 28419 us, max 28419 us | turnaround max 10 s 28454 us, over 1 block 181, over 2 blocks 86 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 9: 4907 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 839 us, max 10 s 7779 us, max 7779 us | turnaround max 10 s 30435 us, over 1 block 181, over 2 blocks 80 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 10: 4909 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 909 us, max 10 s 24558 us, max 24558 us | turnaround max 10 s 26777 us, over 1 block 165, over 2 blocks 75 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 11: 4838 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 909 us, max 10 s 26448 us, max 26448 us | turnaround max 10 s 28809 us, over 1 block 191, over 2 blocks 87 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 12: 4803 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1008 us, max 10 s 33458 us, max 35510 us | turnaround max 10 s 33497 us, over 1 block 191, over 2 blocks 92 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 13: 4765 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1013 us, max 10 s 20106 us, max 22165 us | turnaround max 10 s 27582 us, over 1 block 169, over 2 blocks 74 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 14: 4728 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 846 us, max 10 s 19884 us, max 19884 us | turnaround max 10 s 27152 us, over 1 block 161, over 2 blocks 48 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 15: 4693 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 825 us, max 10 s 27488 us, max 27488 us | turnaround max 10 s 35105 us, over 1 block 195, over 2 blocks 77 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 16: 4668 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 834 us, max 10 s 23580 us, max 23580 us | turnaround max 10 s 28221 us, over 1 block 188, over 2 blocks 74 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 17: 4596 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1030 us, max 10 s 16910 us, max 16910 us | turnaround max 10 s 24126 us, over 1 block 182, over 2 blocks 74 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 18: 4556 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 961 us, max 10 s 30207 us, max 30207 us | turnaround max 10 s 37759 us, over 1 block 182, over 2 blocks 77 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 19: 4507 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 844 us, max 10 s 31127 us, max 31127 us | turnaround max 10 s 31941 us, over 1 block 188, over 2 blocks 84 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 20: 4462 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 932 us, max 10 s 27954 us, max 27954 us | turnaround max 10 s 34902 us, over 1 block 185, over 2 blocks 72 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 21: 4413 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 821 us, max 10 s 20348 us, max 20348 us | turnaround max 10 s 24056 us, over 1 block 177, over 2 blocks 73 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 22: 4372 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1020 us, max 10 s 7247 us, max 20339 us | turnaround max 10 s 23778 us, over 1 block 187, over 2 blocks 86 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 23: 4306 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 774 us, max 10 s 19075 us, max 19075 us | turnaround max 10 s 32586 us, over 1 block 214, over 2 blocks 108 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 24: 4249 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 847 us, max 10 s 23830 us, max 23830 us | turnaround max 10 s 32405 us, over 1 block 209, over 2 blocks 109 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 25: 4218 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 751 us, max 10 s 19300 us, max 19300 us | turnaround max 10 s 34249 us, over 1 block 231, over 2 blocks 124 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 26: 4144 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 916 us, max 10 s 7304 us, max 17025 us | turnaround max 10 s 29226 us, over 1 block 198, over 2 blocks 109 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 27: 4094 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 735 us, max 10 s 9936 us, max 9936 us | turnaround max 10 s 25897 us, over 1 block 185, over 2 blocks 101 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:01  session 28: 4066 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 822 us, max 10 s 8158 us, max 23990 us | turnaround max 10 s 29781 us, over 1 block 188, over 2 blocks 111 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 1: 13436 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 2 | process 1021 us, max 10 s 16139 us, max 18789 us | turnaround max 10 s 38266 us, over 1 block 301, over 2 blocks 181 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 2: 6970 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1039 us, max 10 s 10241 us, max 12788 us | turnaround max 10 s 30200 us, over 1 block 288, over 2 blocks 193 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 3: 6864 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 976 us, max 10 s 31184 us, max 31184 us | turnaround max 10 s 33212 us, over 1 block 294, over 2 blocks 191 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 4: 6821 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 831 us, max 10 s 17106 us, max 17106 us | turnaround max 10 s 32846 us, over 1 block 290, over 2 blocks 179 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 5: 6788 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 857 us, max 10 s 12726 us, max 12726 us | turnaround max 10 s 34408 us, over 1 block 288, over 2 blocks 190 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 6: 6754 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 841 us, max 10 s 15015 us, max 22767 us | turnaround max 10 s 37004 us, over 1 block 313, over 2 blocks 201 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 7: 6713 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1135 us, max 10 s 32801 us, max 32801 us | turnaround max 10 s 32840 us, over 1 block 264, over 2 blocks 134 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 8: 6680 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1000 us, max 10 s 9150 us, max 28419 us | turnaround max 10 s 29927 us, over 1 block 262, over 2 blocks 124 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 9: 6636 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1182 us, max 10 s 33767 us, max 33767 us | turnaround max 10 s 33804 us, over 1 block 273, over 2 blocks 119 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 10: 6638 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1141 us, max 10 s 28993 us, max 28993 us | turnaround max 10 s 30954 us, over 1 block 263, over 2 blocks 123 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 11: 6568 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1192 us, max 10 s 30909 us, max 30909 us | turnaround max 10 s 32757 us, over 1 block 286, over 2 blocks 131 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 12: 6532 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1146 us, max 10 s 34632 us, max 35510 us | turnaround max 10 s 34676 us, over 1 block 290, over 2 blocks 137 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 13: 6495 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1136 us, max 10 s 19044 us, max 22165 us | turnaround max 10 s 28524 us, over 1 block 259, over 2 blocks 108 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 14: 6458 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 997 us, max 10 s 9973 us, max 19884 us | turnaround max 10 s 26011 us, over 1 block 245, over 2 blocks 73 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 15: 6423 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1047 us, max 10 s 41305 us, max 41305 us | turnaround max 10 s 43208 us, over 1 block 305, over 2 blocks 124 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 16: 6398 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1124 us, max 10 s 10884 us, max 23580 us | turnaround max 10 s 29024 us, over 1 block 290, over 2 blocks 119 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 17: 6326 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 884 us, max 10 s 24701 us, max 24701 us | turnaround max 10 s 30817 us, over 1 block 283, over 2 blocks 108 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 18: 6286 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 950 us, max 10 s 23678 us, max 30207 us | turnaround max 10 s 27636 us, over 1 block 279, over 2 blocks 113 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 19: 6237 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1030 us, max 10 s 15965 us, max 31127 us | turnaround max 10 s 23157 us, over 1 block 278, over 2 blocks 123 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 20: 6192 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1152 us, max 10 s 24605 us, max 27954 us | turnaround max 10 s 27943 us, over 1 block 281, over 2 blocks 115 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 21: 6143 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1201 us, max 10 s 20680 us, max 20680 us | turnaround max 10 s 28728 us, over 1 block 281, over 2 blocks 127 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 22: 6102 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1195 us, max 10 s 25317 us, max 25317 us | turnaround max 10 s 40592 us, over 1 block 302, over 2 blocks 149 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 23: 6036 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1016 us, max 10 s 18952 us, max 19075 us | turnaround max 10 s 30616 us, over 1 block 321, over 2 blocks 166 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 24: 5979 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1258 us, max 10 s 16414 us, max 23830 us | turnaround max 10 s 29610 us, over 1 block 323, over 2 blocks 173 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 25: 5948 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1207 us, max 10 s 13569 us, max 19300 us | turnaround max 10 s 27828 us, over 1 block 339, over 2 blocks 187 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 26: 5874 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1125 us, max 10 s 27118 us, max 27118 us | turnaround max 10 s 33929 us, over 1 block 308, over 2 blocks 175 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 27: 5824 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1240 us, max 10 s 7579 us, max 9936 us | turnaround max 10 s 29795 us, over 1 block 287, over 2 blocks 162 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:11  session 28: 5796 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1150 us, max 10 s 7203 us, max 23990 us | turnaround max 10 s 30046 us, over 1 block 303, over 2 blocks 179 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 1: 15165 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 2 | process 1007 us, max 10 s 24245 us, max 24245 us | turnaround max 10 s 29348 us, over 1 block 430, over 2 blocks 262 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 2: 8698 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 889 us, max 10 s 18059 us, max 18059 us | turnaround max 10 s 40397 us, over 1 block 406, over 2 blocks 277 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 3: 8592 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 780 us, max 10 s 17521 us, max 31184 us | turnaround max 10 s 38899 us, over 1 block 412, over 2 blocks 266 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 4: 8549 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 994 us, max 10 s 13792 us, max 17106 us | turnaround max 10 s 38787 us, over 1 block 421, over 2 blocks 262 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 5: 8516 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 995 us, max 10 s 33190 us, max 33190 us | turnaround max 10 s 38881 us, over 1 block 415, over 2 blocks 276 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 6: 8482 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 834 us, max 10 s 18925 us, max 22767 us | turnaround max 10 s 45054 us, over 1 block 451, over 2 blocks 302 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 7: 8441 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1413 us, max 10 s 25377 us, max 32801 us | turnaround max 10 s 30808 us, over 1 block 374, over 2 blocks 190 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 8: 8408 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 887 us, max 10 s 29227 us, max 29227 us | turnaround max 10 s 37436 us, over 1 block 381, over 2 blocks 184 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 9: 8364 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 902 us, max 10 s 34947 us, max 34947 us | turnaround max 10 s 34985 us, over 1 block 392, over 2 blocks 178 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 10: 8366 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1075 us, max 10 s 7542 us, max 28993 us | turnaround max 10 s 29416 us, over 1 block 392, over 2 blocks 188 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 11: 8296 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1170 us, max 10 s 14645 us, max 30909 us | turnaround max 10 s 43993 us, over 1 block 399, over 2 blocks 190 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 12: 8260 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1200 us, max 10 s 27545 us, max 35510 us | turnaround max 10 s 39274 us, over 1 block 423, over 2 blocks 216 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 13: 8223 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1226 us, max 10 s 26319 us, max 26319 us | turnaround max 10 s 32394 us, over 1 block 397, over 2 blocks 180 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 14: 8186 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 951 us, max 10 s 22931 us, max 22931 us | turnaround max 10 s 34469 us, over 1 block 368, over 2 blocks 114 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 15: 8151 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 961 us, max 10 s 23608 us, max 41305 us | turnaround max 10 s 29837 us, over 1 block 445, over 2 blocks 201 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 16: 8126 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1517 us, max 10 s 29577 us, max 29577 us | turnaround max 10 s 35074 us, over 1 block 410, over 2 blocks 181 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 17: 8054 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1078 us, max 10 s 25870 us, max 25870 us | turnaround max 10 s 32873 us, over 1 block 406, over 2 blocks 161 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 18: 8014 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1210 us, max 10 s 29088 us, max 30207 us | turnaround max 10 s 34447 us, over 1 block 423, over 2 blocks 182 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 19: 7965 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1194 us, max 10 s 23924 us, max 31127 us | turnaround max 10 s 32985 us, over 1 block 403, over 2 blocks 185 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 20: 7920 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 881 us, max 10 s 31118 us, max 31118 us | turnaround max 10 s 36660 us, over 1 block 399, over 2 blocks 178 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 21: 7871 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1195 us, max 10 s 17305 us, max 20680 us | turnaround max 10 s 29679 us, over 1 block 395, over 2 blocks 185 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 22: 7830 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1053 us, max 10 s 20436 us, max 25317 us | turnaround max 10 s 37749 us, over 1 block 437, over 2 blocks 223 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 23: 7764 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 929 us, max 10 s 20863 us, max 20863 us | turnaround max 10 s 32915 us, over 1 block 450, over 2 blocks 239 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 24: 7707 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1198 us, max 10 s 16721 us, max 23830 us | turnaround max 10 s 27626 us, over 1 block 444, over 2 blocks 240 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 25: 7676 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1541 us, max 10 s 19586 us, max 19586 us | turnaround max 10 s 34365 us, over 1 block 470, over 2 blocks 254 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 26: 7602 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1207 us, max 10 s 22524 us, max 27118 us | turnaround max 10 s 33583 us, over 1 block 446, over 2 blocks 243 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 27: 7552 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 938 us, max 10 s 20716 us, max 20716 us | turnaround max 10 s 28218 us, over 1 block 397, over 2 blocks 227 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:21  session 28: 7524 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1207 us, max 10 s 31073 us, max 31073 us | turnaround max 10 s 44211 us, over 1 block 424, over 2 blocks 254 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 1: 16902 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 2 | process 990 us, max 10 s 19098 us, max 24245 us | turnaround max 10 s 32603 us, over 1 block 567, over 2 blocks 354 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 2: 10436 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1010 us, max 10 s 14752 us, max 18059 us | turnaround max 10 s 33422 us, over 1 block 542, over 2 blocks 364 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 3: 10330 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 842 us, max 10 s 17760 us, max 31184 us | turnaround max 10 s 44711 us, over 1 block 569, over 2 blocks 370 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 4: 10287 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 994 us, max 10 s 21899 us, max 21899 us | turnaround max 10 s 38885 us, over 1 block 555, over 2 blocks 354 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 5: 10254 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1021 us, max 10 s 19933 us, max 33190 us | turnaround max 10 s 42311 us, over 1 block 563, over 2 blocks 386 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 6: 10220 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 923 us, max 10 s 16362 us, max 22767 us | turnaround max 10 s 40697 us, over 1 block 600, over 2 blocks 402 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 7: 10179 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 990 us, max 10 s 14020 us, max 32801 us | turnaround max 10 s 36405 us, over 1 block 496, over 2 blocks 251 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 8: 10146 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 826 us, max 10 s 35353 us, max 35353 us | turnaround max 10 s 35394 us, over 1 block 518, over 2 blocks 258 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 9: 10102 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1063 us, max 10 s 10743 us, max 34947 us | turnaround max 10 s 33150 us, over 1 block 535, over 2 blocks 252 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 10: 10104 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1039 us, max 10 s 22594 us, max 28993 us | turnaround max 10 s 32862 us, over 1 block 530, over 2 blocks 257 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 11: 10034 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1010 us, max 10 s 7231 us, max 30909 us | turnaround max 10 s 31868 us, over 1 block 538, over 2 blocks 261 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 12: 9998 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 955 us, max 10 s 24866 us, max 35510 us | turnaround max 10 s 30676 us, over 1 block 551, over 2 blocks 287 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 13: 9961 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 850 us, max 10 s 29324 us, max 29324 us | turnaround max 10 s 38610 us, over 1 block 541, over 2 blocks 251 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 14: 9924 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1021 us, max 10 s 9708 us, max 22931 us | turnaround max 10 s 38691 us, over 1 block 493, over 2 blocks 156 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 15: 9888 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 794 us, max 10 s 21447 us, max 41305 us | turnaround max 10 s 29611 us, over 1 block 602, over 2 blocks 278 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 16: 9863 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1043 us, max 10 s 8709 us, max 29577 us | turnaround max 10 s 29454 us, over 1 block 563, over 2 blocks 256 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 17: 9791 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1042 us, max 10 s 30280 us, max 30280 us | turnaround max 10 s 37550 us, over 1 block 556, over 2 blocks 237 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 18: 9751 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 939 us, max 10 s 32313 us, max 32313 us | turnaround max 10 s 45567 us, over 1 block 569, over 2 blocks 266 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 19: 9702 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 811 us, max 10 s 26490 us, max 31127 us | turnaround max 10 s 34710 us, over 1 block 541, over 2 blocks 256 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 20: 9657 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1013 us, max 10 s 23468 us, max 31118 us | turnaround max 10 s 36144 us, over 1 block 529, over 2 blocks 247 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 21: 9608 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1013 us, max 10 s 9263 us, max 20680 us | turnaround max 10 s 23891 us, over 1 block 529, over 2 blocks 243 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 22: 9567 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1051 us, max 10 s 15444 us, max 25317 us | turnaround max 10 s 25094 us, over 1 block 566, over 2 blocks 286 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 23: 9501 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 934 us, max 10 s 24798 us, max 24798 us | turnaround max 10 s 38099 us, over 1 block 600, over 2 blocks 329 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 24: 9444 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 840 us, max 10 s 23183 us, max 23830 us | turnaround max 10 s 37178 us, over 1 block 600, over 2 blocks 331 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 25: 9413 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 940 us, max 10 s 19313 us, max 19586 us | turnaround max 10 s 28923 us, over 1 block 641, over 2 blocks 356 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 26: 9339 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1007 us, max 10 s 22828 us, max 27118 us | turnaround max 10 s 36368 us, over 1 block 596, over 2 blocks 335 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 27: 9289 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1018 us, max 10 s 15034 us, max 20716 us | turnaround max 10 s 28661 us, over 1 block 565, over 2 blocks 320 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:31  session 28: 9261 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1010 us, max 10 s 14784 us, max 31073 us | turnaround max 10 s 32489 us, over 1 block 559, over 2 blocks 333 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 1: 18631 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 2 | process 953 us, max 10 s 16971 us, max 24245 us | turnaround max 10 s 33407 us, over 1 block 699, over 2 blocks 445 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 2: 12165 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 939 us, max 10 s 7753 us, max 18059 us | turnaround max 10 s 38850 us, over 1 block 686, over 2 blocks 457 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 3: 12059 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1003 us, max 10 s 14746 us, max 31184 us | turnaround max 10 s 37825 us, over 1 block 707, over 2 blocks 468 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 4: 12016 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1021 us, max 10 s 20450 us, max 21899 us | turnaround max 10 s 42739 us, over 1 block 702, over 2 blocks 451 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 5: 11983 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 809 us, max 10 s 21619 us, max 33190 us | turnaround max 10 s 40711 us, over 1 block 696, over 2 blocks 475 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 6: 11949 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 916 us, max 10 s 16239 us, max 22767 us | turnaround max 10 s 44115 us, over 1 block 752, over 2 blocks 500 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 7: 11908 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 893 us, max 10 s 23905 us, max 32801 us | turnaround max 10 s 27838 us, over 1 block 620, over 2 blocks 311 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 8: 11875 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 985 us, max 10 s 28702 us, max 35353 us | turnaround max 10 s 31101 us, over 1 block 647, over 2 blocks 326 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 9: 11831 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 942 us, max 10 s 28978 us, max 34947 us | turnaround max 10 s 31340 us, over 1 block 661, over 2 blocks 315 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 10: 11833 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 962 us, max 10 s 26263 us, max 28993 us | turnaround max 10 s 32452 us, over 1 block 686, over 2 blocks 340 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 11: 11763 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 843 us, max 10 s 24537 us, max 30909 us | turnaround max 10 s 31947 us, over 1 block 675, over 2 blocks 335 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 12: 11727 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1039 us, max 10 s 31070 us, max 35510 us | turnaround max 10 s 33502 us, over 1 block 681, over 2 blocks 354 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 13: 11690 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1016 us, max 10 s 26641 us, max 29324 us | turnaround max 10 s 28092 us, over 1 block 690, over 2 blocks 317 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 14: 11653 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 915 us, max 10 s 24159 us, max 24159 us | turnaround max 10 s 35474 us, over 1 block 615, over 2 blocks 195 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 15: 11618 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 843 us, max 10 s 36469 us, max 41305 us | turnaround max 10 s 43760 us, over 1 block 746, over 2 blocks 364 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 16: 11593 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 877 us, max 10 s 34165 us, max 34165 us | turnaround max 10 s 35819 us, over 1 block 711, over 2 blocks 337 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 17: 11521 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 884 us, max 10 s 30709 us, max 30709 us | turnaround max 10 s 37536 us, over 1 block 698, over 2 blocks 312 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 18: 11481 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 988 us, max 10 s 29775 us, max 32313 us | turnaround max 10 s 37166 us, over 1 block 709, over 2 blocks 343 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 19: 11432 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 976 us, max 10 s 18262 us, max 31127 us | turnaround max 10 s 26963 us, over 1 block 676, over 2 blocks 322 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 20: 11387 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 778 us, max 10 s 23113 us, max 31118 us | turnaround max 10 s 29802 us, over 1 block 654, over 2 blocks 302 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 21: 11338 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 981 us, max 10 s 19704 us, max 20680 us | turnaround max 10 s 34187 us, over 1 block 671, over 2 blocks 317 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 22: 11297 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1006 us, max 10 s 18838 us, max 25317 us | turnaround max 10 s 32097 us, over 1 block 709, over 2 blocks 359 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 23: 11231 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1002 us, max 10 s 8114 us, max 24798 us | turnaround max 10 s 23641 us, over 1 block 747, over 2 blocks 409 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 24: 11174 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1032 us, max 10 s 24866 us, max 24866 us | turnaround max 10 s 38818 us, over 1 block 745, over 2 blocks 410 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 25: 11143 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 833 us, max 10 s 25534 us, max 25534 us | turnaround max 10 s 33106 us, over 1 block 796, over 2 blocks 444 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 26: 11069 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 1036 us, max 10 s 16466 us, max 27118 us | turnaround max 10 s 26610 us, over 1 block 752, over 2 blocks 424 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 27: 11018 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 782 us, max 10 s 20738 us, max 20738 us | turnaround max 10 s 34935 us, over 1 block 705, over 2 blocks 401 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:41  session 28: 10991 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 990 us, max 10 s 8341 us, max 31073 us | turnaround max 10 s 33188 us, over 1 block 686, over 2 blocks 408 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 1: 20353 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 2 | process 799 us, max 10 s 7505 us, max 24245 us | turnaround max 10 s 24773 us, over 1 block 731, over 2 blocks 456 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 2: 13887 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 779 us, max 10 s 6795 us, max 18059 us | turnaround max 10 s 28171 us, over 1 block 722, over 2 blocks 473 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 3: 13781 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 781 us, max 10 s 16549 us, max 31184 us | turnaround max 10 s 32620 us, over 1 block 749, over 2 blocks 485 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 4: 13738 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 678 us, max 10 s 7491 us, max 21899 us | turnaround max 10 s 28207 us, over 1 block 737, over 2 blocks 466 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 5: 13705 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 824 us, max 10 s 12192 us, max 33190 us | turnaround max 10 s 32286 us, over 1 block 742, over 2 blocks 499 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 6: 13671 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 793 us, max 10 s 6261 us, max 22767 us | turnaround max 10 s 31134 us, over 1 block 786, over 2 blocks 517 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 7: 13629 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 764 us, max 10 s 6881 us, max 32801 us | turnaround max 10 s 23219 us, over 1 block 655, over 2 blocks 324 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 8: 13596 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 791 us, max 10 s 8623 us, max 35353 us | turnaround max 10 s 26000 us, over 1 block 679, over 2 blocks 341 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 9: 13552 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 737 us, max 10 s 9141 us, max 34947 us | turnaround max 10 s 29811 us, over 1 block 704, over 2 blocks 338 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 10: 13554 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 704 us, max 10 s 8530 us, max 28993 us | turnaround max 10 s 30960 us, over 1 block 727, over 2 blocks 361 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 11: 13484 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 606 us, max 10 s 11853 us, max 30909 us | turnaround max 10 s 26134 us, over 1 block 716, over 2 blocks 353 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 12: 13448 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 752 us, max 10 s 6669 us, max 35510 us | turnaround max 10 s 29447 us, over 1 block 724, over 2 blocks 379 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 13: 13412 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 555 us, max 10 s 28888 us, max 29324 us | turnaround max 10 s 28940 us, over 1 block 729, over 2 blocks 331 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 14: 13375 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 581 us, max 10 s 9576 us, max 24159 us | turnaround max 10 s 29027 us, over 1 block 648, over 2 blocks 208 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 15: 13340 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 737 us, max 10 s 7241 us, max 41305 us | turnaround max 10 s 23320 us, over 1 block 783, over 2 blocks 379 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 16: 13315 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 756 us, max 10 s 13095 us, max 34165 us | turnaround max 10 s 21382 us, over 1 block 751, over 2 blocks 357 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 17: 13243 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 755 us, max 10 s 6775 us, max 30709 us | turnaround max 10 s 25552 us, over 1 block 739, over 2 blocks 330 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 18: 13203 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 697 us, max 10 s 23351 us, max 32313 us | turnaround max 10 s 25125 us, over 1 block 748, over 2 blocks 363 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 19: 13154 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 730 us, max 10 s 27247 us, max 31127 us | turnaround max 10 s 27668 us, over 1 block 712, over 2 blocks 340 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 20: 13109 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 727 us, max 10 s 24681 us, max 31118 us | turnaround max 10 s 30403 us, over 1 block 685, over 2 blocks 313 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 21: 13060 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 637 us, max 10 s 7228 us, max 20680 us | turnaround max 10 s 24026 us, over 1 block 713, over 2 blocks 329 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 22: 13019 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 773 us, max 10 s 18108 us, max 25317 us | turnaround max 10 s 22885 us, over 1 block 753, over 2 blocks 372 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 23: 12953 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 737 us, max 10 s 6971 us, max 24798 us | turnaround max 10 s 17851 us, over 1 block 789, over 2 blocks 421 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 24: 12896 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 739 us, max 10 s 11902 us, max 24866 us | turnaround max 10 s 25732 us, over 1 block 786, over 2 blocks 429 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 25: 12865 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 636 us, max 10 s 8649 us, max 25534 us | turnaround max 10 s 23713 us, over 1 block 843, over 2 blocks 464 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 26: 12791 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 696 us, max 10 s 19529 us, max 27118 us | turnaround max 10 s 30232 us, over 1 block 790, over 2 blocks 443 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 27: 12741 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 767 us, max 10 s 7588 us, max 20738 us | turnaround max 10 s 21482 us, over 1 block 739, over 2 blocks 414 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:04:51  session 28: 12713 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 635 us, max 10 s 9954 us, max 31073 us | turnaround max 10 s 30670 us, over 1 block 717, over 2 blocks 422 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 1: 22076 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 2 | process 723 us, max 10 s 1482 us, max 24245 us | turnaround max 10 s 1725 us, over 1 block 731, over 2 blocks 456 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 2: 15610 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 635 us, max 10 s 1614 us, max 18059 us | turnaround max 10 s 1677 us, over 1 block 722, over 2 blocks 473 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 3: 15504 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 702 us, max 10 s 1442 us, max 31184 us | turnaround max 10 s 1517 us, over 1 block 749, over 2 blocks 485 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 4: 15461 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 677 us, max 10 s 1547 us, max 21899 us | turnaround max 10 s 1712 us, over 1 block 737, over 2 blocks 466 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 5: 15428 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 698 us, max 10 s 1645 us, max 33190 us | turnaround max 10 s 1828 us, over 1 block 742, over 2 blocks 499 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 6: 15394 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 689 us, max 10 s 1686 us, max 22767 us | turnaround max 10 s 1767 us, over 1 block 786, over 2 blocks 517 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 7: 15352 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 720 us, max 10 s 1534 us, max 32801 us | turnaround max 10 s 1706 us, over 1 block 655, over 2 blocks 324 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 8: 15319 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 679 us, max 10 s 1474 us, max 35353 us | turnaround max 10 s 1744 us, over 1 block 679, over 2 blocks 341 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 9: 15275 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 707 us, max 10 s 1473 us, max 34947 us | turnaround max 10 s 1895 us, over 1 block 704, over 2 blocks 338 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 10: 15277 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 714 us, max 10 s 1499 us, max 28993 us | turnaround max 10 s 1842 us, over 1 block 727, over 2 blocks 361 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 11: 15207 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 606 us, max 10 s 1342 us, max 30909 us | turnaround max 10 s 1757 us, over 1 block 716, over 2 blocks 353 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 12: 15171 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 712 us, max 10 s 1340 us, max 35510 us | turnaround max 10 s 1727 us, over 1 block 724, over 2 blocks 379 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 13: 15134 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 700 us, max 10 s 1337 us, max 29324 us | turnaround max 10 s 1389 us, over 1 block 729, over 2 blocks 331 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 14: 15097 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 654 us, max 10 s 1398 us, max 24159 us | turnaround max 10 s 1473 us, over 1 block 648, over 2 blocks 208 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 15: 15062 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 761 us, max 10 s 1278 us, max 41305 us | turnaround max 10 s 1342 us, over 1 block 783, over 2 blocks 379 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 16: 15037 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 614 us, max 10 s 1341 us, max 34165 us | turnaround max 10 s 1421 us, over 1 block 751, over 2 blocks 357 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 17: 14965 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 756 us, max 10 s 1409 us, max 30709 us | turnaround max 10 s 1505 us, over 1 block 739, over 2 blocks 330 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 18: 14925 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 666 us, max 10 s 1438 us, max 32313 us | turnaround max 10 s 1493 us, over 1 block 748, over 2 blocks 363 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 19: 14876 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 683 us, max 10 s 1448 us, max 31127 us | turnaround max 10 s 1590 us, over 1 block 712, over 2 blocks 340 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 20: 14831 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 642 us, max 10 s 1388 us, max 31118 us | turnaround max 10 s 1487 us, over 1 block 685, over 2 blocks 313 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 21: 14782 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 696 us, max 10 s 1610 us, max 20680 us | turnaround max 10 s 1691 us, over 1 block 713, over 2 blocks 329 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 22: 14741 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 749 us, max 10 s 1452 us, max 25317 us | turnaround max 10 s 1529 us, over 1 block 753, over 2 blocks 372 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 23: 14675 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 761 us, max 10 s 1502 us, max 24798 us | turnaround max 10 s 1558 us, over 1 block 789, over 2 blocks 421 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 24: 14618 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 643 us, max 10 s 1608 us, max 24866 us | turnaround max 10 s 1698 us, over 1 block 786, over 2 blocks 429 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 25: 14587 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 684 us, max 10 s 1540 us, max 25534 us | turnaround max 10 s 1749 us, over 1 block 843, over 2 blocks 464 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 26: 14513 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 727 us, max 10 s 1478 us, max 27118 us | turnaround max 10 s 1562 us, over 1 block 790, over 2 blocks 443 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 27: 14463 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 679 us, max 10 s 1675 us, max 20738 us | turnaround max 10 s 1781 us, over 1 block 739, over 2 blocks 414 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:01  session 28: 14435 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 1 | process 700 us, max 10 s 1525 us, max 31073 us | turnaround max 10 s 1669 us, over 1 block 717, over 2 blocks 422 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 1: 22523 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 1134 us, max 10 s 7525 us, max 24245 us | turnaround max 10 s 8401 us, over 1 block 735, over 2 blocks 456 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 2: 16043 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1097 us, max 10 s 9273 us, max 18059 us | turnaround max 10 s 9706 us, over 1 block 727, over 2 blocks 473 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 3: 15952 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1048 us, max 10 s 7719 us, max 31184 us | turnaround max 10 s 8081 us, over 1 block 755, over 2 blocks 485 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 4: 15896 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1130 us, max 10 s 7732 us, max 21899 us | turnaround max 10 s 8251 us, over 1 block 741, over 2 blocks 466 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 5: 15876 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1362 us, max 10 s 7777 us, max 33190 us | turnaround max 10 s 8085 us, over 1 block 747, over 2 blocks 499 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 6: 15838 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1256 us, max 10 s 7206 us, max 22767 us | turnaround max 10 s 8486 us, over 1 block 791, over 2 blocks 517 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 7: 15798 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1093 us, max 10 s 6963 us, max 32801 us | turnaround max 10 s 7933 us, over 1 block 659, over 2 blocks 324 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 8: 15765 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1188 us, max 10 s 6966 us, max 35353 us | turnaround max 10 s 8574 us, over 1 block 683, over 2 blocks 341 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 9: 15718 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1191 us, max 10 s 4829 us, max 34947 us | turnaround max 10 s 7644 us, over 1 block 707, over 2 blocks 338 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 10: 15720 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1131 us, max 10 s 5153 us, max 28993 us | turnaround max 10 s 7896 us, over 1 block 730, over 2 blocks 361 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 11: 15648 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1124 us, max 10 s 7168 us, max 30909 us | turnaround max 10 s 10085 us, over 1 block 720, over 2 blocks 353 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 12: 15614 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1469 us, max 10 s 4936 us, max 35510 us | turnaround max 10 s 6895 us, over 1 block 727, over 2 blocks 379 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 13: 15574 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1165 us, max 10 s 4386 us, max 29324 us | turnaround max 10 s 7261 us, over 1 block 731, over 2 blocks 331 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 14: 15536 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1236 us, max 10 s 5536 us, max 24159 us | turnaround max 10 s 8416 us, over 1 block 652, over 2 blocks 208 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 15: 15501 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1172 us, max 10 s 3876 us, max 41305 us | turnaround max 10 s 6272 us, over 1 block 784, over 2 blocks 379 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 16: 15476 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1160 us, max 10 s 4458 us, max 34165 us | turnaround max 10 s 6273 us, over 1 block 753, over 2 blocks 357 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 17: 15401 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1121 us, max 10 s 3730 us, max 30709 us | turnaround max 10 s 5743 us, over 1 block 739, over 2 blocks 330 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 18: 15360 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1153 us, max 10 s 4041 us, max 32313 us | turnaround max 10 s 5767 us, over 1 block 748, over 2 blocks 363 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 19: 15310 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1030 us, max 10 s 3948 us, max 31127 us | turnaround max 10 s 6111 us, over 1 block 713, over 2 blocks 340 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 20: 15265 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1390 us, max 10 s 3851 us, max 31118 us | turnaround max 10 s 6059 us, over 1 block 686, over 2 blocks 313 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 21: 15216 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1121 us, max 10 s 3936 us, max 20680 us | turnaround max 10 s 5820 us, over 1 block 714, over 2 blocks 329 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 22: 15174 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 960 us, max 10 s 3647 us, max 25317 us | turnaround max 10 s 5093 us, over 1 block 753, over 2 blocks 372 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 23: 15107 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 937 us, max 10 s 3933 us, max 24798 us | turnaround max 10 s 5962 us, over 1 block 790, over 2 blocks 421 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 24: 15050 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 930 us, max 10 s 3931 us, max 24866 us | turnaround max 10 s 4803 us, over 1 block 786, over 2 blocks 429 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 25: 15019 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 925 us, max 10 s 3044 us, max 25534 us | turnaround max 10 s 5058 us, over 1 block 843, over 2 blocks 464 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 26: 14945 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 949 us, max 10 s 3559 us, max 27118 us | turnaround max 10 s 5351 us, over 1 block 790, over 2 blocks 443 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 27: 14896 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1196 us, max 10 s 3929 us, max 20738 us | turnaround max 10 s 6826 us, over 1 block 741, over 2 blocks 414 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:11  session 28: 14868 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1102 us, max 10 s 3375 us, max 31073 us | turnaround max 10 s 6045 us, over 1 block 718, over 2 blocks 422 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 1: 24254 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 1273 us, max 10 s 33765 us, max 33765 us | turnaround max 10 s 40430 us, over 1 block 877, over 2 blocks 535 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 2: 17774 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1130 us, max 10 s 14676 us, max 18059 us | turnaround max 10 s 41427 us, over 1 block 856, over 2 blocks 550 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 3: 17683 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1129 us, max 10 s 11674 us, max 31184 us | turnaround max 10 s 28685 us, over 1 block 880, over 2 blocks 547 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 4: 17627 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 927 us, max 10 s 20604 us, max 21899 us | turnaround max 10 s 32644 us, over 1 block 875, over 2 blocks 535 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 5: 17607 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1128 us, max 10 s 9828 us, max 33190 us | turnaround max 10 s 36870 us, over 1 block 873, over 2 blocks 565 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 6: 17569 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1234 us, max 10 s 9540 us, max 22767 us | turnaround max 10 s 26664 us, over 1 block 878, over 2 blocks 540 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 7: 17529 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1096 us, max 10 s 26928 us, max 32801 us | turnaround max 10 s 33462 us, over 1 block 787, over 2 blocks 388 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 8: 17496 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1119 us, max 10 s 26132 us, max 35353 us | turnaround max 10 s 34520 us, over 1 block 820, over 2 blocks 414 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 9: 17449 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1401 us, max 10 s 21092 us, max 34947 us | turnaround max 10 s 38225 us, over 1 block 834, over 2 blocks 401 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 10: 17451 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1095 us, max 10 s 7198 us, max 28993 us | turnaround max 10 s 26457 us, over 1 block 858, over 2 blocks 425 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 11: 17379 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1120 us, max 10 s 23047 us, max 30909 us | turnaround max 10 s 27857 us, over 1 block 839, over 2 blocks 412 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 12: 17345 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1132 us, max 10 s 19881 us, max 35510 us | turnaround max 10 s 25832 us, over 1 block 852, over 2 blocks 440 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 13: 17305 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 944 us, max 10 s 21016 us, max 29324 us | turnaround max 10 s 26620 us, over 1 block 852, over 2 blocks 386 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 14: 17267 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1244 us, max 10 s 24378 us, max 24378 us | turnaround max 10 s 37242 us, over 1 block 787, over 2 blocks 269 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 15: 17232 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1110 us, max 10 s 9563 us, max 41305 us | turnaround max 10 s 25086 us, over 1 block 914, over 2 blocks 443 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 16: 17207 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1170 us, max 10 s 15569 us, max 34165 us | turnaround max 10 s 24498 us, over 1 block 885, over 2 blocks 420 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 17: 17132 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1161 us, max 10 s 20438 us, max 30709 us | turnaround max 10 s 30586 us, over 1 block 867, over 2 blocks 393 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 18: 17091 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1144 us, max 10 s 10655 us, max 32313 us | turnaround max 10 s 25921 us, over 1 block 884, over 2 blocks 429 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 19: 17041 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 919 us, max 10 s 25456 us, max 31127 us | turnaround max 10 s 33463 us, over 1 block 841, over 2 blocks 407 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 20: 16996 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1114 us, max 10 s 14273 us, max 31118 us | turnaround max 10 s 29725 us, over 1 block 797, over 2 blocks 372 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 21: 16947 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1186 us, max 10 s 10990 us, max 20680 us | turnaround max 10 s 33826 us, over 1 block 841, over 2 blocks 398 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 22: 16906 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1134 us, max 10 s 10152 us, max 25317 us | turnaround max 10 s 32287 us, over 1 block 887, over 2 blocks 448 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 23: 16839 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1135 us, max 10 s 9345 us, max 24798 us | turnaround max 10 s 32443 us, over 1 block 917, over 2 blocks 491 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 24: 16782 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1106 us, max 10 s 18152 us, max 24866 us | turnaround max 10 s 41381 us, over 1 block 904, over 2 blocks 504 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 25: 16751 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1054 us, max 10 s 15043 us, max 25534 us | turnaround max 10 s 34469 us, over 1 block 986, over 2 blocks 554 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 26: 16677 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1006 us, max 10 s 15305 us, max 27118 us | turnaround max 10 s 37978 us, over 1 block 917, over 2 blocks 522 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 27: 16627 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 947 us, max 10 s 7930 us, max 20738 us | turnaround max 10 s 30196 us, over 1 block 849, over 2 blocks 464 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:21  session 28: 16599 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 1119 us, max 10 s 13522 us, max 31073 us | turnaround max 10 s 35293 us, over 1 block 834, over 2 blocks 479 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 1: 25989 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 736 us, max 10 s 7743 us, max 33765 us | turnaround max 10 s 35510 us, over 1 block 1031, over 2 blocks 615 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 2: 19509 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 883 us, max 10 s 36423 us, max 36423 us | turnaround max 10 s 36478 us, over 1 block 1009, over 2 blocks 631 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 3: 19419 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 846 us, max 10 s 16160 us, max 31184 us | turnaround max 10 s 35065 us, over 1 block 1036, over 2 blocks 632 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 4: 19363 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 880 us, max 10 s 32955 us, max 32955 us | turnaround max 10 s 36231 us, over 1 block 1037, over 2 blocks 620 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 5: 19343 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 985 us, max 10 s 9348 us, max 33190 us | turnaround max 10 s 35261 us, over 1 block 1015, over 2 blocks 628 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 6: 19305 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 866 us, max 10 s 9843 us, max 22767 us | turnaround max 10 s 37429 us, over 1 block 1014, over 2 blocks 591 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 7: 19265 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 886 us, max 10 s 10272 us, max 32801 us | turnaround max 10 s 34141 us, over 1 block 926, over 2 blocks 448 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 8: 19232 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 834 us, max 10 s 30453 us, max 35353 us | turnaround max 10 s 30610 us, over 1 block 961, over 2 blocks 478 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 9: 19185 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 864 us, max 10 s 25515 us, max 34947 us | turnaround max 10 s 32002 us, over 1 block 998, over 2 blocks 484 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 10: 19187 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 934 us, max 10 s 31548 us, max 31548 us | turnaround max 10 s 36649 us, over 1 block 1006, over 2 blocks 503 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 11: 19115 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 844 us, max 10 s 25956 us, max 30909 us | turnaround max 10 s 31075 us, over 1 block 987, over 2 blocks 483 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 12: 19081 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 893 us, max 10 s 19085 us, max 35510 us | turnaround max 10 s 27495 us, over 1 block 1000, over 2 blocks 513 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 13: 19041 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 854 us, max 10 s 28432 us, max 29324 us | turnaround max 10 s 31457 us, over 1 block 999, over 2 blocks 463 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 14: 19003 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 977 us, max 10 s 19872 us, max 24378 us | turnaround max 10 s 30003 us, over 1 block 937, over 2 blocks 340 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 15: 18968 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 702 us, max 10 s 22543 us, max 41305 us | turnaround max 10 s 39790 us, over 1 block 1075, over 2 blocks 534 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 16: 18943 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 829 us, max 10 s 21023 us, max 34165 us | turnaround max 10 s 34361 us, over 1 block 1041, over 2 blocks 517 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 17: 18868 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 845 us, max 10 s 19421 us, max 30709 us | turnaround max 10 s 35826 us, over 1 block 1037, over 2 blocks 485 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 18: 18827 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 721 us, max 10 s 20416 us, max 32313 us | turnaround max 10 s 29862 us, over 1 block 1039, over 2 blocks 517 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 19: 18777 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 870 us, max 10 s 19267 us, max 31127 us | turnaround max 10 s 39758 us, over 1 block 1005, over 2 blocks 498 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 20: 18732 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 743 us, max 10 s 15664 us, max 31118 us | turnaround max 10 s 31697 us, over 1 block 938, over 2 blocks 454 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 21: 18683 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 840 us, max 10 s 10690 us, max 20680 us | turnaround max 10 s 34579 us, over 1 block 994, over 2 blocks 490 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 22: 18642 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 707 us, max 10 s 16070 us, max 25317 us | turnaround max 10 s 33973 us, over 1 block 1026, over 2 blocks 536 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 23: 18575 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 807 us, max 10 s 7786 us, max 24798 us | turnaround max 10 s 33659 us, over 1 block 1069, over 2 blocks 592 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 24: 18518 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 757 us, max 10 s 14866 us, max 24866 us | turnaround max 10 s 41639 us, over 1 block 1052, over 2 blocks 603 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 25: 18487 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 762 us, max 10 s 13985 us, max 25534 us | turnaround max 10 s 44425 us, over 1 block 1134, over 2 blocks 659 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 26: 18413 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 801 us, max 10 s 12342 us, max 27118 us | turnaround max 10 s 41566 us, over 1 block 1073, over 2 blocks 627 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 27: 18363 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 797 us, max 10 s 19733 us, max 20738 us | turnaround max 10 s 29491 us, over 1 block 983, over 2 blocks 534 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:31  session 28: 18335 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 3 | process 677 us, max 10 s 23731 us, max 31073 us | turnaround max 10 s 35801 us, over 1 block 982, over 2 blocks 560 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 1: 27673 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 5 | process 885 us, max 10 s 18998 us, max 33765 us | turnaround max 10 s 24534 us, over 1 block 1101, over 2 blocks 644 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 2: 21193 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 988 us, max 10 s 15377 us, max 36423 us | turnaround max 10 s 23193 us, over 1 block 1070, over 2 blocks 655 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 3: 21102 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 926 us, max 10 s 7589 us, max 31184 us | turnaround max 10 s 31959 us, over 1 block 1097, over 2 blocks 663 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 4: 21046 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 899 us, max 10 s 11226 us, max 32955 us | turnaround max 10 s 25014 us, over 1 block 1104, over 2 blocks 653 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 5: 21026 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 938 us, max 10 s 7374 us, max 33190 us | turnaround max 10 s 38387 us, over 1 block 1082, over 2 blocks 659 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 6: 20988 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 882 us, max 10 s 7766 us, max 22767 us | turnaround max 10 s 26621 us, over 1 block 1064, over 2 blocks 604 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 7: 20948 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 988 us, max 10 s 20462 us, max 32801 us | turnaround max 10 s 27203 us, over 1 block 1010, over 2 blocks 482 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 8: 20915 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 1211 us, max 10 s 6687 us, max 35353 us | turnaround max 10 s 24752 us, over 1 block 1032, over 2 blocks 501 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 9: 20868 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 941 us, max 10 s 17694 us, max 34947 us | turnaround max 10 s 34016 us, over 1 block 1074, over 2 blocks 508 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 10: 20870 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 984 us, max 10 s 20865 us, max 31548 us | turnaround max 10 s 25903 us, over 1 block 1076, over 2 blocks 523 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 11: 20798 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 1003 us, max 10 s 20637 us, max 30909 us | turnaround max 10 s 26591 us, over 1 block 1062, over 2 blocks 513 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 12: 20764 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 990 us, max 10 s 24000 us, max 35510 us | turnaround max 10 s 33163 us, over 1 block 1069, over 2 blocks 540 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 13: 20724 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 990 us, max 10 s 17982 us, max 29324 us | turnaround max 10 s 27152 us, over 1 block 1075, over 2 blocks 492 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 14: 20686 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 984 us, max 10 s 23277 us, max 24378 us | turnaround max 10 s 34824 us, over 1 block 1000, over 2 blocks 355 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 15: 20651 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 998 us, max 10 s 6575 us, max 41305 us | turnaround max 10 s 17682 us, over 1 block 1138, over 2 blocks 555 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 16: 20626 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 980 us, max 10 s 6954 us, max 34165 us | turnaround max 10 s 25119 us, over 1 block 1102, over 2 blocks 536 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 17: 20551 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 1200 us, max 10 s 16522 us, max 30709 us | turnaround max 10 s 29436 us, over 1 block 1101, over 2 blocks 512 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 18: 20510 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 887 us, max 10 s 19847 us, max 32313 us | turnaround max 10 s 26857 us, over 1 block 1113, over 2 blocks 543 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 19: 20460 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 967 us, max 10 s 8559 us, max 31127 us | turnaround max 10 s 24364 us, over 1 block 1084, over 2 blocks 532 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 20: 20415 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 1028 us, max 10 s 13874 us, max 31118 us | turnaround max 10 s 29389 us, over 1 block 1005, over 2 blocks 478 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 21: 20366 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 969 us, max 10 s 5838 us, max 20680 us | turnaround max 10 s 25944 us, over 1 block 1064, over 2 blocks 515 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 22: 20325 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 973 us, max 10 s 6329 us, max 25317 us | turnaround max 10 s 25405 us, over 1 block 1092, over 2 blocks 567 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 23: 20258 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 1003 us, max 10 s 7429 us, max 24798 us | turnaround max 10 s 23632 us, over 1 block 1134, over 2 blocks 625 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 24: 20201 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 987 us, max 10 s 7068 us, max 24866 us | turnaround max 10 s 34533 us, over 1 block 1121, over 2 blocks 640 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 25: 20170 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 1213 us, max 10 s 11198 us, max 25534 us | turnaround max 10 s 38650 us, over 1 block 1203, over 2 blocks 694 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 26: 20096 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 878 us, max 10 s 5688 us, max 27118 us | turnaround max 10 s 38801 us, over 1 block 1155, over 2 blocks 666 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 27: 20047 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 905 us, max 10 s 6432 us, max 20738 us | turnaround max 10 s 25303 us, over 1 block 1037, over 2 blocks 558 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:41  session 28: 20019 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 892 us, max 10 s 10734 us, max 31073 us | turnaround max 10 s 20097 us, over 1 block 1043, over 2 blocks 586 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 1: 29403 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 5 | process 1021 us, max 10 s 26342 us, max 33765 us | turnaround max 10 s 30848 us, over 1 block 1243, over 2 blocks 725 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 2: 22923 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 1018 us, max 10 s 41276 us, max 41276 us | turnaround max 10 s 44837 us, over 1 block 1226, over 2 blocks 739 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 3: 22832 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 858 us, max 10 s 36520 us, max 36520 us | turnaround max 10 s 39020 us, over 1 block 1240, over 2 blocks 747 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 4: 22776 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 995 us, max 10 s 27671 us, max 32955 us | turnaround max 10 s 34257 us, over 1 block 1252, over 2 blocks 733 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 5: 22756 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 990 us, max 10 s 33816 us, max 33816 us | turnaround max 10 s 43391 us, over 1 block 1237, over 2 blocks 743 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 6: 22718 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 1051 us, max 10 s 13886 us, max 22767 us | turnaround max 10 s 41907 us, over 1 block 1187, over 2 blocks 644 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 7: 22678 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 1018 us, max 10 s 36024 us, max 36024 us | turnaround max 10 s 42938 us, over 1 block 1164, over 2 blocks 567 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 8: 22645 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 972 us, max 10 s 33105 us, max 35353 us | turnaround max 10 s 40650 us, over 1 block 1191, over 2 blocks 591 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 9: 22598 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 890 us, max 10 s 26673 us, max 34947 us | turnaround max 10 s 32523 us, over 1 block 1222, over 2 blocks 592 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 10: 22600 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 956 us, max 10 s 26060 us, max 31548 us | turnaround max 10 s 35093 us, over 1 block 1224, over 2 blocks 602 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 11: 22528 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 943 us, max 10 s 26594 us, max 30909 us | turnaround max 10 s 32540 us, over 1 block 1207, over 2 blocks 587 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 12: 22494 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 1035 us, max 10 s 21970 us, max 35510 us | turnaround max 10 s 35453 us, over 1 block 1222, over 2 blocks 621 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 13: 22454 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 1028 us, max 10 s 27511 us, max 29324 us | turnaround max 10 s 35302 us, over 1 block 1198, over 2 blocks 556 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 14: 22416 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 1048 us, max 10 s 26066 us, max 26066 us | turnaround max 10 s 39909 us, over 1 block 1148, over 2 blocks 438 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 15: 22381 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 1007 us, max 10 s 13219 us, max 41305 us | turnaround max 10 s 29391 us, over 1 block 1297, over 2 blocks 646 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 16: 22356 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 1067 us, max 10 s 27254 us, max 34165 us | turnaround max 10 s 41959 us, over 1 block 1268, over 2 blocks 631 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 17: 22281 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 881 us, max 10 s 24497 us, max 30709 us | turnaround max 10 s 39255 us, over 1 block 1259, over 2 blocks 609 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 18: 22240 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 939 us, max 10 s 17782 us, max 32313 us | turnaround max 10 s 27383 us, over 1 block 1267, over 2 blocks 639 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 19: 22190 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 1020 us, max 10 s 27697 us, max 31127 us | turnaround max 10 s 36749 us, over 1 block 1248, over 2 blocks 630 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 20: 22145 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 1035 us, max 10 s 16796 us, max 31118 us | turnaround max 10 s 44060 us, over 1 block 1138, over 2 blocks 559 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 21: 22096 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 1012 us, max 10 s 20099 us, max 20680 us | turnaround max 10 s 42689 us, over 1 block 1209, over 2 blocks 602 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 22: 22055 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 850 us, max 10 s 14820 us, max 25317 us | turnaround max 10 s 34737 us, over 1 block 1233, over 2 blocks 659 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 23: 21988 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 945 us, max 10 s 11062 us, max 24798 us | turnaround max 10 s 36816 us, over 1 block 1290, over 2 blocks 728 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 24: 21931 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 920 us, max 10 s 13587 us, max 24866 us | turnaround max 10 s 33225 us, over 1 block 1264, over 2 blocks 740 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 25: 21900 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 1025 us, max 10 s 19351 us, max 25534 us | turnaround max 10 s 38842 us, over 1 block 1346, over 2 blocks 788 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 26: 21826 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 882 us, max 10 s 13911 us, max 27118 us | turnaround max 10 s 42248 us, over 1 block 1322, over 2 blocks 777 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 27: 21776 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 972 us, max 10 s 16718 us, max 20738 us | turnaround max 10 s 36132 us, over 1 block 1171, over 2 blocks 632 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:05:51  session 28: 21748 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 1083 us, max 10 s 25764 us, max 31073 us | turnaround max 10 s 30884 us, over 1 block 1192, over 2 blocks 662 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 1: 31130 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 5 | process 768 us, max 10 s 7354 us, max 33765 us | turnaround max 10 s 31750 us, over 1 block 1309, over 2 blocks 762 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 2: 24650 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 747 us, max 10 s 35493 us, max 41276 us | turnaround max 10 s 35535 us, over 1 block 1286, over 2 blocks 768 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 3: 24559 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 759 us, max 10 s 7282 us, max 36520 us | turnaround max 10 s 41562 us, over 1 block 1309, over 2 blocks 780 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 4: 24503 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 731 us, max 10 s 7116 us, max 32955 us | turnaround max 10 s 32913 us, over 1 block 1319, over 2 blocks 762 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 5: 24483 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 750 us, max 10 s 9118 us, max 33816 us | turnaround max 10 s 28824 us, over 1 block 1293, over 2 blocks 768 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 6: 24445 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 645 us, max 10 s 9277 us, max 22767 us | turnaround max 10 s 26589 us, over 1 block 1229, over 2 blocks 656 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 7: 24405 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 677 us, max 10 s 15310 us, max 36024 us | turnaround max 10 s 27910 us, over 1 block 1229, over 2 blocks 596 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 8: 24372 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 575 us, max 10 s 12567 us, max 35353 us | turnaround max 10 s 31922 us, over 1 block 1256, over 2 blocks 618 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 9: 24325 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 625 us, max 10 s 21361 us, max 34947 us | turnaround max 10 s 27866 us, over 1 block 1285, over 2 blocks 618 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 10: 24327 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 694 us, max 10 s 19749 us, max 31548 us | turnaround max 10 s 29018 us, over 1 block 1298, over 2 blocks 640 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 11: 24255 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 760 us, max 10 s 19208 us, max 30909 us | turnaround max 10 s 24428 us, over 1 block 1276, over 2 blocks 618 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 12: 24221 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 752 us, max 10 s 12836 us, max 35510 us | turnaround max 10 s 29618 us, over 1 block 1283, over 2 blocks 647 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 13: 24181 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 738 us, max 10 s 7019 us, max 29324 us | turnaround max 10 s 24005 us, over 1 block 1253, over 2 blocks 579 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 14: 24143 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 690 us, max 10 s 26078 us, max 26078 us | turnaround max 10 s 39254 us, over 1 block 1209, over 2 blocks 468 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 15: 24108 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 772 us, max 10 s 6617 us, max 41305 us | turnaround max 10 s 32118 us, over 1 block 1367, over 2 blocks 683 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 16: 24083 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 756 us, max 10 s 11995 us, max 34165 us | turnaround max 10 s 30469 us, over 1 block 1347, over 2 blocks 672 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 17: 24008 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 732 us, max 10 s 6840 us, max 30709 us | turnaround max 10 s 29990 us, over 1 block 1324, over 2 blocks 643 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 18: 23967 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 741 us, max 10 s 8276 us, max 32313 us | turnaround max 10 s 21317 us, over 1 block 1333, over 2 blocks 670 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 19: 23917 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 742 us, max 10 s 7702 us, max 31127 us | turnaround max 10 s 28098 us, over 1 block 1316, over 2 blocks 658 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 20: 23872 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 775 us, max 10 s 6347 us, max 31118 us | turnaround max 10 s 28530 us, over 1 block 1201, over 2 blocks 592 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 21: 23823 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 711 us, max 10 s 7951 us, max 20680 us | turnaround max 10 s 30993 us, over 1 block 1266, over 2 blocks 626 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 22: 23782 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 649 us, max 10 s 7038 us, max 25317 us | turnaround max 10 s 37709 us, over 1 block 1302, over 2 blocks 698 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 23: 23715 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 794 us, max 10 s 19048 us, max 24798 us | turnaround max 10 s 48385 us, over 1 block 1364, over 2 blocks 771 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 24: 23658 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 671 us, max 10 s 18783 us, max 24866 us | turnaround max 10 s 41551 us, over 1 block 1331, over 2 blocks 779 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 25: 23626 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 777 us, max 10 s 17070 us, max 25534 us | turnaround max 10 s 34338 us, over 1 block 1410, over 2 blocks 822 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 26: 23552 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 672 us, max 10 s 6387 us, max 27118 us | turnaround max 10 s 31239 us, over 1 block 1382, over 2 blocks 812 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 27: 23503 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 553 us, max 10 s 16539 us, max 20738 us | turnaround max 10 s 31564 us, over 1 block 1225, over 2 blocks 656 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:01  session 28: 23475 blocks, lost 0, stale 0, from cache 0, queue full 0, send errors 0, resets 4 | process 701 us, max 10 s 11353 us, max 31073 us | turnaround max 10 s 30735 us, over 1 block 1252, over 2 blocks 697 | chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 10:06:03  session 28: bye
+2026-11-07 10:06:03  session 28 closed
+2026-11-07 10:06:03  session 27: bye
+2026-11-07 10:06:03  session 27 closed
+2026-11-07 10:06:03  session 26: bye
+2026-11-07 10:06:03  session 26 closed
+2026-11-07 10:06:03  session 25: bye
+2026-11-07 10:06:03  session 25 closed
+2026-11-07 10:06:03  session 24: bye
+2026-11-07 10:06:03  session 24 closed
+2026-11-07 10:06:03  session 23: bye
+2026-11-07 10:06:03  session 23 closed
+2026-11-07 10:06:03  session 22: bye
+2026-11-07 10:06:03  session 22 closed
+2026-11-07 10:06:03  session 21: bye
+2026-11-07 10:06:03  session 21 closed
+2026-11-07 10:06:03  session 20: bye
+2026-11-07 10:06:03  session 20 closed
+2026-11-07 10:06:03  session 19: bye
+2026-11-07 10:06:03  session 19 closed
+2026-11-07 10:06:04  session 18: bye
+2026-11-07 10:06:04  session 18 closed
+2026-11-07 10:06:04  session 17: bye
+2026-11-07 10:06:04  session 17 closed
+2026-11-07 10:06:04  session 16: bye
+2026-11-07 10:06:04  session 16 closed
+2026-11-07 10:06:04  session 15: bye
+2026-11-07 10:06:04  session 15 closed
+2026-11-07 10:06:04  session 14: bye
+2026-11-07 10:06:04  session 14 closed
+2026-11-07 10:06:04  session 13: bye
+2026-11-07 10:06:04  session 13 closed
+2026-11-07 10:06:04  session 12: bye
+2026-11-07 10:06:04  session 12 closed
+2026-11-07 10:06:04  session 11: bye
+2026-11-07 10:06:04  session 11 closed
+2026-11-07 10:06:04  session 10: bye
+2026-11-07 10:06:04  session 10 closed
+2026-11-07 10:06:04  session 9: bye
+2026-11-07 10:06:04  session 9 closed
+2026-11-07 10:06:05  session 8: bye
+2026-11-07 10:06:05  session 8 closed
+2026-11-07 10:06:05  session 7: bye
+2026-11-07 10:06:05  session 7 closed
+2026-11-07 10:06:05  session 6: bye
+2026-11-07 10:06:05  session 6 closed
+2026-11-07 10:06:05  session 5: bye
+2026-11-07 10:06:05  session 5 closed
+2026-11-07 10:06:05  session 4: bye
+2026-11-07 10:06:05  session 4 closed
+2026-11-07 10:06:05  session 3: bye
+2026-11-07 10:06:05  session 3 closed
+2026-11-07 10:06:05  session 2: bye
+2026-11-07 10:06:05  session 2 closed

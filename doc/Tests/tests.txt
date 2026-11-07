@@ -80,7 +80,7 @@ UdpSndbufErrors                 0                  0.0
 
 
 ASIO buffer 128
-FxmeNet buffer 128x2
+FxmeNet buffer 1024x2
 28 track with 17 fxmeFX plugins on each: Server at more than 75% CPU
 No audible clicks during all the session
 At 24 tracks almost no concealed blocks
@@ -96,3 +96,52 @@ Netstat after:
 UdpInErrors                     0                  0.0
 UdpRcvbufErrors                 0                  0.0
 UdpSndbufErrors                 101                0.0
+
+New tests 2 on 2026-11-07
+
+Fter adding me in the audio group:
+
+ $ps -eLo tid,cls,rtprio,pcpu,comm | grep -i fxme
+   3090  TS      -  0.0 fxmenet-server
+   3093  TS      -  0.0 FxmeNet accept
+   3094  RR     89  0.0 FxmeNet UDP
+   3095  TS      -  0.0 fxmenet-server
+   3096  TS      -  0.1 fxmenet-server
+
+* ASIO buffer 128
+FxmeNet buffer 128x2
+28 track with 17 fxmeFX plugins on each: Server at 65% CPU
+No audible clicks during all the session
+At 24 tracks only a few concealed blocks
+At 28 tracks, a lot of concealed blocks (a few per second) (CPU at 90% I think my 65% before were for 24 tracks)
+At 32 tracks, the system cannot follow, lot of silences
+
+* ASIO buffer 128
+FxmeNet buffer 1024x2
+28 track with 17 fxmeFX plugins on each: Server at more than 75% CPU
+No audible clicks during all the session
+At 24 tracks almost no concealed blocks
+At 28 tracks, one concealed block every 5s approx
+At 32 tracks, regular concealed blocks, one every second or less approx
+
+
+netstat after these tests:
+UdpInErrors                     0                  0.0
+UdpRcvbufErrors                 0                  0.0
+UdpSndbufErrors                 216                0.0
+
+* One more test at ASIO 256 / FxmeNet 256x2
+CPU server at ~85%
+Lot of concealed blocks, no useable
+
+* One more test at ASIO 1024 / FxmeNet 1024x2
+28 tracks CPU server at ~75%
+No or very rare concealed blocks, very useable
+32 tracks : ~1 concealed block per second
+
+Still no click heard on any test
+
+netstat after these two tests (same session as before):
+UdpInErrors                     0                  0.0
+UdpRcvbufErrors                 0                  0.0
+UdpSndbufErrors                 218                0.0
