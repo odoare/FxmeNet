@@ -112,6 +112,20 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     - c. Later, optional: windows that outlive FxmeNet's editor (owned by
       the processor, as Reaper's floating FX windows), with the lifetime
       cases that brings (slot removed, session lost, processor deleted).
+20. Later, low priority (seen 2026-11-06 with the Zam plugins): plugins
+    whose meters are output parameters. DPF plugins (Zam, and others built
+    on DPF) declare meters as `kParameterIsOutput` (ZamComp: "Gain
+    Reduction", "Output Level"), read-only in VST3 and reported from
+    processing. They already work in FxmeNet through the parameter path
+    (the server's ParamWatcher sends them as PARAM_CHANGED at the
+    session's timer rate, the shadow takes them with setQuietly). To check
+    and, if needed, fix: whether such parameters show in the generic
+    controls as if they could be moved, and whether the automatic mapping
+    gives them pool entries (DAW automation lanes that move by
+    themselves, and lanes taken for nothing). Likely fix: skip read-only
+    or non-automatable parameters when auto-mapping (SLOT_READY's
+    `automatable` already travels; a `readOnly` flag may be needed), and
+    show them as read-outs in the generic view.
 13. Later, optional: mDNS publishing (`_fxmenet._tcp`) for system browsers.
 8. Phase 4: shadow editors and telemetry; port Compressor and Equalizer.
    - 8c (written): telemetry into the shadows. Build the plugin; in Reaper
