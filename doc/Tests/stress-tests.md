@@ -210,3 +210,98 @@ Repeat the step 1 measurement after each change, to see which one helps.
 
 Rerun tests 1a, 1b, 4 and 5 after the changes and add the results to this
 document, to find the new limits at 128×2, 256×2 and 1024×2.
+
+## 5. Second session (2026-11-07)
+
+Step 1 of the plan, without any tuning (generic kernel, default socket
+buffers). Raw notes in `tests.txt`, server logs in
+`serverlog_28tracks_128x2_ASIO128.txt` and
+`serverlog_28tracks_1024x2_ASIO128.txt`.
+
+### 5.1 Results
+
+| Run | FxmeNet | Server CPU (28 tracks) | 24 tracks | 28 tracks | 32 tracks | Clicks | UDP counters on the server |
+|-----|---------|------------------------|-----------|-----------|-----------|--------|----------------------------|
+| A | 128×2 | 65 % | a few concealed blocks | a few per second | | none | all 0 |
+| B | 1024×2 (1) | more than 75 % | almost none | one every ~5 s | about one per second | none | `UdpSndbufErrors` 0 → 101 |
+
+All with ASIO 128 and the full chain. (1) The notes say 128×2 for both
+runs; the server log of run B shows blocks of 1024.
+
+Server log, for every session of both runs:
+
+| | Run A (128×2) | Run B (1024×2) |
+|---|---|---|
+| `lost`, `stale`, `from cache`, `queue full` | 0 | 0 |
+| Usual processing time per block | 0.5 to 0.6 ms | 2 to 4.5 ms |
+| Longest processing time (`max`) | 12 to 26 ms | 21 to 51 ms |
+| Deadline (about 2 blocks) | 5.8 ms | 46 ms |
+
+### 5.2 Analysis
+
+- **Every request reached the server, in order, and was processed.** No
+  block was lost on the way in (`lost` and `stale` at 0, no receive
+  errors). So the concealed blocks are replies that came back late or not
+  at all.
+- **No clicks, and no lost requests.** This fits 3.4: the clicks come from
+  requests lost on the way in, which make the server jump. It doesn't
+  prove it (no clicks were captured), but nothing here points elsewhere.
+  The receive-buffer overflow suspected in 3.3 did not happen
+  (`UdpRcvbufErrors` at 0).
+- **Processing spikes are the main cause of the concealed blocks.**
+  - The `max` keeps setting new records through the whole run, not only
+    at start-up: the spikes happen in steady state.
+  - At 128×2 a block usually takes 0.55 ms, but sometimes 10 to 26 ms,
+    four times the deadline. One spike delays the blocks queued behind it
+    too, so a single spike can conceal several blocks.
+  - At 1024×2 the spikes (up to 51 ms) only sometimes pass the 46 ms
+    deadline, which is why run B conceals fewer blocks than run A.
+  - Stalls of 10 to 50 ms for a thread doing 0.5 ms of work look like a
+    thread waiting for a CPU, not like plugin work. That is what happens
+    when the audio threads run as ordinary threads: 28 of them compete for
+    8 hardware threads with the normal scheduler's time slices. The likely
+    reason is that the server didn't get real-time priority and fell back
+    to an ordinary thread without saying so (3.5).
+- **Replies lost on the server's send side (run B).**
+  `UdpSndbufErrors` went up by 101: the server's kernel dropped 101 reply
+  datagrams because the socket's send buffer was full. At 1024×2 each reply
+  is 6 datagrams and the 28 sessions reply at nearly the same moment, so
+  this is the burst problem of 3.3, on the way out instead of the way in.
+  Each dropped datagram loses a whole reply. The server counts these
+  failures (`sendErrors`) but doesn't print them.
+- The "Authorization required, but no authorization protocol specified"
+  lines in run B come from the X display (probably a plugin, or JUCE,
+  trying to open a window connection). Unrelated to audio, but worth
+  removing later.
+
+### 5.3 What this changes in the plan
+
+1. **Real-time priority first** (step 3.1). Check it during a run with
+   `ps -eLo tid,cls,rtprio,pcpu,comm | grep -i fxme`. If the audio threads
+   show `TS` instead of `FF` or `RR`, set up the limits file and rerun run
+   A. This is the most likely fix for the spikes.
+2. **Larger send buffer** (step 2, the `wmem` lines), for run B.
+3. **Better server statistics** (done 2026-11-07), so that the next runs
+   are easier to read:
+   - print `sendErrors` in the activity line;
+   - give the `max` over the last 10 s as well as since the start, and
+     count the blocks that took longer than the deadline;
+   - log a warning when real-time priority is refused.
+
+   The activity line now reads, for example:
+   ```
+   session 5: 139154 blocks, lost 0, stale 0, from cache 0, queue full 0,
+   send errors 0, resets 2 | process 817 us, max 10 s 1210 us, max 25845 us
+   | turnaround max 10 s 3100 us, over 1 block 3, over 2 blocks 1
+   | chain latency 4, ...
+   ```
+   (one line in the log). Counts are since the session started; "max 10 s"
+   is over the last 10 s. The turnaround runs from the request's arrival to
+   the reply being sent, so it includes the wait behind a slow block.
+   "Over 2 blocks" is close to the number of replies too late for a budget
+   of 2. The session's first line says "real-time audio thread" when the
+   priority was granted, and a warning follows when it was not. The UDP
+   thread now asks for real-time priority above the audio threads.
+4. The two code fixes of step 5 (large socket buffers set by the server
+   itself, and no jump on a missing request) stay useful, but are less
+   urgent than 1 to 3.

@@ -131,16 +131,27 @@ juce::String Session::describeActivity()
         return {};
     lastProcessed = processed;
 
+    const auto window = worker.takeWindow();
+    const auto count = [] (const std::atomic<std::uint64_t>& a) { return juce::String ((juce::int64) a.load()); };
+    const auto micros = [] (std::uint32_t us) { return juce::String ((juce::int64) us) + " us"; };
+
+    // Counts are since the session started; "10 s" values are over the
+    // last line's interval. Turnaround: request arrival to reply sent.
     return "session " + juce::String ((int) sessionId)
          + ": " + juce::String ((juce::int64) processed) + " blocks"
-         + ", lost " + juce::String ((juce::int64) s.lostBlocks.load())
-         + ", from cache " + juce::String ((juce::int64) s.fromCache.load())
-         + ", stale " + juce::String ((juce::int64) s.stale.load())
-         + ", resets " + juce::String ((juce::int64) s.resets.load())
-         + ", queue full " + juce::String ((juce::int64) s.queueFull.load())
-         + ", process " + juce::String ((int) s.lastProcessMicros.load())
-         + " us (max " + juce::String ((int) s.maxProcessMicros.load()) + ")"
-         + ", chain latency " + juce::String (chain.getLatency())
+         + ", lost " + count (s.lostBlocks)
+         + ", stale " + count (s.stale)
+         + ", from cache " + count (s.fromCache)
+         + ", queue full " + count (s.queueFull)
+         + ", send errors " + count (s.sendErrors)
+         + ", resets " + count (s.resets)
+         + " | process " + micros (s.lastProcessMicros.load())
+         + ", max 10 s " + micros (window.maxProcessMicros)
+         + ", max " + micros (s.maxProcessMicros.load())
+         + " | turnaround max 10 s " + micros (window.maxTurnaroundMicros)
+         + ", over 1 block " + count (s.overOneBlock)
+         + ", over 2 blocks " + count (s.overTwoBlocks)
+         + " | chain latency " + juce::String (chain.getLatency())
          + ", telemetry frames " + juce::String ((juce::int64) telemetrySent)
          + ", parameter changes " + juce::String ((juce::int64) paramChangesSent);
 }
@@ -332,7 +343,12 @@ void Session::handleConfigure (const Frame& f)
 
     log ("session " + juce::String ((int) sessionId) + ": " + juce::String (c.sampleRate) + " Hz, block "
          + juce::String (c.blockSize) + ", " + juce::String (c.numInputs) + " in / "
-         + juce::String (c.numOutputs) + " out");
+         + juce::String (c.numOutputs) + " out"
+         + (worker.isRealtime() ? ", real-time audio thread" : ""));
+    if (! worker.isRealtime())
+        log ("session " + juce::String ((int) sessionId) + ": warning: real-time priority refused, "
+             "the audio thread runs as an ordinary thread (on Linux: give the user an rtprio limit, "
+             "for example @audio - rtprio 95 in /etc/security/limits.d/audio.conf)");
     ack (f);
 }
 

@@ -85,7 +85,10 @@ void AudioWorker::start (const control::Configure& c, std::uint32_t session, std
     expected = 0;
     haveParity = false;   // the first block sets it: a stream starts with a fresh chain
 
-    if (! startRealtimeThread (juce::Thread::RealtimeOptions{}.withPriority (8)))
+    blockSeconds = config.blockSize / juce::jmax (1.0, config.sampleRate);
+
+    realtime = startRealtimeThread (juce::Thread::RealtimeOptions{}.withPriority (8));
+    if (! realtime)
         startThread (juce::Thread::Priority::highest);
 }
 
@@ -134,6 +137,7 @@ bool AudioWorker::enqueue (std::uint16_t flags, const std::uint8_t* body, std::s
         e.flags = flags;
         e.body.assign (body, body + size);   // within the reserved capacity: no allocation
         e.size = size;
+        e.arrived = juce::Time::getHighResolutionTicks();
     }
     wake.signal();   // after the commit, or the worker could wake to an empty queue
     return true;
@@ -200,7 +204,7 @@ void AudioWorker::handle (const Entry& e)
     if (block > expected)
         stats.lostBlocks.fetch_add (block - expected);
 
-    processBlock (v, e.flags);
+    processBlock (v, e.flags, e.arrived);
     expected = block + 1;
     drainHeld();
 }
@@ -235,6 +239,7 @@ void AudioWorker::hold (const Entry& e, std::uint64_t block)
     freeSlot->entry.flags = e.flags;
     freeSlot->entry.body.assign (e.body.begin(), e.body.begin() + (std::ptrdiff_t) e.size);
     freeSlot->entry.size = e.size;
+    freeSlot->entry.arrived = e.arrived;
 }
 
 void AudioWorker::drainHeld()
@@ -250,7 +255,7 @@ void AudioWorker::drainHeld()
             h.used = false;
             wire::BlockView v;
             if (wire::readBlock (h.entry.body.data(), h.entry.size, false, h.entry.flags, v))
-                processBlock (v, h.entry.flags);
+                processBlock (v, h.entry.flags, h.entry.arrived);
             expected = h.block + 1;
             progressed = true;
         }
@@ -278,7 +283,7 @@ void AudioWorker::releaseStaleHeld()
 }
 
 //==============================================================================
-void AudioWorker::processBlock (const wire::BlockView& v, std::uint16_t flags)
+void AudioWorker::processBlock (const wire::BlockView& v, std::uint16_t flags, std::int64_t arrived)
 {
     const auto t0 = juce::Time::getHighResolutionTicks();
     const int n = config.blockSize;
@@ -348,6 +353,20 @@ void AudioWorker::processBlock (const wire::BlockView& v, std::uint16_t flags)
     stats.processed.fetch_add (1);
     stats.lastProcessMicros.store (micros);
     raiseTo (stats.maxProcessMicros, micros);
+    raiseTo (stats.windowMaxProcessMicros, micros);
+
+    // From arrival to reply sent: includes the wait behind earlier blocks,
+    // which processing time alone does not show. Offline blocks may wait
+    // on purpose (held for a missing one): not counted.
+    if ((flags & wire::requestFlags::offline) == 0)
+    {
+        const auto turnaround = juce::Time::highResolutionTicksToSeconds (juce::Time::getHighResolutionTicks() - arrived);
+        raiseTo (stats.windowMaxTurnaroundMicros, (std::uint32_t) (turnaround * 1.0e6));
+        if (turnaround > blockSeconds)
+            stats.overOneBlock.fetch_add (1);
+        if (turnaround > 2.0 * blockSeconds)
+            stats.overTwoBlocks.fetch_add (1);
+    }
 }
 
 void AudioWorker::send (const std::vector<std::uint8_t>& body)
