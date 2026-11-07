@@ -59,3 +59,40 @@ Network at 75Mbps*2
 
 
 
+New tests 2026-11-07
+
+ASIO buffer 128
+FxmeNet buffer 128x2
+28 track with 17 fxmeFX plugins on each: Server at 65% CPU
+No audible clicks during all the session
+At 24 tracks only a few concealed blocks
+At 28 tracks, a lot of concealed blocks (a few per second)
+
+Netstat before:
+UdpInErrors                     0                  0.0
+UdpRcvbufErrors                 0                  0.0
+UdpSndbufErrors                 0                  0.0
+
+Netstat after:
+UdpInErrors                     0                  0.0
+UdpRcvbufErrors                 0                  0.0
+UdpSndbufErrors                 0                  0.0
+
+
+ASIO buffer 128
+FxmeNet buffer 128x2
+28 track with 17 fxmeFX plugins on each: Server at more than 75% CPU
+No audible clicks during all the session
+At 24 tracks almost no concealed blocks
+At 28 tracks, one concealed block every 5s approx
+At 32 tracks, regular concealed blocks, one every second approx
+
+Netstat before:
+UdpInErrors                     0                  0.0
+UdpRcvbufErrors                 0                  0.0
+UdpSndbufErrors                 0                  0.0
+
+Netstat after:
+UdpInErrors                     0                  0.0
+UdpRcvbufErrors                 0                  0.0
+UdpSndbufErrors                 101                0.0

@@ -1,0 +1,1322 @@
+olivierdoare@olivier:~/bin$ ./fxmenet-server
+2026-11-07 08:05:47  fxmenet-server 0.1.0 "olivier" on Linux
+2026-11-07 08:05:47  scanning VST3 in /home/olivierdoare/.vst3;/usr/local/lib/vst3;/usr/lib/vst3
+2026-11-07 08:05:47    Dynette 0.1.0 (FX-Mechanics), uid 1772bb39
+2026-11-07 08:05:47    FxmeGate 0.5.1 (FX-Mechanics), uid 1a5ac12a, FxmeNet-aware
+2026-11-07 08:05:47    FxmeFreeze 0.5.1 (FX-Mechanics), uid 196bc72a, FxmeNet-aware
+2026-11-07 08:05:47    FxmeTube 0.5.1 (FX-Mechanics), uid 276eaf2a, FxmeNet-aware
+2026-11-07 08:05:47    OtoDelay 0.1.0 (FX-Mechanics), uid 228db151
+2026-11-07 08:05:47    OtoMonitor 0.1.0 (FX-Mechanics), uid 228dba53
+2026-11-07 08:05:47    OtoComp 0.1.0 (FX-Mechanics), uid 228db055
+2026-11-07 08:05:47    FxmeEqualizer 0.5.1 (FX-Mechanics), uid 186ac231, FxmeNet-aware
+2026-11-07 08:05:47    FxmeDeEsser 0.6.0 (FX-Mechanics), uid 175ec038, FxmeNet-aware
+2026-11-07 08:05:47    FxmeConvolReverb 0.5.1 (FX-Mechanics), uid 166bb23b, FxmeNet-aware
+2026-11-07 08:05:47    FxmeOct 0.5.1 (FX-Mechanics), uid 225cc13b, FxmeNet-aware
+2026-11-07 08:05:47    FxmeCab 0.5.1 (FX-Mechanics), uid 165aaf33, FxmeNet-aware
+2026-11-07 08:05:47    FxmeTape 0.6.0 (FX-Mechanics), uid 275abd2a, FxmeNet-aware
+2026-11-07 08:05:47    SpectralDede 0.1.0 (FX-Mechanics), uid 175eb12a
+2026-11-07 08:05:47    FxmeStereoDelay 0.5.1 (FX-Mechanics), uid 265db231, FxmeNet-aware
+2026-11-07 08:05:47    AmbiRR2 0.1.0 (FX-Mechanics), uid 1466bf17
+2026-11-07 08:05:47    Mango 0.3.0 (FX-Mechanics), uid 2067b434
+2026-11-07 08:05:47    FxmeLimiter 0.5.1 (FX-Mechanics), uid 1f62ba39, FxmeNet-aware
+2026-11-07 08:05:47    FxmeReverb 0.5.1 (FX-Mechanics), uid 196fbf27, FxmeNet-aware
+2026-11-07 08:05:47    FxmeCompressor 0.5.1 (FX-Mechanics), uid 1668ba35, FxmeNet-aware
+2026-11-07 08:05:47    FxmeCrusher 0.6.0 (FX-Mechanics), uid 166bc02d, FxmeNet-aware
+2026-11-07 08:05:47    FxmeChorus 0.5.1 (FX-Mechanics), uid 1661bc37, FxmeNet-aware
+2026-11-07 08:05:47    FxmeFlanger 0.5.1 (FX-Mechanics), uid 1965bb2c, FxmeNet-aware
+2026-11-07 08:05:47    FxmeTransient 0.5.1 (FX-Mechanics), uid 276bbb38, FxmeNet-aware
+2026-11-07 08:05:47    FxmePhaser 0.5.1 (FX-Mechanics), uid 2361c037, FxmeNet-aware
+2026-11-07 08:05:47    ZamGEQ31 4.5.0 (Damien Zammit), uid ec641cc5
+2026-11-07 08:05:47    ZamTube 4.5.0 (Damien Zammit), uid ff83afc5
+2026-11-07 08:05:47    ZamDynamicEQ 4.5.0 (Damien Zammit), uid ce73d6c5
+2026-11-07 08:05:47    ZamComp 4.5.0 (Damien Zammit), uid b089a0c5
+2026-11-07 08:05:47    ZamGateX2 4.5.0 (Damien Zammit), uid 0f631cc5
+2026-11-07 08:05:47    ZamDelay 4.5.0 (Damien Zammit), uid 3373d6c5
+2026-11-07 08:05:47    ZamGate 4.5.0 (Damien Zammit), uid 2b161cc5
+2026-11-07 08:05:47    ZaMaximX2 4.5.0 (Damien Zammit), uid 0fdfd6c5
+2026-11-07 08:05:47    ZamNoise 4.5.0 (Damien Zammit), uid d7c8f5c5
+2026-11-07 08:05:47    ZamEcho 4.5.0 (Damien Zammit), uid 1c92d6c5
+2026-11-07 08:05:47    ZamHeadX2 4.5.0 (Damien Zammit), uid 0d733bc5
+2026-11-07 08:05:47    ZamCompX2 4.5.0 (Damien Zammit), uid 0ee6a0c5
+2026-11-07 08:05:47    ZamEQ2 4.5.0 (Damien Zammit), uid 0f05dec5
+2026-11-07 08:05:47    ZamPhono 4.5.0 (Damien Zammit), uid b8e7d6c5
+2026-11-07 08:05:47    ZaMultiCompX2 4.5.0 (Damien Zammit), uid 0e8ad6c5
+2026-11-07 08:05:47    ZamGrains 4.5.0 (Damien Zammit), uid edd0d6c5
+2026-11-07 08:05:47    ZamAutoSat 4.5.0 (Damien Zammit), uid 2b1790c5
+2026-11-07 08:05:47    ZamVerb 4.5.0 (Damien Zammit), uid ff26edc5
+2026-11-07 08:05:47    ZaMultiComp 4.5.0 (Damien Zammit), uid 1d8ad6c5
+2026-11-07 08:05:47    plugdata-fx 0.9.2 (plugdata), uid 5be8a20e
+2026-11-07 08:05:47  45 plugins (0 examined, 47 from the cache, 0 failed)
+2026-11-07 08:05:47  listening: control TCP 54322, audio UDP 54321, discovery UDP 54320
+2026-11-07 08:05:50  session 1 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:05:50  session 1: 44100 Hz, block 1024, 2 in / 2 out
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+2026-11-07 08:05:50  session 1: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:50  session 2 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:05:50  session 3 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+2026-11-07 08:05:50  session 1: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:50  session 2: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:05:50  session 3: 44100 Hz, block 1024, 2 in / 2 out
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+2026-11-07 08:05:50  session 1: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:50  session 2: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:50  session 3: slot 1 = FxmeFreeze (FxmeNet-aware)
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+2026-11-07 08:05:50  session 1: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:05:50  session 2: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:50  session 3: slot 2 = FxmeTube (FxmeNet-aware)
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+2026-11-07 08:05:50  session 1: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:50  session 2: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:50  session 3: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:50  session 4 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:05:50  session 5 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:05:50  session 6 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:05:50  session 7 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:05:50  session 8 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:05:50  session 9 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+2026-11-07 08:05:50  session 1: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:50  session 2: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:05:50  session 5: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:05:50  session 4: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:05:50  session 6: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:05:50  session 7: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:05:50  session 9: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:05:50  session 8: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:05:50  session 3: slot 4 = FxmeDeEsser (FxmeNet-aware)
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+2026-11-07 08:05:50  session 1: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:50  session 2: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:50  session 3: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:50  session 10 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+2026-11-07 08:05:50  session 1: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:50  session 11 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:05:50  session 12 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:05:50  session 13 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:05:50  session 14 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:05:50  session 15 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:05:50  session 16 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:05:50  session 17 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:05:50  session 18 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:05:50  session 5: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:50  session 6: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:50  session 4: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:50  session 7: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:50  session 9: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:50  session 8: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:50  session 2: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:50  session 10: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:05:50  session 3: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:50  session 19 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:05:50  session 20 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:05:50  session 21 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:05:50  session 22 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:05:50  session 11: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:05:50  session 13: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:05:50  session 12: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:05:50  session 14: 44100 Hz, block 1024, 2 in / 2 out
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+2026-11-07 08:05:50  session 1: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:50  session 15: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:05:50  session 16: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:05:50  session 17: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:05:50  session 18: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:05:50  session 5: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:50  session 6: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:50  session 4: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:50  session 7: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:50  session 9: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:50  session 8: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:50  session 23 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:05:50  session 2: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:50  session 24 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:05:50  session 19: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:05:50  session 21: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:05:50  session 20: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:05:50  session 22: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:05:50  session 3: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:50  session 5: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:50  session 6: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:50  session 4: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:50  session 7: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:50  session 9: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:50  session 23: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:05:50  session 8: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:50  session 10: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:50  session 24: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:05:50  session 2: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:50  session 11: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:50  session 12: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:50  session 14: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:50  session 15: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:50  session 16: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:50  session 17: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:50  session 13: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:50  session 18: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:50  session 3: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:50  session 5: slot 4 = FxmeDeEsser (FxmeNet-aware)
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+2026-11-07 08:05:50  session 1: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:50  session 6: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:05:50  session 4: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:05:50  session 7: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:05:50  session 9: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:05:50  session 8: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:05:50  session 10: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:50  session 19: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:50  session 20: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:50  session 22: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:50  session 21: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:50  session 2: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:50  session 11: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:50  session 12: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:50  session 14: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:50  session 15: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:50  session 16: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:50  session 17: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:50  session 13: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:50  session 18: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:50  session 3: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:50  session 5: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+2026-11-07 08:05:50  session 1: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:50  session 6: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:50  session 4: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:50  session 7: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:50  session 23: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:50  session 9: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:51  session 8: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:51  session 24: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:05:51  session 10: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:51  session 19: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:51  session 20: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:51  session 22: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:51  session 21: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:51  session 11: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:51  session 12: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:51  session 14: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:51  session 15: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:51  session 16: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:51  session 17: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:51  session 13: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:51  session 18: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:51  session 2: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:51  session 3: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:51  session 5: slot 6 = FxmeOct (FxmeNet-aware)
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+2026-11-07 08:05:51  session 1: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:51  session 6: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:51  session 4: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:51  session 7: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:51  session 23: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:51  session 9: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:51  session 8: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:51  session 24: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:05:51  session 10: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:05:51  session 19: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:51  session 20: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:51  session 22: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:51  session 21: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:51  session 11: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:05:51  session 12: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:05:51  session 14: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:05:51  session 15: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:05:51  session 16: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:05:51  session 17: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:05:51  session 13: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:05:51  session 2: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:51  session 18: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:05:51  session 3: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:51  session 5: slot 7 = FxmeCab (FxmeNet-aware)
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+2026-11-07 08:05:51  session 1: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:51  session 6: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:51  session 4: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:51  session 7: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:51  session 23: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:51  session 9: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:51  session 8: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:51  session 24: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:05:51  session 10: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:51  session 19: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:05:51  session 20: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:05:51  session 22: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:05:51  session 21: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:05:51  session 11: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:51  session 12: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:51  session 14: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:51  session 15: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:51  session 16: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:51  session 17: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:51  session 13: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:51  session 2: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:51  session 18: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:51  session 3: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:51  session 5: slot 8 = FxmeTape (FxmeNet-aware)
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+2026-11-07 08:05:51  session 1: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:51  session 6: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:51  session 4: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:51  session 7: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:51  session 23: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:05:51  session 9: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:51  session 8: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:51  session 24: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:05:51  session 10: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:51  session 19: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:51  session 20: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:51  session 22: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:51  session 21: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:51  session 11: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:51  session 12: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:51  session 14: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:51  session 15: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:51  session 16: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:51  session 17: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:51  session 13: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:51  session 2: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:51  session 18: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:51  session 3: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:51  session 5: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+2026-11-07 08:05:51  session 1: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:51  session 6: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:51  session 4: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:52  session 7: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:52  session 23: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:52  session 9: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:52  session 8: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:52  session 24: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:05:52  session 10: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:52  session 19: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:52  session 20: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:52  session 22: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:52  session 21: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:52  session 11: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:52  session 12: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:52  session 14: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:52  session 15: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:52  session 16: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:52  session 17: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:52  session 13: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:52  session 2: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:52  session 18: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:52  session 3: slot 14 = FxmeChorus (FxmeNet-aware)
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+2026-11-07 08:05:52  session 1: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:52  session 5: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:52  session 6: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:52  session 4: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:52  session 7: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:52  session 23: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:52  session 9: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:52  session 8: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:52  session 24: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:05:52  session 10: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:52  session 19: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:52  session 20: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:52  session 22: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:52  session 21: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:52  session 11: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:52  session 12: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:52  session 14: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:52  session 15: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:52  session 16: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:52  session 17: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:52  session 13: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:52  session 2: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:52  session 18: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:52  session 3: slot 15 = FxmeFlanger (FxmeNet-aware)
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+2026-11-07 08:05:52  session 1: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:52  session 5: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:52  session 6: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:52  session 4: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:52  session 7: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:52  session 23: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:52  session 9: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:52  session 8: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:52  session 24: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:05:52  session 10: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:52  session 19: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:52  session 20: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:52  session 22: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:52  session 21: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:52  session 11: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:52  session 12: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:52  session 14: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:52  session 15: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:52  session 16: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:52  session 17: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:52  session 13: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:52  session 2: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:52  session 18: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:52  session 3: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:52  session 5: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:52  session 6: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:52  session 4: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:52  session 7: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:52  session 23: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:52  session 9: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:52  session 8: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:52  session 24: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:05:52  session 19: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:52  session 20: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:52  session 22: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:52  session 21: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:53  session 10: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:53  session 11: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:53  session 12: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:53  session 14: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:53  session 15: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:53  session 16: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:53  session 17: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:53  session 2: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:53  session 13: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:53  session 3: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:53  session 5: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:53  session 6: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:53  session 4: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:53  session 7: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:53  session 23: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:53  session 9: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:53  session 8: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:53  session 24: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:05:53  session 18: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:53  session 19: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:53  session 20: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:53  session 22: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:53  session 10: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:53  session 11: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:53  session 12: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:53  session 14: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:53  session 15: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:53  session 16: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:53  session 17: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:53  session 13: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:53  session 5: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:53  session 6: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:53  session 4: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:53  session 7: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:53  session 21: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:53  session 9: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:53  session 8: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:53  session 23: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:53  session 18: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:53  session 19: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:53  session 20: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:53  session 22: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:53  session 10: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:53  session 11: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:53  session 12: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:53  session 14: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:53  session 15: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:53  session 16: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:53  session 17: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:53  session 13: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:53  session 5: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:53  session 6: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:53  session 4: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:53  session 7: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:53  session 21: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:53  session 9: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:53  session 8: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:53  session 23: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:53  session 24: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:05:53  session 18: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:53  session 19: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:53  session 20: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:53  session 22: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:53  session 10: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:53  session 11: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:53  session 12: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:53  session 14: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:53  session 15: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:53  session 16: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:53  session 17: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:53  session 13: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:53  session 5: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:53  session 6: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:53  session 4: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:53  session 7: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:53  session 21: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:53  session 9: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:53  session 8: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:53  session 23: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:53  session 24: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:05:53  session 18: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:53  session 19: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:53  session 20: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:53  session 22: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:53  session 10: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:53  session 11: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:53  session 12: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:53  session 14: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:53  session 15: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:53  session 16: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:53  session 17: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:53  session 13: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:53  session 5: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:53  session 6: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:53  session 4: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:53  session 7: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:53  session 21: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:53  session 9: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:53  session 8: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:53  session 23: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:53  session 24: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:05:53  session 18: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:53  session 19: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:53  session 20: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:53  session 22: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:53  session 10: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:53  session 11: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:53  session 12: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:53  session 14: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:53  session 15: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:53  session 16: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:53  session 17: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:53  session 13: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:53  session 21: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:53  session 23: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:53  session 24: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:05:53  session 18: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:53  session 19: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:53  session 20: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:53  session 22: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:53  session 10: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:53  session 11: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:53  session 12: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:53  session 14: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:53  session 15: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:53  session 16: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:53  session 17: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:53  session 13: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:53  session 21: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:53  session 23: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:53  session 24: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:05:53  session 18: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:53  session 19: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:53  session 20: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:53  session 22: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:53  session 10: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:53  session 11: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:53  session 12: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:53  session 14: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:53  session 15: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:53  session 16: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:53  session 17: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:53  session 13: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:53  session 21: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:53  session 23: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:53  session 24: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:05:53  session 18: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:53  session 19: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:53  session 20: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:53  session 22: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:53  session 21: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:53  session 23: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:53  session 24: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:05:53  session 24: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:05:58  session 1: 128 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4131 us (max 13875), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 2: 128 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3417 us (max 13725), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 3: 128 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3537 us (max 12194), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 4: 128 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4210 us (max 16709), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 5: 129 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4154 us (max 19969), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 6: 129 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3188 us (max 12280), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 7: 130 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4162 us (max 13071), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 8: 128 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4653 us (max 16924), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 9: 128 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4516 us (max 15533), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 10: 134 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4171 us (max 15451), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 11: 134 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4421 us (max 20091), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 12: 130 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3529 us (max 13874), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 13: 130 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4515 us (max 13826), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 14: 135 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4071 us (max 16185), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 15: 131 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 7735 us (max 14290), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 16: 132 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3176 us (max 30748), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 17: 131 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4242 us (max 17410), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 18: 132 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3158 us (max 20004), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 19: 134 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 5416 us (max 19436), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 20: 129 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 6330 us (max 25784), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 21: 135 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3980 us (max 16662), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 22: 133 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2997 us (max 26523), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 23: 136 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3078 us (max 15045), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:05:58  session 24: 134 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3935 us (max 21651), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 1: 559 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4478 us (max 28491), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 2: 559 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4341 us (max 27993), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 3: 559 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4430 us (max 26248), chain latency 4, telemetry frames 116, parameter changes 0
+2026-11-07 08:06:08  session 4: 559 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4658 us (max 25033), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 5: 561 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3871 us (max 23456), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 6: 560 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3599 us (max 26507), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 7: 561 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3676 us (max 28111), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 8: 560 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 5278 us (max 26307), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 9: 560 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4264 us (max 31177), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 10: 566 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4665 us (max 24924), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 11: 566 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4519 us (max 20091), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 12: 562 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3288 us (max 21546), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 13: 562 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4626 us (max 21577), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 14: 567 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4502 us (max 24307), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 15: 562 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3933 us (max 22781), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 16: 562 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3142 us (max 30748), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 17: 563 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4505 us (max 19135), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 18: 562 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3158 us (max 21614), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 19: 564 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3188 us (max 23637), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 20: 559 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3196 us (max 25784), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 21: 565 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3956 us (max 24317), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 22: 563 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3970 us (max 26523), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 23: 566 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3359 us (max 26205), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:08  session 24: 564 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3921 us (max 23985), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 1: 989 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3776 us (max 28491), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 2: 989 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3902 us (max 27993), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 3: 989 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3553 us (max 26248), chain latency 4, telemetry frames 116, parameter changes 0
+2026-11-07 08:06:18  session 4: 989 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3875 us (max 28945), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 5: 991 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4743 us (max 28128), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 6: 990 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4054 us (max 26507), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 7: 991 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3516 us (max 30367), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 8: 990 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3989 us (max 26802), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 9: 990 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 5561 us (max 31177), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 10: 996 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3963 us (max 24924), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 11: 996 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3505 us (max 22207), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 12: 992 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4040 us (max 29102), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 13: 992 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4055 us (max 22231), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 14: 997 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3993 us (max 24307), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 15: 993 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3884 us (max 22781), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 16: 993 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3885 us (max 30748), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 17: 994 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3441 us (max 19135), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 18: 993 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3506 us (max 22589), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 19: 995 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3760 us (max 26124), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 20: 990 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4212 us (max 25784), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 21: 996 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3836 us (max 24317), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 22: 994 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3701 us (max 26523), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 23: 997 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3388 us (max 26205), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:18  session 24: 995 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3746 us (max 27300), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 1: 1420 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4001 us (max 28491), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 2: 1420 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3861 us (max 27993), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 3: 1420 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3051 us (max 26248), chain latency 4, telemetry frames 116, parameter changes 0
+2026-11-07 08:06:28  session 4: 1421 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2901 us (max 28945), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 5: 1423 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3796 us (max 31798), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 6: 1421 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3798 us (max 26507), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 7: 1423 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3448 us (max 30367), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 8: 1422 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3799 us (max 27344), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 9: 1422 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3354 us (max 31177), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 10: 1428 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2917 us (max 24924), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 11: 1428 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3127 us (max 22207), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 12: 1424 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3666 us (max 29102), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 13: 1424 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2813 us (max 25155), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 14: 1429 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3930 us (max 27191), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 15: 1424 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2915 us (max 25233), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 16: 1424 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3243 us (max 30748), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 17: 1425 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3911 us (max 23822), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 18: 1424 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3227 us (max 26905), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 19: 1426 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4092 us (max 27481), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 20: 1421 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4081 us (max 25784), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 21: 1427 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4548 us (max 24317), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 22: 1425 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4022 us (max 26523), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 23: 1428 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3125 us (max 26205), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:28  session 24: 1426 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4033 us (max 27300), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 1: 1851 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3956 us (max 28491), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 2: 1851 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 7837 us (max 27993), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 3: 1851 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4771 us (max 30123), chain latency 4, telemetry frames 116, parameter changes 0
+2026-11-07 08:06:38  session 4: 1851 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4153 us (max 28945), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 5: 1853 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4726 us (max 31798), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 6: 1852 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4581 us (max 26507), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 7: 1853 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4771 us (max 30367), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 8: 1852 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4755 us (max 30206), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 9: 1852 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4371 us (max 31177), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 10: 1859 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3762 us (max 24924), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 11: 1859 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2876 us (max 22207), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 12: 1855 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4001 us (max 29102), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 13: 1855 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4012 us (max 25155), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 14: 1860 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2867 us (max 27191), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 15: 1855 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 6186 us (max 25233), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 16: 1855 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4749 us (max 30748), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 17: 1856 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2812 us (max 27859), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 18: 1855 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4133 us (max 26905), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 19: 1857 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4378 us (max 27481), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 20: 1852 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 6578 us (max 26701), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 21: 1858 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4762 us (max 24317), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 22: 1856 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3870 us (max 26523), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 23: 1859 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4898 us (max 26205), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:38  session 24: 1857 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4152 us (max 27300), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 1: 2283 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4094 us (max 28491), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 2: 2283 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4556 us (max 29487), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 3: 2283 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4729 us (max 30123), chain latency 4, telemetry frames 116, parameter changes 0
+2026-11-07 08:06:48  session 4: 2283 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4191 us (max 32336), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 5: 2284 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3546 us (max 31798), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 6: 2284 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4627 us (max 26507), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 7: 2285 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4538 us (max 30367), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 8: 2284 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3565 us (max 30206), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 9: 2284 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3468 us (max 31177), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 10: 2289 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3897 us (max 27217), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 11: 2289 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3963 us (max 22207), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 12: 2285 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3975 us (max 29102), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 13: 2285 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3939 us (max 25155), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 14: 2290 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3857 us (max 27191), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 15: 2287 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4599 us (max 25233), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 16: 2287 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3466 us (max 30748), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 17: 2287 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4272 us (max 27859), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 18: 2287 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4279 us (max 26905), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 19: 2289 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3813 us (max 27481), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 20: 2284 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4665 us (max 34370), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 21: 2290 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4355 us (max 24317), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 22: 2288 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4599 us (max 26523), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 23: 2291 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4753 us (max 26205), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:48  session 24: 2289 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4325 us (max 27300), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 1: 2712 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 24408 us (max 28491), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 2: 2712 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 24233 us (max 29487), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 3: 2713 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 8230 us (max 30716), chain latency 4, telemetry frames 116, parameter changes 0
+2026-11-07 08:06:58  session 4: 2713 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3288 us (max 37270), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 5: 2714 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 31184 us (max 31798), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 6: 2713 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 22695 us (max 26507), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 7: 2715 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4045 us (max 30367), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 8: 2715 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3791 us (max 30206), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 9: 2714 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 10057 us (max 31177), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 10: 2721 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4006 us (max 27217), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 11: 2721 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3994 us (max 29015), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 12: 2717 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4509 us (max 29102), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 13: 2716 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4526 us (max 25155), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 14: 2722 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3996 us (max 27191), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 15: 2718 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4365 us (max 28018), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 16: 2717 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 6120 us (max 30748), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 17: 2717 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 10074 us (max 27859), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 18: 2717 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4630 us (max 26905), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 19: 2718 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 20651 us (max 27481), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 20: 2714 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 10060 us (max 34370), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 21: 2720 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4177 us (max 24317), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 22: 2718 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 5354 us (max 26523), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 23: 2721 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 7289 us (max 31651), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:06:58  session 24: 2719 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 12012 us (max 27300), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:05  session 25 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:07:05  session 25: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:07:05  session 25: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:07:05  session 25: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:07:05  session 25: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:07:05  session 25: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:07:05  session 25: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:07:05  session 25: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:07:05  session 25: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:07:05  session 25: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:07:05  session 25: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:07:05  session 26 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:07:05  session 26: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:07:05  session 25: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:07:05  session 26: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:07:05  session 25: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:07:05  session 26: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:07:05  session 25: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:07:05  session 26: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:07:05  session 25: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:07:05  session 26: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:07:05  session 25: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:07:06  session 26: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:07:06  session 25: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:07:06  session 26: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:07:06  session 25: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:07:06  session 26: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:07:06  session 25: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:07:06  session 26: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:07:06  session 26: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:07:06  session 27 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:07:06  session 27: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:07:06  session 27: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:07:06  session 27: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:07:06  session 27: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:07:06  session 26: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:07:06  session 26: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:07:06  session 27: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:07:06  session 26: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:07:06  session 27: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:07:06  session 26: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:07:06  session 28 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:07:06  session 27: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:07:06  session 28: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:07:06  session 26: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:07:06  session 27: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:07:06  session 26: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:07:06  session 27: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:07:06  session 28: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:07:06  session 26: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:07:06  session 28: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:07:06  session 27: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:07:06  session 26: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:07:06  session 28: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:07:06  session 28: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:07:06  session 28: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:07:06  session 27: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:07:06  session 28: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:07:06  session 27: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:07:06  session 28: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:07:06  session 27: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:07:06  session 28: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:07:06  session 27: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:07:06  session 28: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:07:06  session 27: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:07:07  session 27: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:07:07  session 27: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:07:07  session 27: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:07:07  session 28: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:07:07  session 28: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:07:07  session 28: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:07:07  session 28: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:07:07  session 28: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:07:07  session 28: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:07:07  session 28: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:07:07  session 28: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:07:08  session 1: 3143 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4559 us (max 32414), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 2: 3144 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 14878 us (max 33484), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 3: 3144 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 19010 us (max 30716), chain latency 4, telemetry frames 116, parameter changes 0
+2026-11-07 08:07:08  session 4: 3143 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4798 us (max 37270), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 5: 3146 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 15810 us (max 31798), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 6: 3145 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 22076 us (max 29784), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 7: 3146 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 19601 us (max 30367), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 8: 3144 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4704 us (max 30688), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 9: 3144 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 5488 us (max 32119), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 10: 3151 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 17458 us (max 28378), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 11: 3151 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 8953 us (max 29916), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 12: 3147 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 18013 us (max 29858), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 13: 3147 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 18791 us (max 31048), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 14: 3152 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 24754 us (max 31625), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 15: 3148 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 18150 us (max 28018), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 16: 3149 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3250 us (max 30748), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 17: 3148 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 22757 us (max 30296), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 18: 3148 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 20211 us (max 27489), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 19: 3150 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 7675 us (max 27481), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 20: 3146 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3293 us (max 34370), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 21: 3152 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 6091 us (max 27707), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 22: 3149 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 9346 us (max 30883), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 23: 3152 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 6578 us (max 31651), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 24: 3150 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 14278 us (max 27300), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 25: 117 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 4687 us (max 19680), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 26: 102 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 10642 us (max 12988), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 27: 85 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 7237 us (max 7237), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:08  session 28: 75 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 11400 us (max 11400), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 1: 3574 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4000 us (max 32414), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 2: 3574 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4919 us (max 33484), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 3: 3574 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4011 us (max 30716), chain latency 4, telemetry frames 116, parameter changes 0
+2026-11-07 08:07:18  session 4: 3574 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4944 us (max 37270), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 5: 3576 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3611 us (max 34325), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 6: 3575 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3943 us (max 29784), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 7: 3576 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4053 us (max 30382), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 8: 3575 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3052 us (max 30688), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 9: 3575 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3289 us (max 32119), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 10: 3582 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4753 us (max 32940), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 11: 3582 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4678 us (max 29916), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 12: 3578 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4775 us (max 29858), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 13: 3578 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4488 us (max 31048), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 14: 3583 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4833 us (max 34278), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 15: 3579 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3777 us (max 32216), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 16: 3579 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4543 us (max 30748), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 17: 3579 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 7231 us (max 30296), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 18: 3579 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4951 us (max 30348), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 19: 3581 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3571 us (max 27481), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 20: 3576 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4387 us (max 34370), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 21: 3582 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4366 us (max 27707), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 22: 3580 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4628 us (max 31711), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 23: 3583 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4716 us (max 31651), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 24: 3581 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4764 us (max 33681), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 25: 548 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3931 us (max 23782), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 26: 532 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3969 us (max 14396), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 27: 515 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3835 us (max 14093), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:18  session 28: 505 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3638 us (max 12493), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 1: 4005 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3660 us (max 33168), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 2: 4005 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3207 us (max 33484), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 3: 4005 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3947 us (max 30716), chain latency 4, telemetry frames 116, parameter changes 0
+2026-11-07 08:07:28  session 4: 4005 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3670 us (max 37270), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 5: 4008 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3959 us (max 34325), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 6: 4006 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4040 us (max 33281), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 7: 4007 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4015 us (max 37369), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 8: 4007 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4002 us (max 40696), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 9: 4007 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3582 us (max 32119), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 10: 4013 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3546 us (max 32940), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 11: 4013 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4040 us (max 31327), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 12: 4009 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3740 us (max 29858), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 13: 4009 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3210 us (max 32109), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 14: 4014 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3538 us (max 34278), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 15: 4010 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3894 us (max 32216), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 16: 4010 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3865 us (max 30748), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 17: 4010 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3057 us (max 30296), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 18: 4010 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3581 us (max 30800), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 19: 4012 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3429 us (max 29152), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 20: 4007 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2836 us (max 34370), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 21: 4013 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3461 us (max 38219), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 22: 4011 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2944 us (max 34646), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 23: 4014 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3726 us (max 31651), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 24: 4012 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3160 us (max 33681), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 25: 979 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3172 us (max 30972), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 26: 963 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3974 us (max 14396), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 27: 946 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3297 us (max 14093), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:28  session 28: 936 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 4041 us (max 14884), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 1: 4436 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4560 us (max 33168), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 2: 4436 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3999 us (max 33484), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 3: 4436 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3682 us (max 34505), chain latency 4, telemetry frames 116, parameter changes 0
+2026-11-07 08:07:38  session 4: 4436 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3732 us (max 37270), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 5: 4438 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3950 us (max 34325), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 6: 4437 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3816 us (max 33281), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 7: 4438 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4016 us (max 37369), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 8: 4437 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4605 us (max 40696), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 9: 4437 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2971 us (max 32119), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 10: 4443 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3714 us (max 32940), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 11: 4443 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3213 us (max 36238), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 12: 4439 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4061 us (max 29858), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 13: 4439 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3858 us (max 35201), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 14: 4444 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4087 us (max 34278), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 15: 4441 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3590 us (max 32216), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 16: 4441 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3090 us (max 30748), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 17: 4441 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3429 us (max 30296), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 18: 4441 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3822 us (max 33961), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 19: 4443 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3121 us (max 34396), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 20: 4438 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3543 us (max 34370), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 21: 4444 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3791 us (max 38219), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 22: 4442 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3611 us (max 35090), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 23: 4445 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3673 us (max 31651), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 24: 4443 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4061 us (max 33681), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 25: 1410 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 2786 us (max 30972), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 26: 1394 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3627 us (max 17203), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 27: 1377 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3920 us (max 18308), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:38  session 28: 1367 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3874 us (max 14884), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 1: 4867 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4259 us (max 39467), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 2: 4867 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4683 us (max 33484), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 3: 4867 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4742 us (max 34672), chain latency 4, telemetry frames 116, parameter changes 0
+2026-11-07 08:07:48  session 4: 4867 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3998 us (max 37270), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 5: 4869 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3668 us (max 34325), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 6: 4868 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4230 us (max 33281), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 7: 4869 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3893 us (max 37369), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 8: 4868 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4216 us (max 40696), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 9: 4868 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4084 us (max 32119), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 10: 4874 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 6710 us (max 36091), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 11: 4874 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4671 us (max 36238), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 12: 4870 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4741 us (max 35365), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 13: 4870 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4497 us (max 37884), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 14: 4875 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4774 us (max 34577), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 15: 4871 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4138 us (max 39789), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 16: 4871 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 6706 us (max 37461), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 17: 4871 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3762 us (max 30516), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 18: 4871 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4804 us (max 33961), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 19: 4874 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2854 us (max 34396), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 20: 4869 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3594 us (max 34370), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 21: 4874 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 7912 us (max 38219), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 22: 4873 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3814 us (max 35090), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 23: 4876 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3899 us (max 31651), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 24: 4873 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4335 us (max 38918), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 25: 1841 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 4227 us (max 30972), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 26: 1825 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3391 us (max 17203), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 27: 1808 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 4552 us (max 18308), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 28: 1798 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 4038 us (max 26511), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:48  session 29 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:07:48  session 29: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:07:48  session 29: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:07:48  session 29: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:07:48  session 29: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:07:48  session 29: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:07:48  session 29: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:07:48  session 29: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:07:48  session 29: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:07:48  session 29: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:07:48  session 29: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:07:48  session 29: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:07:48  session 29: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:07:48  session 29: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:07:48  session 29: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:07:48  session 29: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:07:48  session 29: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:07:48  session 30 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:07:48  session 30: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:07:48  session 29: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:07:48  session 29: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:07:48  session 30: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:07:48  session 30: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:07:48  session 30: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:07:48  session 30: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:07:49  session 30: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:07:49  session 30: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:07:49  session 30: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:07:49  session 30: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:07:49  session 30: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:07:49  session 31 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:07:49  session 31: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:07:49  session 31: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:07:49  session 30: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:07:49  session 31: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:07:49  session 30: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:07:49  session 31: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:07:49  session 30: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:07:49  session 31: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:07:49  session 30: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:07:49  session 31: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:07:49  session 30: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:07:49  session 31: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:07:49  session 30: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:07:49  session 31: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:07:49  session 30: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:07:49  session 30: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:07:49  session 31: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:07:49  session 31: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:07:50  session 32 opened by 10.0.0.2 (FxmeNetPlugin, Windows 11)
+2026-11-07 08:07:50  session 32: 44100 Hz, block 1024, 2 in / 2 out
+2026-11-07 08:07:50  session 32: slot 1 = FxmeFreeze (FxmeNet-aware)
+2026-11-07 08:07:50  session 32: slot 2 = FxmeTube (FxmeNet-aware)
+2026-11-07 08:07:50  session 32: slot 3 = FxmeEqualizer (FxmeNet-aware)
+2026-11-07 08:07:50  session 32: slot 4 = FxmeDeEsser (FxmeNet-aware)
+2026-11-07 08:07:50  session 32: slot 5 = FxmeConvolReverb (FxmeNet-aware)
+2026-11-07 08:07:50  session 32: slot 6 = FxmeOct (FxmeNet-aware)
+2026-11-07 08:07:50  session 32: slot 7 = FxmeCab (FxmeNet-aware)
+2026-11-07 08:07:50  session 32: slot 8 = FxmeTape (FxmeNet-aware)
+2026-11-07 08:07:50  session 32: slot 9 = FxmeStereoDelay (FxmeNet-aware)
+2026-11-07 08:07:50  session 31: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:07:50  session 31: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:07:50  session 31: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:07:50  session 31: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:07:50  session 31: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:07:50  session 31: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:07:50  session 31: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:07:50  session 31: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:07:51  session 32: slot 10 = FxmeLimiter (FxmeNet-aware)
+2026-11-07 08:07:51  session 32: slot 11 = FxmeReverb (FxmeNet-aware)
+2026-11-07 08:07:51  session 32: slot 12 = FxmeCompressor (FxmeNet-aware)
+2026-11-07 08:07:51  session 32: slot 13 = FxmeCrusher (FxmeNet-aware)
+2026-11-07 08:07:51  session 32: slot 14 = FxmeChorus (FxmeNet-aware)
+2026-11-07 08:07:51  session 32: slot 15 = FxmeFlanger (FxmeNet-aware)
+2026-11-07 08:07:51  session 32: slot 16 = FxmeTransient (FxmeNet-aware)
+2026-11-07 08:07:51  session 32: slot 17 = FxmePhaser (FxmeNet-aware)
+2026-11-07 08:07:58  session 1: 5315 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4635 us (max 42410), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 2: 5315 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4676 us (max 37064), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 3: 5315 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4599 us (max 34672), chain latency 4, telemetry frames 116, parameter changes 0
+2026-11-07 08:07:58  session 4: 5315 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4184 us (max 37270), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 5: 5318 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3757 us (max 37615), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 6: 5316 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3783 us (max 35736), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 7: 5317 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4529 us (max 50633), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 8: 5316 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4272 us (max 40696), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 9: 5316 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4422 us (max 42264), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 10: 5323 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2981 us (max 36091), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 11: 5323 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3671 us (max 38379), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 12: 5319 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3374 us (max 35834), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 13: 5319 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3318 us (max 37884), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 14: 5324 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3585 us (max 42598), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 15: 5320 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3406 us (max 41179), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 16: 5320 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3602 us (max 37461), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 17: 5320 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3222 us (max 43231), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 18: 5320 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3740 us (max 34752), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 19: 5322 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3947 us (max 38800), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 20: 5317 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2876 us (max 37080), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 21: 5323 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3707 us (max 38219), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 22: 5321 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3250 us (max 35090), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 23: 5324 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3894 us (max 37377), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 24: 5322 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3729 us (max 38918), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 25: 2289 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 4634 us (max 34212), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 26: 2273 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 6855 us (max 26102), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 27: 2256 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3512 us (max 21326), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 28: 2246 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 6086 us (max 29605), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 29: 445 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3895 us (max 20841), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 30: 420 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3874 us (max 17680), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 31: 395 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3957 us (max 19009), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:07:58  session 32: 370 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3933 us (max 18155), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 1: 5746 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3454 us (max 44235), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 2: 5746 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3695 us (max 38414), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 3: 5746 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3886 us (max 34672), chain latency 4, telemetry frames 116, parameter changes 0
+2026-11-07 08:08:08  session 4: 5746 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2782 us (max 39258), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 5: 5748 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2677 us (max 37615), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 6: 5747 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3068 us (max 40320), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 7: 5748 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3025 us (max 50633), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 8: 5747 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3450 us (max 40696), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 9: 5747 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3096 us (max 42264), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 10: 5753 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3061 us (max 36091), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 11: 5753 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3566 us (max 38379), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 12: 5749 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3081 us (max 39085), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 13: 5749 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2771 us (max 37884), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 14: 5754 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2843 us (max 46428), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 15: 5750 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3886 us (max 41179), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 16: 5750 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2977 us (max 37461), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 17: 5750 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3731 us (max 43231), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 18: 5750 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2815 us (max 36726), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 19: 5753 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3790 us (max 39850), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 20: 5748 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3950 us (max 37080), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 21: 5754 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3887 us (max 38219), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 22: 5752 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4177 us (max 35090), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 23: 5755 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3789 us (max 37377), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 24: 5753 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4098 us (max 48344), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 25: 2720 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3235 us (max 34212), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 26: 2704 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3063 us (max 26102), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 27: 2687 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3137 us (max 21326), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 28: 2677 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 4698 us (max 29605), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 29: 876 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 4005 us (max 20841), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 30: 851 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 2779 us (max 30090), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 31: 826 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 6441 us (max 19009), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:08  session 32: 801 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3543 us (max 19903), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 1: 6177 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2982 us (max 44235), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 2: 6177 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3421 us (max 38598), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 3: 6177 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3353 us (max 34672), chain latency 4, telemetry frames 116, parameter changes 0
+2026-11-07 08:08:18  session 4: 6177 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3142 us (max 39258), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 5: 6179 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3608 us (max 37615), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 6: 6178 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3221 us (max 40320), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 7: 6179 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3279 us (max 50633), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 8: 6178 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3603 us (max 40696), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 9: 6178 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3269 us (max 44385), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 10: 6184 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3940 us (max 36091), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 11: 6184 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2981 us (max 38379), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 12: 6180 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3497 us (max 43677), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 13: 6180 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3504 us (max 45318), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 14: 6185 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3894 us (max 46428), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 15: 6181 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3910 us (max 41179), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 16: 6181 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3376 us (max 37461), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 17: 6181 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3887 us (max 43231), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 18: 6181 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4915 us (max 36726), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 19: 6183 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2985 us (max 39850), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 20: 6178 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3555 us (max 37080), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 21: 6184 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3458 us (max 38219), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 22: 6182 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3220 us (max 43910), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 23: 6185 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3717 us (max 39146), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 24: 6183 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3461 us (max 48344), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 25: 3150 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3445 us (max 36762), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 26: 3134 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3608 us (max 26953), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 27: 3118 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 2583 us (max 21326), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 28: 3108 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3769 us (max 29605), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 29: 1306 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 4238 us (max 21812), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 30: 1281 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 2832 us (max 30090), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 31: 1256 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3259 us (max 19363), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:18  session 32: 1232 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3186 us (max 30227), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 1: 6607 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4762 us (max 44235), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 2: 6607 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3893 us (max 38598), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 3: 6607 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4640 us (max 39045), chain latency 4, telemetry frames 116, parameter changes 0
+2026-11-07 08:08:28  session 4: 6607 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4012 us (max 39258), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 5: 6610 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3983 us (max 37615), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 6: 6609 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3079 us (max 40320), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 7: 6610 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3139 us (max 50633), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 8: 6609 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2850 us (max 41825), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 9: 6609 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2941 us (max 44385), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 10: 6615 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3050 us (max 36091), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 11: 6615 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3224 us (max 43102), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 12: 6611 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3738 us (max 43677), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 13: 6611 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4038 us (max 45318), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 14: 6616 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2980 us (max 46428), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 15: 6612 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3051 us (max 41179), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 16: 6612 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3188 us (max 40085), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 17: 6612 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3346 us (max 43231), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 18: 6612 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3357 us (max 39224), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 19: 6614 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3510 us (max 39850), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 20: 6609 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3436 us (max 37080), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 21: 6615 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3758 us (max 38219), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 22: 6613 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4187 us (max 43910), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 23: 6616 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3843 us (max 39146), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 24: 6614 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3547 us (max 48344), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 25: 3581 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3681 us (max 36762), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 26: 3565 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3857 us (max 26953), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 27: 3548 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3674 us (max 21326), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 28: 3538 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3073 us (max 29605), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 29: 1737 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3349 us (max 21812), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 30: 1712 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3791 us (max 30090), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 31: 1687 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3942 us (max 20064), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:28  session 32: 1662 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 2753 us (max 30227), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 1: 7038 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3780 us (max 48163), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 2: 7038 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3488 us (max 38598), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 3: 7038 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3911 us (max 39045), chain latency 4, telemetry frames 116, parameter changes 0
+2026-11-07 08:08:38  session 4: 7038 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3157 us (max 39258), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 5: 7040 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3909 us (max 37615), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 6: 7039 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3637 us (max 41867), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 7: 7040 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3781 us (max 50633), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 8: 7039 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3035 us (max 41825), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 9: 7039 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2788 us (max 44385), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 10: 7046 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3819 us (max 36202), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 11: 7046 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4600 us (max 43102), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 12: 7042 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4584 us (max 43677), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 13: 7041 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3802 us (max 45318), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 14: 7047 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4468 us (max 46428), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 15: 7043 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4490 us (max 41179), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 16: 7043 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4526 us (max 40085), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 17: 7043 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4643 us (max 43231), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 18: 7043 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3361 us (max 39224), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 19: 7045 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4204 us (max 39850), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 20: 7040 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3702 us (max 37080), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 21: 7046 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4623 us (max 42204), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 22: 7044 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4101 us (max 43910), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 23: 7047 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4091 us (max 39146), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 24: 7045 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4751 us (max 48344), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 25: 4012 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3930 us (max 36762), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 26: 3996 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3911 us (max 26953), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 27: 3979 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3247 us (max 24836), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 28: 3969 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3598 us (max 29605), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 29: 2168 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3578 us (max 21812), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 30: 2143 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3709 us (max 30090), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 31: 2118 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3252 us (max 20573), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:38  session 32: 2093 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 4070 us (max 30227), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 1: 7469 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4052 us (max 48163), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 2: 7470 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2738 us (max 38598), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 3: 7469 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3907 us (max 41191), chain latency 4, telemetry frames 116, parameter changes 0
+2026-11-07 08:08:48  session 4: 7469 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2956 us (max 39258), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 5: 7471 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3817 us (max 37615), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 6: 7470 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3798 us (max 41867), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 7: 7472 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3122 us (max 50633), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 8: 7470 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4375 us (max 41825), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 9: 7470 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2780 us (max 44385), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 10: 7476 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3583 us (max 44127), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 11: 7476 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3983 us (max 43102), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 12: 7472 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3763 us (max 43677), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 13: 7472 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3875 us (max 45318), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 14: 7477 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2791 us (max 46428), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 15: 7473 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3039 us (max 41179), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 16: 7473 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3152 us (max 45406), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 17: 7473 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3272 us (max 43231), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 18: 7473 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 4621 us (max 39224), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 19: 7475 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3603 us (max 39850), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 20: 7470 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3177 us (max 37080), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 21: 7476 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3118 us (max 42204), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 22: 7474 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3636 us (max 43910), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 23: 7477 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3133 us (max 39146), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 24: 7475 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 3088 us (max 48344), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 25: 4443 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 2958 us (max 37172), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 26: 4427 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3905 us (max 26953), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 27: 4410 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 2820 us (max 24836), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 28: 4400 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 4600 us (max 29605), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 29: 2598 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3864 us (max 21812), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 30: 2574 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3184 us (max 30090), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 31: 2549 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 3806 us (max 20573), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:48  session 32: 2524 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 2951 us (max 30227), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 1: 7900 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2392 us (max 48163), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 2: 7900 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2604 us (max 40648), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 3: 7900 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2007 us (max 45970), chain latency 4, telemetry frames 116, parameter changes 0
+2026-11-07 08:08:58  session 4: 7900 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2513 us (max 39258), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 5: 7902 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2391 us (max 37615), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 6: 7901 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2599 us (max 41867), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 7: 7902 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2581 us (max 50633), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 8: 7901 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2463 us (max 41825), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 9: 7901 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2142 us (max 44385), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 10: 7907 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2641 us (max 44127), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 11: 7907 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2149 us (max 43102), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 12: 7903 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2591 us (max 43677), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 13: 7903 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2416 us (max 45318), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 14: 7908 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2644 us (max 46428), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 15: 7904 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2271 us (max 41179), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 16: 7904 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2469 us (max 45406), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 17: 7904 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2424 us (max 43231), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 18: 7904 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2285 us (max 39224), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 19: 7906 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 1944 us (max 39850), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 20: 7901 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2353 us (max 37080), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 21: 7907 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2504 us (max 42204), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 22: 7905 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2587 us (max 43910), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 23: 7908 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2505 us (max 39146), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 24: 7906 blocks, lost 0, from cache 0, stale 0, resets 1, queue full 0, process 2633 us (max 48344), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 25: 4873 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 2706 us (max 37172), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 26: 4857 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 2635 us (max 26953), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 27: 4841 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 2081 us (max 24836), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 28: 4831 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 2649 us (max 29605), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 29: 3029 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 1916 us (max 21812), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 30: 3004 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 2030 us (max 30090), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 31: 2980 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 2630 us (max 21407), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:58  session 32: 2955 blocks, lost 0, from cache 0, stale 0, resets 0, queue full 0, process 2137 us (max 30227), chain latency 4, telemetry frames 0, parameter changes 0
+2026-11-07 08:08:59  session 32: bye
+2026-11-07 08:08:59  session 32 closed
+2026-11-07 08:08:59  session 31: bye
+2026-11-07 08:08:59  session 31 closed
+2026-11-07 08:08:59  session 30: bye
+2026-11-07 08:08:59  session 30 closed
+2026-11-07 08:08:59  session 29: bye
+2026-11-07 08:08:59  session 29 closed
+2026-11-07 08:08:59  session 28: bye
+2026-11-07 08:08:59  session 28 closed
+2026-11-07 08:08:59  session 27: bye
+2026-11-07 08:08:59  session 27 closed
+2026-11-07 08:08:59  session 26: bye
+2026-11-07 08:08:59  session 26 closed
+2026-11-07 08:08:59  session 25: bye
+2026-11-07 08:08:59  session 25 closed
+2026-11-07 08:08:59  session 3: bye
+2026-11-07 08:08:59  session 3 closed
+2026-11-07 08:09:00  session 1: bye
+2026-11-07 08:09:00  session 1 closed
+2026-11-07 08:09:00  session 2: bye
+2026-11-07 08:09:00  session 2 closed
+2026-11-07 08:09:00  session 4: bye
+2026-11-07 08:09:00  session 4 closed
+2026-11-07 08:09:00  session 6: bye
+2026-11-07 08:09:00  session 6 closed
+2026-11-07 08:09:00  session 7: bye
+2026-11-07 08:09:00  session 7 closed
+2026-11-07 08:09:00  session 9: bye
+2026-11-07 08:09:00  session 9 closed
+2026-11-07 08:09:00  session 8: bye
+2026-11-07 08:09:00  session 8 closed
+2026-11-07 08:09:00  session 5: bye
+2026-11-07 08:09:00  session 5 closed
+2026-11-07 08:09:00  session 13: bye
+2026-11-07 08:09:00  session 13 closed
+2026-11-07 08:09:00  session 12: bye
+2026-11-07 08:09:00  session 12 closed
+2026-11-07 08:09:01  session 14: bye
+2026-11-07 08:09:01  session 14 closed
+2026-11-07 08:09:01  session 10: bye
+2026-11-07 08:09:01  session 10 closed
+2026-11-07 08:09:01  session 11: bye
+2026-11-07 08:09:01  session 11 closed
+2026-11-07 08:09:01  session 17: bye
+2026-11-07 08:09:01  session 17 closed
+2026-11-07 08:09:01  session 18: bye
+2026-11-07 08:09:01  session 18 closed
+2026-11-07 08:09:01  session 15: bye
+2026-11-07 08:09:01  session 15 closed
+2026-11-07 08:09:01  session 16: bye
+2026-11-07 08:09:01  session 16 closed
+2026-11-07 08:09:01  session 24: bye
+2026-11-07 08:09:01  session 24 closed
+2026-11-07 08:09:01  session 21: bye
+2026-11-07 08:09:01  session 21 closed
+2026-11-07 08:09:01  session 22: bye
+2026-11-07 08:09:01  session 22 closed
+2026-11-07 08:09:02  session 23: bye
+2026-11-07 08:09:02  session 23 closed
+2026-11-07 08:09:02  session 19: bye
+2026-11-07 08:09:02  session 19 closed
+2026-11-07 08:09:07  session 20: bye
+2026-11-07 08:09:07  session 20 closed
