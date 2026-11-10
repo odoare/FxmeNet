@@ -139,7 +139,8 @@ bool Server::start()
     log ("fxmenet-server " FXMENET_VERSION " \"" + config.name + "\" on "
          + juce::SystemStats::getOperatingSystemName());
 
-    catalog.scan (config.pluginPaths, config.useDefaultPaths, config.rescan);
+    catalog.configure (config.pluginPaths, ! config.useDefaultPaths);
+    catalog.scan (config.rescan);
 
     if (! listener.createListener (config.controlPort))
     {
@@ -188,6 +189,7 @@ bool Server::start()
 void Server::stop()
 {
     stopTimer();
+    monitors.clear();
 
     if (acceptThread != nullptr)
     {
@@ -223,6 +225,18 @@ void Server::onHello (std::shared_ptr<ControlConnection> connection, const Frame
 {
     const auto hello = control::Hello::fromVar (control::fromPayload (helloFrame.payload));
     const auto peer = connection->getPeerHost();
+
+    if (hello.role == control::roleMonitor)
+    {
+        const int id = nextMonitorId++;
+        const bool admin = allowsAdmin (peer);
+        auto monitor = std::make_shared<Monitor> (*this, id, connection, admin);
+        monitors[id] = monitor;
+        monitor->start (helloFrame.requestId);
+        log ("monitor " + juce::String (id) + " connected from " + peer + " (" + hello.clientName + ", "
+             + hello.os + (admin ? ", may change the plugin folders)" : ", read only)"));
+        return;
+    }
 
     if (! hello.versions.contains (1))
     {
@@ -262,6 +276,7 @@ void Server::onHello (std::shared_ptr<ControlConnection> connection, const Frame
         const std::lock_guard<std::mutex> lock (sessionsLock);
         sessions[id] = session;
     }
+    session->setClient (peer, hello.clientName, hello.os);
     session->attach (connection);
     session->sendWelcome (helloFrame.requestId, false);
     log ("session " + juce::String ((int) id) + " opened by " + peer + " (" + hello.clientName
@@ -283,8 +298,28 @@ void Server::removeSession (std::uint32_t sessionId)
     // message thread, out of the lock (its destructor stops threads).
 }
 
+void Server::removeMonitor (int monitorId)
+{
+    const auto it = monitors.find (monitorId);
+    if (it == monitors.end())
+        return;
+    // The caller may be that monitor: it is destroyed once its call returns
+    // (the caller holds it), not here.
+    monitors.erase (it);
+    log ("monitor " + juce::String (monitorId) + " disconnected");
+}
+
+bool Server::allowsAdmin (const juce::String& host) const
+{
+    if (config.remoteAdmin)
+        return true;
+    return host.startsWith ("127.") || host == "::1" || host.startsWith ("::ffff:127.")
+        || host.equalsIgnoreCase ("localhost");
+}
+
 void Server::route (const std::uint8_t* data, std::size_t size, const juce::String& host, int port)
 {
+    udpBytesIn.fetch_add (size, std::memory_order_relaxed);
     wire::ByteReader r (data, size);
     wire::DatagramHeader h;
     if (size < wire::headerSize || ! wire::readHeader (r, h))
@@ -312,14 +347,25 @@ void Server::timerCallback()
     for (auto id : expired)
         removeSession (id);
 
+    std::vector<std::shared_ptr<Session>> current;
+    {
+        const std::lock_guard<std::mutex> lock (sessionsLock);
+        for (auto& [id, session] : sessions)
+            current.push_back (session);
+    }
+
+    // Once a second: the load, the traffic and each session's figures.
+    load = systemLoad.sample();
+    const auto in = udpBytesIn.load();
+    if (sampledAt != 0 && now != sampledAt)
+        udpInPerSecond = (double) (in - sampledUdpIn) * 1000.0 / (double) (now - sampledAt);
+    sampledUdpIn = in;
+    sampledAt = now;
+    for (auto& s : current)
+        s->sampleSecond();
+
     if (++statsTick % 10 == 0)
     {
-        std::vector<std::shared_ptr<Session>> current;
-        {
-            const std::lock_guard<std::mutex> lock (sessionsLock);
-            for (auto& [id, session] : sessions)
-                current.push_back (session);
-        }
         for (auto& s : current)
         {
             const auto line = s->describeActivity();
@@ -327,6 +373,115 @@ void Server::timerCallback()
                 log (line);
         }
     }
+}
+
+//==============================================================================
+juce::var Server::describeStatus (std::uint64_t logSince, int knownRevision)
+{
+    const auto folders = [] (const juce::StringArray& list)
+    {
+        juce::Array<juce::var> out;
+        for (auto& p : list)
+        {
+            auto* f = new juce::DynamicObject();
+            f->setProperty ("path", p);
+            f->setProperty ("exists", juce::File::isAbsolutePath (p) && juce::File (p).isDirectory());
+            out.add (f);
+        }
+        return out;
+    };
+
+    auto* status = new juce::DynamicObject();
+
+    auto* srv = new juce::DynamicObject();
+    srv->setProperty ("name", config.name);
+    srv->setProperty ("version", FXMENET_VERSION);
+    srv->setProperty ("os", juce::SystemStats::getOperatingSystemName());
+    srv->setProperty ("host", juce::SystemStats::getComputerName());
+    srv->setProperty ("controlPort", config.controlPort);
+    srv->setProperty ("udpPort", config.udpPort);
+    srv->setProperty ("discovery", discoveryThread != nullptr);
+    srv->setProperty ("seconds", (juce::int64) ((juce::Time::currentTimeMillis() - startedAt) / 1000));
+    srv->setProperty ("monitors", (int) monitors.size());
+    status->setProperty ("server", srv);
+
+    auto* cpu = new juce::DynamicObject();
+    cpu->setProperty ("process", load.processPercent);
+    cpu->setProperty ("total", load.totalPercent);
+    juce::Array<juce::var> cores;
+    for (auto c : load.corePercent)
+        cores.add (c);
+    cpu->setProperty ("cores", cores);
+    cpu->setProperty ("numCores", load.numCores);
+    cpu->setProperty ("resident", (juce::int64) load.residentBytes);
+    status->setProperty ("load", cpu);
+
+    std::vector<std::shared_ptr<Session>> current;
+    {
+        const std::lock_guard<std::mutex> lock (sessionsLock);
+        for (auto& [id, session] : sessions)
+            current.push_back (session);
+    }
+    double out = 0.0;
+    juce::Array<juce::var> list;
+    for (auto& s : current)
+    {
+        auto v = s->describeStatus();
+        out += (double) v["outBytesPerSecond"];
+        list.add (v);
+    }
+    auto* net = new juce::DynamicObject();
+    net->setProperty ("inBytesPerSecond", udpInPerSecond);
+    net->setProperty ("outBytesPerSecond", out);
+    status->setProperty ("network", net);
+    status->setProperty ("sessions", list);
+
+    const auto progress = catalog.getProgress();
+    const auto& paths = catalog.getPaths();
+    auto* cat = new juce::DynamicObject();
+    cat->setProperty ("revision", catalog.getRevision());
+    cat->setProperty ("count", catalog.getAll().size());
+    cat->setProperty ("scanning", progress.scanning);
+    cat->setProperty ("done", progress.done);
+    cat->setProperty ("total", progress.total);
+    cat->setProperty ("file", progress.file);
+    cat->setProperty ("summary", progress.summary);
+    cat->setProperty ("useDefaultPaths", paths.useDefaults);
+    cat->setProperty ("defaultPaths", folders (catalog.getDefaultPaths()));
+    cat->setProperty ("savedPaths", folders (paths.saved));
+    cat->setProperty ("commandLinePaths", folders (paths.commandLine));
+    if (knownRevision != catalog.getRevision())
+    {
+        juce::Array<juce::var> plugins;
+        for (auto& e : catalog.getAll())
+        {
+            const auto& d = e.description;
+            auto* p = new juce::DynamicObject();
+            p->setProperty ("name", d.name);
+            p->setProperty ("vendor", d.manufacturerName);
+            p->setProperty ("version", d.version);
+            p->setProperty ("category", d.category);
+            p->setProperty ("inputs", d.numInputChannels);
+            p->setProperty ("outputs", d.numOutputChannels);
+            p->setProperty ("fxmenet", e.fxmenetAbi > 0);
+            p->setProperty ("file", d.fileOrIdentifier);
+            plugins.add (p);
+        }
+        cat->setProperty ("plugins", plugins);
+    }
+    status->setProperty ("catalog", cat);
+
+    std::uint64_t next = 0;
+    const auto lines = LogRing::instance().since (logSince, 500, next);
+    juce::Array<juce::var> logLines;
+    for (auto& l : lines)
+        logLines.add (l);
+    auto* lg = new juce::DynamicObject();
+    lg->setProperty ("next", (juce::int64) next);
+    lg->setProperty ("lines", logLines);
+    status->setProperty ("log", lg);
+
+    return status;
 }
 
 } // namespace fxmenet::server

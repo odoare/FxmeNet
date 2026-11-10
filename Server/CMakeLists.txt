@@ -13,6 +13,8 @@ target_sources(FxmeNetServer PRIVATE
     Source/AudioWorker.cpp
     Source/Session.cpp
     Source/Server.cpp
+    Source/Monitor.cpp
+    Source/SystemLoad.cpp
 )
 
 target_include_directories(FxmeNetServer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Source)
@@ -25,6 +27,11 @@ target_compile_definitions(FxmeNetServer
         JUCE_STRICT_REFCOUNTEDPOINTER=1
         FXMENET_VERSION="${PROJECT_VERSION}"
 )
+
+# SystemLoad: the process's memory (GetProcessMemoryInfo).
+if(WIN32)
+    target_link_libraries(FxmeNetServer PRIVATE psapi)
+endif()
 
 target_link_libraries(FxmeNetServer
     PRIVATE

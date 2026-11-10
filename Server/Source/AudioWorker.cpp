@@ -383,7 +383,10 @@ void AudioWorker::send (const std::vector<std::uint8_t>& body)
 
     const bool ok = fragmenter.split (h, body.data(), body.size(), [this, peer] (const std::uint8_t* d, std::size_t size)
     {
-        return peer->send (socket, d, size);
+        if (! peer->send (socket, d, size))
+            return false;
+        stats.bytesSent.fetch_add (size, std::memory_order_relaxed);
+        return true;
     });
     if (! ok)
         stats.sendErrors.fetch_add (1);

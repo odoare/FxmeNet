@@ -131,7 +131,8 @@ juce::String Session::describeActivity()
         return {};
     lastProcessed = processed;
 
-    const auto window = worker.takeWindow();
+    const auto window = tenSeconds;
+    tenSeconds = {};
     const auto count = [] (const std::atomic<std::uint64_t>& a) { return juce::String ((juce::int64) a.load()); };
     const auto micros = [] (std::uint32_t us) { return juce::String ((juce::int64) us) + " us"; };
 
@@ -154,6 +155,105 @@ juce::String Session::describeActivity()
          + " | chain latency " + juce::String (chain.getLatency())
          + ", telemetry frames " + juce::String ((juce::int64) telemetrySent)
          + ", parameter changes " + juce::String ((juce::int64) paramChangesSent);
+}
+
+void Session::setClient (const juce::String& peerHost, const juce::String& name, const juce::String& operatingSystem)
+{
+    clientHost = peerHost;
+    clientName = name;
+    clientOs = operatingSystem;
+}
+
+void Session::sampleSecond()
+{
+    const auto& s = worker.getStatistics();
+    const auto now = juce::Time::getMillisecondCounter();
+    const auto blocks = s.processed.load();
+    const auto in = bytesReceived.load();
+    const auto out = s.bytesSent.load() + telemetryBytes.load();
+    const auto window = worker.takeWindow();
+
+    if (sampledAt != 0 && now != sampledAt)
+    {
+        const double seconds = (now - sampledAt) / 1000.0;
+        second.blocks = (double) (blocks - sampledBlocks) / seconds;
+        second.inBytes = (double) (in - sampledIn) / seconds;
+        second.outBytes = (double) (out - sampledOut) / seconds;
+    }
+    second.maxProcessMicros = window.maxProcessMicros;
+    second.maxTurnaroundMicros = window.maxTurnaroundMicros;
+    tenSeconds.maxProcessMicros = std::max (tenSeconds.maxProcessMicros, window.maxProcessMicros);
+    tenSeconds.maxTurnaroundMicros = std::max (tenSeconds.maxTurnaroundMicros, window.maxTurnaroundMicros);
+
+    sampledAt = now;
+    sampledBlocks = blocks;
+    sampledIn = in;
+    sampledOut = out;
+}
+
+juce::var Session::describeStatus() const
+{
+    const auto& s = worker.getStatistics();
+    const auto count = [] (const std::atomic<std::uint64_t>& a) { return juce::var ((juce::int64) a.load()); };
+
+    auto* o = new juce::DynamicObject();
+    o->setProperty ("id", (int) sessionId);
+    o->setProperty ("peer", clientHost);
+    o->setProperty ("client", clientName);
+    o->setProperty ("os", clientOs);
+    o->setProperty ("orphan", isOrphan());
+    o->setProperty ("seconds", (juce::int64) ((juce::Time::currentTimeMillis() - openedAt) / 1000));
+    o->setProperty ("configured", configured);
+    if (configured)
+    {
+        o->setProperty ("sampleRate", config.sampleRate);
+        o->setProperty ("blockSize", config.blockSize);
+        o->setProperty ("inputs", config.numInputs);
+        o->setProperty ("outputs", config.numOutputs);
+        o->setProperty ("realtime", worker.isRealtime());
+    }
+    o->setProperty ("chainLatency", chain.getLatency());
+
+    juce::Array<juce::var> slots;
+    chain.forEachSlot ([&slots] (const Chain::Slot& slot)
+    {
+        auto* x = new juce::DynamicObject();
+        x->setProperty ("id", (int) slot.slotId);
+        if (slot.instance != nullptr)
+        {
+            const auto d = slot.instance->getPluginDescription();
+            x->setProperty ("name", d.name);
+            x->setProperty ("vendor", d.manufacturerName);
+            x->setProperty ("version", d.version);
+            x->setProperty ("latency", slot.instance->getLatencySamples());
+        }
+        x->setProperty ("bypassed", slot.bypassed.load());
+        x->setProperty ("fxmenet", slot.net != nullptr);
+        slots.add (x);
+    });
+    o->setProperty ("slots", slots);
+
+    auto* c = new juce::DynamicObject();
+    c->setProperty ("processed", count (s.processed));
+    c->setProperty ("lost", count (s.lostBlocks));
+    c->setProperty ("stale", count (s.stale));
+    c->setProperty ("fromCache", count (s.fromCache));
+    c->setProperty ("queueFull", count (s.queueFull));
+    c->setProperty ("malformed", count (s.malformed));
+    c->setProperty ("sendErrors", count (s.sendErrors));
+    c->setProperty ("resets", count (s.resets));
+    c->setProperty ("overOneBlock", count (s.overOneBlock));
+    c->setProperty ("overTwoBlocks", count (s.overTwoBlocks));
+    o->setProperty ("counters", c);
+
+    o->setProperty ("processMicros", (int) s.lastProcessMicros.load());
+    o->setProperty ("processMaxMicros", (int) second.maxProcessMicros);      // the last second
+    o->setProperty ("processPeakMicros", (int) s.maxProcessMicros.load());   // since it started
+    o->setProperty ("turnaroundMaxMicros", (int) second.maxTurnaroundMicros);
+    o->setProperty ("blocksPerSecond", second.blocks);
+    o->setProperty ("inBytesPerSecond", second.inBytes);
+    o->setProperty ("outBytesPerSecond", second.outBytes);
+    return o;
 }
 
 //==============================================================================
@@ -196,7 +296,10 @@ void Session::pumpTelemetry()
         telemetryFragmenter.split (h, telemetryBody.data(), telemetryBody.size(),
                                    [this, peer] (const std::uint8_t* d, std::size_t size)
                                    {
-                                       return peer->send (udp, d, size);
+                                       if (! peer->send (udp, d, size))
+                                           return false;
+                                       telemetryBytes += size;
+                                       return true;
                                    });
         ++telemetrySent;
     });
@@ -225,6 +328,8 @@ void Session::flushParamChanges()
 void Session::onDatagram (const std::uint8_t* data, std::size_t size,
                           const juce::String& senderHost, int senderPort)
 {
+    bytesReceived.fetch_add (size, std::memory_order_relaxed);
+
     const std::lock_guard<std::mutex> lock (udpLock);
     if (reassembler == nullptr)
         return;   // not configured yet
@@ -306,6 +411,9 @@ void Session::handleFrame (const Frame& f, int gen)
         case Type::slotReady:
         case Type::paramChanged:
         case Type::state:
+        case Type::monitorStatus:
+        case Type::monitorPaths:
+        case Type::monitorRescan:
         default:
             fail (f, ErrorMessage::unsupported, "unexpected message type " + juce::String ((int) f.type));
             break;

@@ -89,7 +89,7 @@ int PluginCatalog::scanOnePlugin (const juce::String& file)
     return 0;
 }
 
-bool PluginCatalog::scanInChild (const juce::String& file, juce::Array<Entry>& results) const
+bool PluginCatalog::scanInChild (const juce::String& file, juce::Array<Entry>& results, const std::atomic<bool>& abort)
 {
     const auto exe = juce::File::getSpecialLocation (juce::File::currentExecutableFile).getFullPathName();
     juce::ChildProcess child;
@@ -106,13 +106,16 @@ bool PluginCatalog::scanInChild (const juce::String& file, juce::Array<Entry>& r
     // the output: the child exiting, or killed.
     juce::String output;
     std::thread reader ([&child, &output] { output = child.readAllProcessOutput(); });
-    const bool finished = child.waitForProcessToFinish (childTimeoutMs);
+    bool finished = false;
+    for (int waited = 0; ! finished && waited < childTimeoutMs && ! abort; waited += 250)
+        finished = child.waitForProcessToFinish (250);
     if (! finished)
         child.kill();
     reader.join();
     if (! finished)
     {
-        log ("  skipped " + file + ": hung for " + juce::String (childTimeoutMs / 1000) + " s while loaded");
+        if (! abort)
+            log ("  skipped " + file + ": hung for " + juce::String (childTimeoutMs / 1000) + " s while loaded");
         return false;
     }
 
@@ -140,9 +143,180 @@ bool PluginCatalog::scanInChild (const juce::String& file, juce::Array<Entry>& r
 }
 
 //==============================================================================
-int PluginCatalog::scan (const juce::StringArray& extraPaths, bool useDefaultPaths, bool ignoreCache)
+/** A rescan asked by fxmenet-top. */
+class PluginCatalog::ScanThread : public juce::Thread
 {
-    entries.clear();
+public:
+    ScanThread (PluginCatalog& c, juce::FileSearchPath p, bool full)
+        : juce::Thread ("FxmeNet plugin scan"), catalog (c), path (std::move (p)), ignoreCache (full) {}
+
+    ~ScanThread() override
+    {
+        abort = true;
+        stopThread (5000);
+    }
+
+    void run() override
+    {
+        auto outcome = catalog.scanFiles (path, ignoreCache, abort);
+        if (abort)
+            return;
+        juce::WeakReference<PluginCatalog> weak (&catalog);
+        juce::MessageManager::callAsync ([weak, outcome = std::move (outcome)]() mutable
+        {
+            if (auto* c = weak.get())
+                c->finishRescan (std::move (outcome));
+        });
+    }
+
+private:
+    PluginCatalog& catalog;
+    const juce::FileSearchPath path;
+    const bool ignoreCache;
+    std::atomic<bool> abort { false };
+};
+
+//==============================================================================
+PluginCatalog::~PluginCatalog()
+{
+    scanThread.reset();   // stops a scan (and its child) before the rest goes
+}
+
+juce::File PluginCatalog::getSettingsFile()
+{
+    return getCacheFile().getSiblingFile ("fxmenet-server-settings.json");
+}
+
+void PluginCatalog::configure (const juce::StringArray& commandLinePaths, bool noDefaultPaths)
+{
+    const auto settings = juce::JSON::parse (getSettingsFile());
+    paths.saved = control::json::toStringArray (settings["pluginPaths"]);
+    paths.useDefaults = settings.hasProperty ("useDefaultPaths") ? (bool) settings["useDefaultPaths"] : true;
+    if (noDefaultPaths)
+        paths.useDefaults = false;   // this run only: not saved
+
+    paths.commandLine.clear();
+    for (auto& p : commandLinePaths)
+        paths.commandLine.add (juce::File::getCurrentWorkingDirectory().getChildFile (p).getFullPathName());
+}
+
+void PluginCatalog::saveSettings() const
+{
+    auto* o = new juce::DynamicObject();
+    o->setProperty ("pluginPaths", control::json::stringArray (paths.saved));
+    o->setProperty ("useDefaultPaths", paths.useDefaults);
+    const auto file = getSettingsFile();
+    file.getParentDirectory().createDirectory();
+    if (! file.replaceWithText (juce::JSON::toString (juce::var (o))))
+        log ("warning: cannot write the settings " + file.getFullPathName());
+}
+
+bool PluginCatalog::setPaths (const juce::StringArray& saved, bool useDefaults, juce::String& error)
+{
+    juce::StringArray clean;
+    for (auto p : saved)
+    {
+        p = p.trim();
+        if (p.isEmpty())
+            continue;
+        if (! juce::File::isAbsolutePath (p))
+        {
+            error = "not an absolute path: " + p;
+            return false;
+        }
+        clean.addIfNotAlreadyThere (juce::File (p).getFullPathName());
+    }
+
+    paths.saved = clean;
+    paths.useDefaults = useDefaults;
+    saveSettings();
+    log ("plugin paths: " + (useDefaults ? juce::String ("default folders, ") : juce::String ("no default folders, "))
+         + (clean.isEmpty() ? juce::String ("no saved folder") : clean.joinIntoString (", ")));
+    rescan (false);
+    return true;
+}
+
+juce::StringArray PluginCatalog::getDefaultPaths() const
+{
+    juce::StringArray out;
+    for (auto* format : formats.getFormats())
+    {
+        const auto path = format->getDefaultLocationsToSearch();
+        for (int i = 0; i < path.getNumPaths(); ++i)
+            out.addIfNotAlreadyThere (path.getRawString (i));
+    }
+    return out;
+}
+
+juce::FileSearchPath PluginCatalog::searchPath() const
+{
+    juce::FileSearchPath path;
+    if (paths.useDefaults)
+        for (auto& p : getDefaultPaths())
+            path.add (juce::File (p));
+    for (auto& p : paths.saved)
+        path.addIfNotAlreadyThere (juce::File (p));
+    for (auto& p : paths.commandLine)
+        path.addIfNotAlreadyThere (juce::File (p));
+    return path;
+}
+
+PluginCatalog::Progress PluginCatalog::getProgress() const
+{
+    const std::lock_guard<std::mutex> lock (progressLock);
+    return progress;
+}
+
+//==============================================================================
+int PluginCatalog::scan (bool ignoreCache)
+{
+    const std::atomic<bool> never { false };
+    auto outcome = scanFiles (searchPath(), ignoreCache, never);
+    entries = std::move (outcome.entries);
+    ++revision;
+    return entries.size();
+}
+
+void PluginCatalog::rescan (bool ignoreCache)
+{
+    // The thread, not the progress: the progress says "done" a moment
+    // before finishRescan runs, and a scan started in between would be
+    // the one finishRescan drops.
+    if (scanThread != nullptr)
+    {
+        rescanAgain = true;
+        rescanAgainFull = rescanAgainFull || ignoreCache;
+        return;
+    }
+    {
+        const std::lock_guard<std::mutex> lock (progressLock);
+        progress.scanning = true;   // at once: a status asked now says so
+        progress.done = progress.total = 0;
+        progress.file = {};
+    }
+    scanThread = std::make_unique<ScanThread> (*this, searchPath(), ignoreCache);
+    scanThread->startThread();
+}
+
+void PluginCatalog::finishRescan (Outcome outcome)
+{
+    scanThread.reset();   // its run() has returned: this joins at once
+    entries = std::move (outcome.entries);
+    ++revision;
+
+    if (rescanAgain)
+    {
+        const bool full = rescanAgainFull;
+        rescanAgain = rescanAgainFull = false;
+        rescan (full);
+    }
+}
+
+PluginCatalog::Outcome PluginCatalog::scanFiles (const juce::FileSearchPath& path, bool ignoreCache,
+                                                 const std::atomic<bool>& abort)
+{
+    Outcome outcome;
+    auto& found = outcome.entries;
 
     // The cache: one FILE element per plugin file, with the binary's size
     // and date, and its PLUGIN elements (or failed="1").
@@ -158,88 +332,119 @@ int PluginCatalog::scan (const juce::StringArray& extraPaths, bool useDefaultPat
     newCache.setAttribute ("version", 1);
     int examined = 0, fromCache = 0, failed = 0;
 
-    for (auto* format : formats.getFormats())
+    // A format of its own: this may run on a background thread.
+    juce::VST3PluginFormatHeadless format;
+    log ("scanning " + format.getName() + " in " + path.toString());
+    const auto files = format.searchPathsForPlugins (path, true, false);
     {
-        juce::FileSearchPath path;
-        if (useDefaultPaths)
-            path = format->getDefaultLocationsToSearch();
-        for (auto& p : extraPaths)
-            path.add (juce::File::getCurrentWorkingDirectory().getChildFile (p));
+        const std::lock_guard<std::mutex> lock (progressLock);
+        progress.scanning = true;
+        progress.done = 0;
+        progress.total = files.size();
+    }
 
-        log ("scanning " + format->getName() + " in " + path.toString());
+    const auto isKnown = [&found] (const juce::PluginDescription& d)
+    {
+        for (auto& e : found)
+            if (e.description.uniqueId == d.uniqueId && e.description.name == d.name
+                && e.description.manufacturerName == d.manufacturerName)
+                return true;
+        return false;
+    };
 
-        for (auto& file : format->searchPathsForPlugins (path, true, false))
+    for (auto& file : files)
+    {
+        if (abort)
+            break;
         {
-            const auto binary = pluginBinary (juce::File (file));
-            const auto size = binary.getSize();
-            const auto modified = binary.getLastModificationTime().toMilliseconds();
+            const std::lock_guard<std::mutex> lock (progressLock);
+            progress.file = file;
+        }
 
-            auto* record = newCache.createNewChildElement ("FILE");
-            record->setAttribute ("path", file);
-            record->setAttribute ("size", juce::String (size));
-            record->setAttribute ("modified", juce::String (modified));
+        const auto binary = pluginBinary (juce::File (file));
+        const auto size = binary.getSize();
+        const auto modified = binary.getLastModificationTime().toMilliseconds();
 
-            juce::Array<Entry> results;
-            bool ok = true;
-            const auto it = cached.find (file);
-            if (it != cached.end()
-                && it->second->getStringAttribute ("size") == juce::String (size)
-                && it->second->getStringAttribute ("modified") == juce::String (modified))
+        auto* record = newCache.createNewChildElement ("FILE");
+        record->setAttribute ("path", file);
+        record->setAttribute ("size", juce::String (size));
+        record->setAttribute ("modified", juce::String (modified));
+
+        juce::Array<Entry> results;
+        bool ok = true;
+        const auto it = cached.find (file);
+        if (it != cached.end()
+            && it->second->getStringAttribute ("size") == juce::String (size)
+            && it->second->getStringAttribute ("modified") == juce::String (modified))
+        {
+            ++fromCache;
+            ok = ! it->second->getBoolAttribute ("failed");
+            for (auto* e : it->second->getChildWithTagNameIterator ("PLUGIN"))
             {
-                ++fromCache;
-                ok = ! it->second->getBoolAttribute ("failed");
-                for (auto* e : it->second->getChildWithTagNameIterator ("PLUGIN"))
+                Entry entry;
+                if (entry.description.loadFromXml (*e))
                 {
-                    Entry entry;
-                    if (entry.description.loadFromXml (*e))
-                    {
-                        entry.fxmenetAbi = e->getIntAttribute ("fxmenetAbi");
-                        entry.sha256 = e->getStringAttribute ("sha256");
-                        results.add (entry);
-                    }
+                    entry.fxmenetAbi = e->getIntAttribute ("fxmenetAbi");
+                    entry.sha256 = e->getStringAttribute ("sha256");
+                    results.add (entry);
                 }
             }
-            else
-            {
-                ++examined;
-                ok = scanInChild (file, results);
-            }
+        }
+        else
+        {
+            ++examined;
+            ok = scanInChild (file, results, abort);
+        }
 
-            if (! ok)
-            {
-                ++failed;
-                record->setAttribute ("failed", true);
-                continue;
-            }
+        {
+            const std::lock_guard<std::mutex> lock (progressLock);
+            ++progress.done;
+        }
 
-            for (auto& entry : results)
-            {
-                auto xml = entry.description.createXml();
-                xml->setAttribute ("fxmenetAbi", entry.fxmenetAbi);
-                xml->setAttribute ("sha256", entry.sha256);
-                record->addChildElement (xml.release());
+        if (! ok)
+        {
+            ++failed;
+            record->setAttribute ("failed", true);
+            continue;
+        }
 
-                const auto& d = entry.description;
-                if (d.isInstrument)
-                    continue;   // FxmeNet hosts effects
-                if (find ((std::uint32_t) d.uniqueId, d.name, d.manufacturerName) != nullptr)
-                    continue;   // the same plugin in two folders: the first wins
-                log ("  " + d.name + " " + d.version + " (" + d.manufacturerName + "), uid "
-                     + juce::String::toHexString (d.uniqueId).paddedLeft ('0', 8)
-                     + (entry.fxmenetAbi > 0 ? ", FxmeNet-aware" : ""));
-                entries.add (entry);
-            }
+        for (auto& entry : results)
+        {
+            auto xml = entry.description.createXml();
+            xml->setAttribute ("fxmenetAbi", entry.fxmenetAbi);
+            xml->setAttribute ("sha256", entry.sha256);
+            record->addChildElement (xml.release());
+
+            const auto& d = entry.description;
+            if (d.isInstrument)
+                continue;   // FxmeNet hosts effects
+            if (isKnown (d))
+                continue;   // the same plugin in two folders: the first wins
+            log ("  " + d.name + " " + d.version + " (" + d.manufacturerName + "), uid "
+                 + juce::String::toHexString (d.uniqueId).paddedLeft ('0', 8)
+                 + (entry.fxmenetAbi > 0 ? ", FxmeNet-aware" : ""));
+            found.add (entry);
         }
     }
+
+    if (abort)
+        return outcome;   // an incomplete cache is not written
 
     const auto cacheFile = getCacheFile();
     cacheFile.getParentDirectory().createDirectory();
     if (! newCache.writeTo (cacheFile))
         log ("warning: cannot write the plugin cache " + cacheFile.getFullPathName());
 
-    log (juce::String (entries.size()) + " plugins (" + juce::String (examined) + " examined, "
-         + juce::String (fromCache) + " from the cache, " + juce::String (failed) + " failed)");
-    return entries.size();
+    outcome.summary = juce::String (found.size()) + " plugins (" + juce::String (examined) + " examined, "
+                    + juce::String (fromCache) + " from the cache, " + juce::String (failed) + " failed)";
+    log (outcome.summary);
+    {
+        const std::lock_guard<std::mutex> lock (progressLock);
+        progress.scanning = false;
+        progress.file = {};
+        progress.summary = juce::Time::getCurrentTime().formatted ("%H:%M:%S") + "  " + outcome.summary;
+    }
+    return outcome;
 }
 
 std::vector<control::PluginEntry> PluginCatalog::getEntries() const

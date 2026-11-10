@@ -73,6 +73,9 @@ private:
     void findServers();
     void showServers (const std::vector<fxmenet::discovery::Announce>&);
     void addSelected();
+
+    /** The catalog entry shown at a row of the list (filtered and sorted), or nullptr. */
+    const fxmenet::control::PluginEntry* catalogEntryAt (int row) const;
     std::uint32_t selectedSlot() const;
 
     static juce::Image assetImage (const char* resourceName);
@@ -100,6 +103,7 @@ private:
 
     RowList catalogRows, chainRows;
     juce::ListBox catalogList { "Server plugins", &catalogRows }, chainList { "Chain", &chainRows };
+    juce::TextEditor filterBox;
     juce::TextButton addButton { "Add" };
     juce::TextButton upButton { "Up" }, downButton { "Down" }, bypassButton { "Bypass" }, removeButton { "Remove" };
 
@@ -109,8 +113,9 @@ private:
     juce::TabbedComponent tabs { juce::TabbedButtonBar::TabsAtTop };
 
     std::vector<fxmenet::control::PluginEntry> catalog;
+    std::vector<int> shown;   ///< the catalog rows listed: filtered, T2 then T1 then T0, by name
     std::vector<fxmenet::client::SlotModel> slots;
-    juce::String catalogSignature, chainSignature, statusLine, statsLine;
+    juce::String catalogSignature, chainSignature, statusLine, statsLine, catalogCount, shownFilter;
     juce::Colour statusColour;
     juce::Rectangle<int> statusArea, statsArea, catalogTitle, chainTitle;
 
@@ -124,7 +129,7 @@ private:
     };
     ToggleableTooltipWindow tooltipWindow { this, 700 };
 
-    // The server field is a TextEditor: one fixer, after the children.
+    // The server field and the filter are TextEditors: one fixer, after the children.
     fxme::TextEntryFocusFixer textEntryFixer { *this };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FxmeNetAudioProcessorEditor)

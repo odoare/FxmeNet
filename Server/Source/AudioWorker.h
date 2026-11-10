@@ -52,8 +52,9 @@ public:
         std::atomic<std::uint64_t> resets { 0 };          ///< chain resets asked for by the client
         std::atomic<std::uint32_t> lastProcessMicros { 0 };
         std::atomic<std::uint32_t> maxProcessMicros { 0 };
+        std::atomic<std::uint64_t> bytesSent { 0 };       ///< replies, UDP payload bytes
 
-        // Since the last takeWindow() (the activity line, every 10 s).
+        // Since the last takeWindow() (the server's 1 s sample).
         std::atomic<std::uint32_t> windowMaxProcessMicros { 0 };
         std::atomic<std::uint32_t> windowMaxTurnaroundMicros { 0 };  ///< arrival to reply sent
 

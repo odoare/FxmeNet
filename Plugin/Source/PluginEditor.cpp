@@ -76,6 +76,21 @@ FxmeNetAudioProcessorEditor::FxmeNetAudioProcessorEditor (FxmeNetAudioProcessor&
         addAndMakeVisible (*list);
     }
 
+    // The filter above the server's plugins: Return adds the selected one
+    // (the first match is selected while typing), Escape clears it (the
+    // focus fixer reverts the field to its text before typing).
+    filterBox.setTextToShowWhenEmpty ("Filter", theme::dimText);
+    filterBox.setTooltip (tips::filter);
+    filterBox.setColour (juce::TextEditor::backgroundColourId, theme::panel);
+    filterBox.setColour (juce::TextEditor::outlineColourId, theme::panelLine);
+    filterBox.setColour (juce::TextEditor::focusedOutlineColourId, theme::accent);
+    filterBox.setColour (juce::TextEditor::textColourId, theme::text);
+    filterBox.setFont (juce::Font (juce::FontOptions (12.5f)));
+    filterBox.setIndents (6, 2);
+    filterBox.onTextChange = [this] { refreshCatalog(); };
+    filterBox.onReturnKey = [this] { addSelected(); };
+    addAndMakeVisible (filterBox);
+
     addButton.setTooltip (tips::add);
     addButton.onClick = [this] { addSelected(); };
     upButton.setTooltip (tips::moveUp);
@@ -179,27 +194,84 @@ void FxmeNetAudioProcessorEditor::timerCallback()
 
 void FxmeNetAudioProcessorEditor::refreshCatalog()
 {
-    catalog = processor.getEngine().getCatalog();
+    const auto filter = filterBox.getText().trim();
+    auto latest = processor.getEngine().getCatalog();
     juce::String signature;
-    signature << (int) processor.getLocalCatalog().getRevision() << ":";
-    for (auto& e : catalog)
+    signature << (int) processor.getLocalCatalog().getRevision() << ":" << filter << ":";
+    for (auto& e : latest)
         signature << fxmenet::control::json::hex32 (e.uid) << e.name << ";";
     if (signature == catalogSignature)
         return;
     catalogSignature = signature;
 
-    catalogRows.rows.clear();
-    for (auto& e : catalog)
+    // The selection follows its plugin, not its row.
+    const auto* previous = catalogEntryAt (catalogList.getSelectedRow());
+    const bool hadSelection = previous != nullptr;
+    const auto selectedUid = hadSelection ? previous->uid : 0u;
+    const auto selectedName = hadSelection ? previous->name : juce::String();
+    const bool filterChanged = filter != shownFilter;
+    shownFilter = filter;
+    catalog = std::move (latest);
+
+    // Every word of the filter must be in the name.
+    const auto words = juce::StringArray::fromTokens (filter, " ", "");
+    std::vector<fxmenet::plugin::LocalMatch> matches;
+    matches.reserve (catalog.size());
+    shown.clear();
+    for (std::size_t i = 0; i < catalog.size(); ++i)
     {
-        const auto m = processor.matchLocal (e);
+        matches.push_back (processor.matchLocal (catalog[i]));
+        bool keep = true;
+        for (auto& w : words)
+            keep = keep && catalog[i].name.containsIgnoreCase (w);
+        if (keep)
+            shown.push_back ((int) i);
+    }
+
+    // T2, T1, T0 (and "T?" while the local scan runs), then by name.
+    const auto rank = [] (const fxmenet::plugin::LocalMatch& m)
+    {
+        return m.kind == fxmenet::plugin::LocalMatch::Kind::unknown ? -1 : m.tier;
+    };
+    std::stable_sort (shown.begin(), shown.end(), [&] (int a, int b)
+    {
+        const int ra = rank (matches[(std::size_t) a]), rb = rank (matches[(std::size_t) b]);
+        if (ra != rb)
+            return ra > rb;
+        const auto& ea = catalog[(std::size_t) a];
+        const auto& eb = catalog[(std::size_t) b];
+        if (const int byName = ea.name.compareNatural (eb.name); byName != 0)
+            return byName < 0;
+        return ea.vendor.compareNatural (eb.vendor) < 0;
+    });
+
+    catalogRows.rows.clear();
+    int reselect = -1;
+    for (auto i : shown)
+    {
+        const auto& e = catalog[(std::size_t) i];
+        const auto& m = matches[(std::size_t) i];
+        if (hadSelection && e.uid == selectedUid && e.name == selectedName)
+            reselect = (int) catalogRows.rows.size();
         catalogRows.rows.push_back ({ e.name,
                                       e.vendor + "  " + juce::String (e.inputs) + "/" + juce::String (e.outputs)
                                           + "  " + tierTag (m),
                                       tierColour (m),
                                       m.text });
     }
+    // While typing, the first match is selected, so Return adds it.
+    if (reselect < 0 && filterChanged && filter.isNotEmpty() && ! shown.empty())
+        reselect = 0;
+
+    catalogCount = filter.isEmpty() ? juce::String ((int) catalog.size())
+                                    : juce::String ((int) shown.size()) + " / " + juce::String ((int) catalog.size());
     catalogList.updateContent();
+    if (reselect >= 0)
+        catalogList.selectRow (reselect);
+    else
+        catalogList.deselectAllRows();
     catalogList.repaint();
+    repaint (catalogTitle);
 }
 
 void FxmeNetAudioProcessorEditor::refreshChain()
@@ -291,9 +363,16 @@ void FxmeNetAudioProcessorEditor::showServers (const std::vector<fxmenet::discov
 
 void FxmeNetAudioProcessorEditor::addSelected()
 {
-    const int row = catalogList.getSelectedRow();
-    if (juce::isPositiveAndBelow (row, (int) catalog.size()))
-        processor.addPlugin (catalog[(std::size_t) row]);
+    if (const auto* e = catalogEntryAt (catalogList.getSelectedRow()))
+        processor.addPlugin (*e);
+}
+
+const fxmenet::control::PluginEntry* FxmeNetAudioProcessorEditor::catalogEntryAt (int row) const
+{
+    if (! juce::isPositiveAndBelow (row, (int) shown.size()))
+        return nullptr;
+    const auto i = shown[(std::size_t) row];
+    return juce::isPositiveAndBelow (i, (int) catalog.size()) ? &catalog[(std::size_t) i] : nullptr;
 }
 
 std::uint32_t FxmeNetAudioProcessorEditor::selectedSlot() const
@@ -326,7 +405,9 @@ void FxmeNetAudioProcessorEditor::paint (juce::Graphics& g)
 
     g.setFont (juce::Font (juce::FontOptions (12.0f)));
     g.setColour (theme::dimText);
-    g.drawText ("SERVER PLUGINS", catalogTitle, juce::Justification::centredLeft);
+    auto title = catalogTitle;
+    g.drawText ("SERVER PLUGINS", title.removeFromLeft (110), juce::Justification::centredLeft);
+    g.drawText (catalogCount, title.withTrimmedRight (filterBox.getWidth() + 8), juce::Justification::centredRight);
     g.drawText ("CHAIN", chainTitle, juce::Justification::centredLeft);
     g.drawText (statsLine, statsArea, juce::Justification::centredLeft, true);
 
@@ -362,7 +443,8 @@ void FxmeNetAudioProcessorEditor::resized()
     auto top = left.removeFromTop ((left.getHeight() - 10) / 2);
     left.removeFromTop (10);
 
-    catalogTitle = top.removeFromTop (18);
+    catalogTitle = top.removeFromTop (22);
+    filterBox.setBounds (catalogTitle.withTrimmedLeft (catalogTitle.getWidth() - 140).withTrimmedBottom (2));
     addButton.setBounds (top.removeFromBottom (26).removeFromRight (80));
     top.removeFromBottom (6);
     catalogList.setBounds (top);

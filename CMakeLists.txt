@@ -27,6 +27,9 @@ add_subdirectory(Common)
 # ── fxmenet-server ───────────────────────────────────────────────────────────
 add_subdirectory(Server)
 
+# ── fxmenet-top: the server in a terminal (status, plugin folders) ───────────
+add_subdirectory(Tools/Top)
+
 # ── FxmeNetPlugin: the client in the DAW ──────────────────────────────────────
 add_subdirectory(Plugin)
 

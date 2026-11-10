@@ -35,7 +35,8 @@ Server/Source/          fxmenet-server: Main (options, signals, message loop),
                         Server (listener, handshakes, UDP routing, orphans),
                         Session (control handling), Chain (slots, snapshots),
                         AudioWorker (ordering, reply cache, processing),
-                        PluginCatalog, UdpPeer, Log
+                        PluginCatalog (scan, folders, rescans), Monitor
+                        (fxmenet-top's connections), SystemLoad, UdpPeer, Log
 Plugin/                 FxmeNetPlugin ("FxmeNet", VST3 and AU): the client in the DAW,
                         processor, 256-parameter pool, editor and its panels
 Examples/GainPan/       FxmeNetGainPan: gain, balance, stereo in/out meters, the
@@ -44,6 +45,8 @@ Tools/Loopback/         FxmeNetLoopback: Phase 1 harness, source and mirror of o
                         plugin in one process, telemetry pumped in memory
 Tools/WavClient/        fxmenet-wavclient: Phase 2 end-to-end test, a WAV through a
                         chain on the server, compared with local processing
+Tools/Top/              fxmenet-top: the server in a terminal (sessions, load,
+                        traffic, log) and its plugin folders
 Spikes/                 Phase 0 throwaway programs (FXMENET_BUILD_SPIKES, ON for now)
   HeadlessHost/         spike 1: GUI-free VST3 hosting, WAV through a plugin,
                         state round trip
@@ -168,7 +171,9 @@ also keeps its wire numbering increasing across stream restarts
 
 `fxmenet-server [--name NAME] [--control-port 54322] [--udp-port 54321]
 [--discovery-port 54320] [--no-discovery] [--plugin-path DIR]...
-[--no-default-paths] [--rescan]`.
+[--no-default-paths] [--rescan] [--remote-admin]`. `--plugin-path` and
+`--no-default-paths` apply to that run only; the folders kept from one run
+to the next are those set with fxmenet-top.
 
 **Plugin catalog.** Each VST3 file is examined in a child process,
 `fxmenet-server --scan-plugin FILE` (30 s timeout), which prints its
@@ -182,6 +187,31 @@ only new or changed plugins are examined at the next start; a failed file
 stays skipped until it changes; `--rescan` ignores the cache. The catalog's
 `platforms` uses the bundle folder names. Links only the GUI-free JUCE
 modules (`juce_audio_processors_headless`, `juce_core`, `juce_events`).
+
+**Plugin folders.** The scan looks in the VST3 default folders (unless
+turned off), the saved folders, and this run's `--plugin-path` folders.
+The saved folders and the default-folders switch are set from fxmenet-top
+and kept in `FX-Mechanics/fxmenet-server-settings.json`, next to the
+cache. The startup scan runs on the message thread; a rescan (fxmenet-top)
+runs on a thread of its own with its own VST3 format object, and the new
+entries replace the old ones on the message thread when it ends, so
+sessions go on meanwhile (`find`'s pointer is only used within one
+message). A rescan asked during one follows it. Stopping the server
+during a scan kills the plugin being examined and writes no cache.
+
+**Monitors and status.** A HELLO with the role "monitor" (fxmenet-top,
+protocol.md 4.7) gets a `Monitor` instead of a session: its reader thread
+posts frames to the message thread, which answers `MONITOR_STATUS` from
+`Server::describeStatus` and applies the folder changes when the monitor
+is allowed to (from 127.0.0.1 or ::1, or any address with
+`--remote-admin`). Every second the server's timer samples the machine's
+and the process's CPU and memory (`SystemLoad`: /proc on Linux, Mach
+calls on macOS, GetSystemTimes and GetProcessTimes on Windows, where
+there is no per-core figure), the bytes received on the UDP socket, and
+each session (`Session::sampleSecond`: blocks and bytes per second, the
+worst processing time and reply delay of the second, folded into the 10 s
+maxima of the activity line). The log keeps its last 1000 lines in memory
+(`LogRing`) for monitors.
 
 Threads:
 
@@ -248,6 +278,29 @@ host turns into the process mode of that very call.
 sender to `AudioWorker::updatePeer`, which switches to a new address (a
 client back with a new socket after a resume) at most once a second. The
 address is double buffered and a sender holds it for one `sendto` only.
+
+## fxmenet-top (Tools/Top)
+
+`fxmenet-top [HOST[:PORT]] [--once]` (this machine's server by default),
+`fxmenet-top --find` (lists the servers answering discovery). A terminal
+program for Linux, macOS and Windows 10 and later (virtual terminal
+sequences), on `juce_core` only; `Terminal` is oto-top's (otomatotamoto),
+with the keys needed to type a path. A thread (`Link`) connects as a
+monitor, asks for the status every second, reconnects when the server
+goes, and sends the folder commands; the main thread reads keys and draws
+four times a second.
+
+Three views: 1 the sessions (one line each: client, address, format,
+plugins, the worst processing time of the last second against the
+block's duration, traffic, and the late, lost and stale counts, red for
+10 s after they moved), with the selected session's details, chain and
+the latest log lines below; 2 the plugin folders (default, saved, this
+run, missing ones in red), the scan's progress, and the plugins found
+(filter with `/`); 3 the log (scroll, filter). On the plugins view, `a`
+adds a folder, `d` removes the selected saved one, `x` turns the default
+folders on or off, `r` and `R` rescan (`R` ignoring the cache); read only
+when the server does not grant "admin". `--once` prints one frame without
+colours and exits.
 
 ## fxmenet-wavclient (Tools/WavClient)
 
@@ -344,7 +397,11 @@ The DAW glue around `ClientEngine`; product name "FxmeNet", VST3 and AU
   copy, tier 0 (generic controls). The sha256 is compared only when both
   sides run the same platform, and a difference is shown (another build of
   the same version), not refused. The editor's lists show T0 / T1 / T2,
-  with the reason on hover. FxmeNet and its spikes are never listed;
+  with the reason on hover. The server's plugins are listed T2 first, then
+  T1, T0, and by name within each, filtered by the field above the list
+  (every word typed must be in the name); while typing, the first match is
+  selected and Return adds it; the selection follows its plugin when the
+  list changes. FxmeNet and its spikes are never listed;
   instruments are left out (FxmeNet hosts effects). The plugin is built
   with `JUCE_PLUGINHOST_VST3`.
 - Shadows (`Shadow.h`, Phase 4 step 8b): a slot's local copy, created the

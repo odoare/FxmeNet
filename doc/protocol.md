@@ -82,7 +82,7 @@ state and parameter batches are binary.
 
 | Type | Name | From | Payload |
 | :--- | :--- | :--- | :--- |
-| 1 | `HELLO` | client | JSON: protocol versions supported, client name, OS, FxmeNet version, `resume` (sessionId + token of a session to take back after a reconnect, optional) |
+| 1 | `HELLO` | client | JSON: protocol versions supported, client name, OS, FxmeNet version, `resume` (sessionId + token of a session to take back after a reconnect, optional), `role` (`"monitor"` for fxmenet-top, section 4.7; absent for a session) |
 | 2 | `WELCOME` | server | JSON: protocol version chosen, sessionId, token, UDP port, server name, OS, capabilities (`["udp-audio"]`, `"routing"` when it applies `ROUTING`, later `"tcp-audio"`), or an error |
 | 3 | `CONFIGURE` | client | JSON: sample rate, block size N, input and output channel counts, channel masks, telemetry rate (Hz, default 30), datagram budget |
 | 4 | `PING` / 5 `PONG` | either | binary: u64 sender clock (microseconds), echoed |
@@ -102,11 +102,16 @@ state and parameter batches are binary.
 | 32 | `STATE_SET` | client | binary: slotId, state blob |
 | 33 | `STATE_GET` / 34 `STATE` | client / server | as `STATE_SET`, with an empty blob / slotId + blob |
 | 40 | `TELEMETRY_ACTIVE` | client | binary: slotId, u8 on (the slot's editor opened or closed) |
+| 50 | `MONITOR_STATUS` | monitor / server | JSON: `logSince`, `catalogRevision` / the status (section 4.7) |
+| 51 | `MONITOR_PATHS` | monitor | JSON: `paths` (the saved plugin folders), `useDefaultPaths` |
+| 52 | `MONITOR_RESCAN` | monitor | JSON: `full` (ignore the cache) |
 
 `SLOT_READY` answers `SLOT_ADD`, `PLUGIN_LIST` answers `LIST_PLUGINS`,
-`STATE` answers `STATE_GET`, `PONG` answers `PING`, and `ERROR` answers
+`STATE` answers `STATE_GET`, `PONG` answers `PING`, `MONITOR_STATUS`
+answers `MONITOR_STATUS`, and `ERROR` answers
 anything that failed. Every other request (`CONFIGURE`, `SLOT_REMOVE`,
-`SLOT_MOVE`, `SLOT_BYPASS`, `CHAIN_CLEAR`, `ROUTING`, `STATE_SET`, `TELEMETRY_ACTIVE`)
+`SLOT_MOVE`, `SLOT_BYPASS`, `CHAIN_CLEAR`, `ROUTING`, `STATE_SET`, `TELEMETRY_ACTIVE`,
+`MONITOR_PATHS`, `MONITOR_RESCAN`)
 is acknowledged on success by a frame of its own type with an empty payload
 and the same `requestId`. `PARAM_SET` is never acknowledged (a stream of
 changes); a failed one gets an `ERROR`. Chain
@@ -189,6 +194,51 @@ full width.
 - The client sends `ROUTING` only to a server whose `WELCOME` lists the
   `"routing"` capability, after each change of the graph and again when a
   session is rebuilt; a resumed session keeps it.
+
+### 4.7 Monitor connections
+
+fxmenet-top (`Tools/Top`) connects to the control port like a client, with
+`"role": "monitor"` in its `HELLO`. The server opens no session for it:
+its `WELCOME` has sessionId 0, the capability `"monitor"`, and `"admin"`
+when the monitor may change the plugin folders (it connected from the
+server's machine, or the server runs with `--remote-admin`). A monitor
+sends only `MONITOR_STATUS`, `MONITOR_PATHS`, `MONITOR_RESCAN`, `PING`
+and `BYE`; anything else gets an `ERROR` (`unsupported`, 3), and the two
+changes without `"admin"` get `notAllowed` (8).
+
+`MONITOR_STATUS` asks for the log lines numbered `logSince` and after (0:
+the latest 500), and the plugin list unless the catalog's revision is
+still `catalogRevision`. The answer, refreshed by the server once a second:
+
+- `server`: name, version, os, host, ports, discovery on, seconds up,
+  monitors connected;
+- `load`: `process` (the server's CPU, 100 per core used), `total` (the
+  machine, 0 to 100, -1 if unknown), `cores` (each core; empty on
+  Windows), `numCores`, `resident` (bytes);
+- `network`: `inBytesPerSecond` (every datagram received),
+  `outBytesPerSecond` (the sessions' replies and telemetry);
+- `sessions`: for each, id, peer, client, os, orphan, seconds, configured,
+  then sampleRate, blockSize, inputs, outputs, realtime (its audio
+  thread), chainLatency, `slots` (id, name, vendor, version, latency,
+  bypassed, fxmenet), `counters` since it started (processed, lost, stale,
+  fromCache, queueFull, malformed, sendErrors, resets, overOneBlock,
+  overTwoBlocks), processMicros (the last block), processMaxMicros and
+  turnaroundMaxMicros (the last second), processPeakMicros (since it
+  started), blocksPerSecond, inBytesPerSecond, outBytesPerSecond;
+- `catalog`: revision, count, scanning, done and total (files), file
+  (being examined), summary (the last scan), useDefaultPaths, and
+  defaultPaths, savedPaths, commandLinePaths (each a list of path and
+  exists), then `plugins` (name, vendor, version, category, inputs,
+  outputs, fxmenet, file) when the revision changed;
+- `log`: `lines`, and `next`, the number to ask from next time.
+
+`MONITOR_PATHS` replaces the saved folders (absolute paths; the server
+keeps them in `fxmenet-server-settings.json` next to its plugin cache) and
+turns the VST3 default folders on or off; `MONITOR_RESCAN` scans again.
+Both are acknowledged once the scan has started; it runs on a thread of
+its own and the status shows its progress. Sessions keep the plugin list
+they asked for: a client sees a rescan's result the next time it
+connects.
 
 ## 5. Audio
 

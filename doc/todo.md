@@ -126,6 +126,46 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     or non-automatable parameters when auto-mapping (SLOT_READY's
     `automatable` already travels; a `readOnly` flag may be needed), and
     show them as read-outs in the generic view.
+21. Network buffers (seen in the stress tests of 2026-11-07, see
+    `doc/Tests/stress-tests.md`). The server sends every session's replies
+    from one UDP socket with the system's default send buffer (about
+    208 KB). Under load the buffer fills and the kernel drops replies:
+    about 0.3 % of them at 28 tracks (`UdpSndbufErrors` on the server, and
+    the `send errors` count in the activity line), each one a concealed
+    block on the client. To do:
+    - the server asks for a large send and receive buffer on its socket
+      (`SO_SNDBUF`, `SO_RCVBUF`, a few MB) and logs the sizes it got;
+    - Linux caps them at `net.core.wmem_max` / `rmem_max`: when the size
+      got is smaller, the log says which sysctl to raise (or document
+      `/etc/sysctl.d/90-fxmenet.conf` in the server's setup notes);
+    - the same on the client's sockets, if its receive side ever shows
+      drops;
+    - check with a 28-track run that the send errors are gone.
+22. (written) The server plugins in FxmeNet's editor sorted T2, T1, T0,
+    then by name, with a filter field above the list (user request
+    2026-11-10, before opening the project on GitHub). To check: the
+    order once the local scan is done (and by name only before), typing
+    a few letters selects the first match and Return adds it, Escape
+    empties the field, the selection stays on its plugin when the list
+    changes, Add and double-click add the right plugin when filtered.
+23. (written) fxmenet-top (`Tools/Top`), the server in a terminal: sessions
+    with their chain and figures, CPU (machine, cores, server), memory,
+    network, the log, and the plugin folders (add, remove, default
+    folders on and off, rescans) kept by the server from one run to the
+    next (user request 2026-11-10, same reason). Protocol in
+    protocol.md 4.7. To check:
+    - against a server under load: the figures agree with htop and the
+      activity line; sessions coming and going; the server restarted
+      (fxmenet-top reconnects);
+    - folders: add one, remove it, defaults off and on, a rescan while
+      a session plays (no glitch), a full rescan; the folders survive a
+      server restart; a client sees the new plugins after reconnecting;
+    - from another machine: read only, unless `--remote-admin`;
+    - on Windows and macOS (the server and fxmenet-top): the CPU and
+      memory figures, the keys, the box characters;
+    - stopping the server during a full rescan (it must quit at once).
+    Later, if wanted: tell connected clients that the catalog changed
+    (an unsolicited `PLUGIN_LIST`), so their list follows a rescan.
 13. Later, optional: mDNS publishing (`_fxmenet._tcp`) for system browsers.
 8. Phase 4: shadow editors and telemetry; port Compressor and Equalizer.
    - 8c (written): telemetry into the shadows. Build the plugin; in Reaper

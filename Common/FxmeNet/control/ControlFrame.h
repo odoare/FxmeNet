@@ -59,7 +59,11 @@ enum class Type : std::uint16_t
     stateSet        = 32,
     stateGet        = 33,
     state           = 34,
-    telemetryActive = 40
+    telemetryActive = 40,
+    // A monitor connection (HELLO role "monitor", fxmenet-top): no session.
+    monitorStatus   = 50,
+    monitorPaths    = 51,
+    monitorRescan   = 52
 };
 
 constexpr std::uint16_t flagJson = 1 << 0;

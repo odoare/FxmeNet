@@ -7,6 +7,10 @@
         fxmenet-server [--name NAME] [--control-port N] [--udp-port N]
                        [--discovery-port N] [--no-discovery]
                        [--plugin-path DIR]... [--no-default-paths] [--rescan]
+                       [--remote-admin]
+
+    --plugin-path and --no-default-paths apply to this run only; the folders
+    kept from one run to the next are fxmenet-top's (PluginCatalog.h).
 
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-FXME-Commercial
@@ -31,6 +35,10 @@ struct ServerConfig
     bool useDefaultPaths = true;
     bool rescan = false;                ///< ignore the plugin cache
 
+    /** fxmenet-top may change the plugin folders from another machine (by
+        default only from this one: monitoring is open to all). */
+    bool remoteAdmin = false;
+
     /** Seconds a session survives its control connection dropping, so a
         client can resume it (protocol.md section 8). */
     int orphanGraceSeconds = 10;
@@ -51,6 +59,7 @@ struct ServerConfig
             else if (a == "--plugin-path" && hasValue)     pluginPaths.add (args[++i]);
             else if (a == "--no-default-paths")            useDefaultPaths = false;
             else if (a == "--rescan")                      rescan = true;
+            else if (a == "--remote-admin")                remoteAdmin = true;
             else
             {
                 error = "unknown or incomplete argument: " + a;
@@ -71,7 +80,10 @@ struct ServerConfig
     {
         return "usage: fxmenet-server [--name NAME] [--control-port N (54322)] [--udp-port N (54321)]\n"
                "                      [--discovery-port N (54320)] [--no-discovery]\n"
-               "                      [--plugin-path DIR]... [--no-default-paths] [--rescan]";
+               "                      [--plugin-path DIR]... [--no-default-paths] [--rescan]\n"
+               "                      [--remote-admin]\n"
+               "--plugin-path and --no-default-paths: this run only (fxmenet-top keeps folders)\n"
+               "--remote-admin: fxmenet-top may change the plugin folders from other machines";
     }
 };
 

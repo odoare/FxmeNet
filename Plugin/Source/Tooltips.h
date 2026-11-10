@@ -18,6 +18,7 @@ namespace fxmenet::plugin::tips
     inline constexpr auto connect    = "Connect to the server, or disconnect (the audio then passes dry).";
     inline constexpr auto catalog    = "The plugins installed on the server. Double-click one, or select it and press Add.";
     inline constexpr auto add        = "Add the selected server plugin at the end of the chain.";
+    inline constexpr auto filter     = "Show only the server plugins whose name contains these letters (several words: all of them). Return adds the selected one, Escape clears.";
     inline constexpr auto chain      = "The chain, processed on the server from top to bottom.";
     inline constexpr auto moveUp     = "Move the selected plugin up the chain.";
     inline constexpr auto moveDown   = "Move the selected plugin down the chain.";

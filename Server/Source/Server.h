@@ -6,8 +6,11 @@
     new connection's HELLO is read on a small thread pool, then handed to
     the message thread, which creates or resumes a session), the shared UDP
     socket and its receive thread (datagrams routed to sessions by id and
-    token), and a 1 Hz timer that removes expired orphan sessions and logs
-    activity.
+    token), and a 1 Hz timer that removes expired orphan sessions, samples
+    the sessions and the machine's load, and logs activity every 10 s.
+
+    A HELLO with the role "monitor" (fxmenet-top) opens no session: it gets
+    a Monitor, answered from describeStatus().
 
     Sessions are created and destroyed on the message thread only. The UDP
     thread reaches them under `sessionsLock`, which removal also takes, so a
@@ -21,9 +24,11 @@
 #pragma once
 
 #include "Log.h"
+#include "Monitor.h"
 #include "PluginCatalog.h"
 #include "ServerConfig.h"
 #include "Session.h"
+#include "SystemLoad.h"
 
 #include <FxmeNet/control/Discovery.h>
 
@@ -54,6 +59,16 @@ public:
     /** Message thread: forgets a session (BYE, or an expired orphan). */
     void removeSession (std::uint32_t sessionId);
 
+    /** Message thread: a monitor's connection closed. */
+    void removeMonitor (int monitorId);
+
+    /** Message thread: everything fxmenet-top shows, as JSON (protocol.md
+        section 4.7). The log lines numbered `logSince` and after; the
+        plugin list only when the catalog's revision is not `knownRevision`. */
+    juce::var describeStatus (std::uint64_t logSince, int knownRevision);
+
+    PluginCatalog& getCatalog() noexcept   { return catalog; }
+
 private:
     class AcceptThread;
     class UdpThread;
@@ -72,6 +87,22 @@ private:
     std::mutex sessionsLock;
     std::map<std::uint32_t, std::shared_ptr<Session>> sessions;
     std::uint32_t nextSessionId = 1;
+
+    // Monitors, message thread.
+    std::map<int, std::shared_ptr<Monitor>> monitors;
+    int nextMonitorId = 1;
+
+    /** True when a monitor connected from `host` may change the plugin folders. */
+    bool allowsAdmin (const juce::String& host) const;
+
+    // Load and traffic, sampled by the timer.
+    SystemLoad systemLoad;
+    SystemLoad::Sample load;
+    std::atomic<std::uint64_t> udpBytesIn { 0 };   ///< every datagram, UDP thread
+    std::uint64_t sampledUdpIn = 0;
+    double udpInPerSecond = 0.0;
+    juce::uint32 sampledAt = 0;
+    const juce::int64 startedAt = juce::Time::currentTimeMillis();
 
     juce::ThreadPool handshakes { juce::ThreadPoolOptions{}.withNumberOfThreads (2) };
     std::unique_ptr<AcceptThread> acceptThread;

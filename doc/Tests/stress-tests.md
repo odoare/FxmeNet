@@ -2,6 +2,39 @@
 
 First stress tests, 2026-11-06. Raw notes in `tests.txt`.
 
+## Summary
+
+Tests of 2026-11-06 and 2026-11-07, on old machines: a 2015 Intel i7-6700K
+client (Windows, Reaper) and a 2018 AMD Ryzen 5 PRO 2400G server (Ubuntu,
+4 cores).
+
+- **The offload works.** 24 tracks with 17 FxmeFX plugins each take 75 %
+  of the client CPU when processed locally, and 20 to 25 % through
+  FxmeNet.
+- **Heavy loads run with large blocks.** 28 tracks × 17 plugins (476
+  plugin instances) is very usable at 1024×2: no concealed blocks, or
+  very rare ones.
+- **Small blocks need headroom.** 128×2 and 256×2 work well while the
+  server has spare CPU (light chains, or up to about 24 heavy tracks).
+  Close to full load the server stalls for 20 to 50 ms now and then,
+  which misses their short deadlines (5.8 and 11.6 ms) but fits in the
+  46 ms of 1024×2.
+- **No click in the later runs.** The clicks heard on the first day did
+  not come back, and in the runs with server logs no request was lost on
+  its way to the server.
+- These are extreme loads. Real sessions rarely put 17 plugins on every
+  track, so they should sit well inside these limits.
+
+Open points, none urgent:
+
+- About 0.3 % of replies are dropped by the server's kernel because the
+  socket's send buffer is full (`UdpSndbufErrors`). Fix: a larger send
+  buffer (todo item 21).
+- The cause of the stalls is not confirmed: real-time throttling, or the
+  load itself (section 6.3).
+- If clicks come back: when a request is missing, the server should
+  process a made-up, faded block instead of jumping over it (section 3.4).
+
 ## 1. Setup
 
 | Role   | Machine                                                                 |
@@ -305,3 +338,86 @@ Server log, for every session of both runs:
 4. The two code fixes of step 5 (large socket buffers set by the server
    itself, and no jump on a missing request) stay useful, but are less
    urgent than 1 to 3.
+
+## 6. Third session (2026-11-07, real-time priority)
+
+The user is now in the `audio` group: the server's audio threads and its UDP
+thread run with real-time priority (SCHED_RR; every session's first line
+says "real-time audio thread", no warning). Same chain (17 FxmeFX plugins
+per track), 28 tracks unless said otherwise. Logs:
+`serverlog_II_28tracks_*.txt`.
+
+### 6.1 Results
+
+| ASIO | FxmeNet | Server CPU | Heard (client) | Replies over 2 blocks, all sessions | Send errors, all sessions |
+|------|---------|------------|----------------|--------------------------------------|---------------------------|
+| 128  | 128×2   | ~90 %      | a few concealed blocks per second; 32 tracks unusable | 61,914 (about 4.5 % of blocks) | 137 |
+| 256  | 256×2   | ~85 %      | many concealed blocks, unusable | 19,059 (about 2.7 %) | 0 |
+| 128  | 1024×2  | over 75 %  | one every ~5 s; 32 tracks about one per second | 5 | 65 |
+| 1024 | 1024×2  | ~75 %      | none or very rare: very usable; 32 tracks about one per second | 3 | 2 |
+
+No click in any run. `lost` and `stale` are 0 everywhere (except 119 lost in
+a 20-block session at the very start of the 128×2 run, a session the client
+closed at once). `UdpRcvbufErrors` stayed at 0; `UdpSndbufErrors` went from 0
+to 218, which matches the sum of the server's send errors (204, plus the
+sessions closed before their last activity line).
+
+Usual and longest times per block:
+
+| FxmeNet | Usual processing | Longest processing over 10 s | Longest turnaround over 10 s | Deadline (2 blocks) |
+|---------|------------------|------------------------------|------------------------------|---------------------|
+| 128×2   | 0.5 to 0.6 ms    | 8 to 36 ms                   | 30 to 90 ms                  | 5.8 ms  |
+| 256×2   | 0.6 to 0.8 ms    | 6 to 35 ms                   | 21 to 48 ms                  | 11.6 ms |
+| 1024×2  | 2 to 5 ms        | 9 to 42 ms                   | 10 to 48 ms                  | 46 ms   |
+
+### 6.2 Analysis
+
+- **Real-time priority did not remove the stalls.** With every audio thread
+  real time, a block that usually takes 0.6 ms still sometimes takes 10 to
+  35 ms *inside its own processing*, and replies still wait up to 30 to
+  50 ms. The stalls are about the same length whatever the block size.
+- **So the block size decides, through the deadline.** Stalls of 20 to
+  50 ms miss a 5.8 ms or 11.6 ms deadline but fit in 46 ms. That is why
+  1024×2 is usable and 128×2 and 256×2 are not, even though 1024×2 has the
+  same stalls.
+- **The stalls hit all sessions together.** Every session of a run has
+  nearly the same count of late replies (2,000 to 2,500 each at 128×2, 600
+  to 800 at 256×2). The cause is machine-wide, not one plugin in one
+  session.
+- **The server is close to full.** 28 tracks × 17 plugins is 476 plugin
+  instances on 4 physical cores (8 threads), at 75 to 90 % CPU. Two causes
+  of machine-wide stalls fit, and both come from running this close to
+  full:
+  1. *Real-time throttling.* By default Linux lets real-time threads use at
+     most 95 % of each CPU per second (`kernel.sched_rt_runtime_us` =
+     950000). A CPU that goes over is barred from running them for the rest
+     of the period, which can last tens of ms. The kernel says so once in
+     its log ("sched: RT throttling activated").
+  2. *Demand peaks.* Every session gets its block at the same moment, so
+     the work arrives in bursts. Close to full load, the queue of waiting
+     threads takes long to drain.
+- **Larger blocks cost less per sample**: about 0.41 ms per 128 samples at
+  1024×2, against 0.55 ms at 128×2. That is another 25 % in favour of large
+  blocks for heavy chains.
+- **Send errors are confirmed**, at 128×2 too (one datagram per reply), but
+  they are a minor cause: a few hundred replies, against tens of thousands
+  late. The send buffer still needs enlarging.
+
+### 6.3 Conclusions and next steps
+
+- On this server, 24 tracks × 17 plugins is the practical limit at small
+  blocks, and 28 needs 1024×2. These are extreme loads (17 plugins on every
+  track); a realistic session should be tested next.
+- To find the cause of the stalls:
+  1. After a run, `sudo dmesg | grep -i throttl`. If "RT throttling
+     activated" is there, rerun 128×2 or 256×2 after
+     `sudo sysctl -w kernel.sched_rt_runtime_us=-1`. This removes the
+     protection against a runaway real-time thread freezing the machine, so
+     it is for a test only. If the stalls shrink, throttling is the cause.
+  2. Compare 24 and 28 tracks at 256×2: if the stalls almost vanish at 24,
+     they come from the load itself.
+- Send buffer: `sudo sysctl -w net.core.wmem_default=4194304
+  net.core.wmem_max=8388608`, then restart the server. In code, the server
+  should ask for a large buffer on its socket itself and log what it got.
+- Possibly: a per-plugin processing time in the log, to see which of the 17
+  plugins cost the most.

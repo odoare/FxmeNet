@@ -71,6 +71,7 @@ struct Hello
 {
     juce::Array<int> versions { 1 };
     juce::String clientName, os, fxmenetVersion;
+    juce::String role;   ///< empty: a session; roleMonitor: fxmenet-top
     bool resume = false;
     std::uint32_t resumeSessionId = 0;
     std::uint64_t resumeToken = 0;
@@ -85,6 +86,8 @@ struct Hello
         o->setProperty ("clientName", clientName);
         o->setProperty ("os", os);
         o->setProperty ("fxmenetVersion", fxmenetVersion);
+        if (role.isNotEmpty())
+            o->setProperty ("role", role);
         if (resume)
         {
             auto* r = new juce::DynamicObject();
@@ -107,6 +110,7 @@ struct Hello
         h.clientName = v["clientName"].toString();
         h.os = v["os"].toString();
         h.fxmenetVersion = v["fxmenetVersion"].toString();
+        h.role = v["role"].toString();
         const auto r = v["resume"];
         h.resume = r.isObject();
         if (h.resume)
@@ -121,6 +125,13 @@ struct Hello
 //==============================================================================
 /** In WELCOME's capabilities: the server applies ROUTING (doc/routing.md). */
 constexpr const char* capabilityRouting = "routing";
+
+/** HELLO's role for a monitor (fxmenet-top): status and plugin paths, no session. */
+constexpr const char* roleMonitor = "monitor";
+
+/** In a monitor's WELCOME: it may change the plugin paths and rescan
+    (it connected from the server's machine, or the server allows it). */
+constexpr const char* capabilityAdmin = "admin";
 
 struct Welcome
 {
@@ -215,7 +226,8 @@ struct ErrorMessage
         pluginNotFound   = 4,
         pluginLoadFailed = 5,
         noSuchSlot       = 6,
-        notConfigured    = 7
+        notConfigured    = 7,
+        notAllowed       = 8    ///< a monitor without the "admin" capability
     };
 
     int code = unknown;

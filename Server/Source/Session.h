@@ -62,8 +62,18 @@ public:
     bool isOrphan() const noexcept              { return connection == nullptr; }
     juce::uint32 getOrphanedSince() const noexcept  { return orphanedSince; }
 
+    /** Who opened it (for fxmenet-top). */
+    void setClient (const juce::String& peerHost, const juce::String& name, const juce::String& clientOs);
+
+    /** Once a second (the server's timer): the last second's rates and
+        maxima, kept for describeStatus and folded into the log's 10 s. */
+    void sampleSecond();
+
     /** One line of statistics for the log, or {} when nothing happened. */
     juce::String describeActivity();
+
+    /** The session for fxmenet-top's status (Monitor.h). */
+    juce::var describeStatus() const;
 
     //==============================================================================
     // The server's UDP thread.
@@ -115,6 +125,22 @@ private:
     std::unique_ptr<wire::Reassembler> reassembler;
 
     std::uint64_t lastProcessed = 0;
+
+    // fxmenet-top. Message thread, apart from the byte counters.
+    juce::String clientHost, clientName, clientOs;
+    const juce::int64 openedAt = juce::Time::currentTimeMillis();
+    std::atomic<std::uint64_t> bytesReceived { 0 };   ///< UDP thread
+    std::atomic<std::uint64_t> telemetryBytes { 0 };
+
+    struct Second
+    {
+        double blocks = 0.0, inBytes = 0.0, outBytes = 0.0;   ///< per second
+        std::uint32_t maxProcessMicros = 0, maxTurnaroundMicros = 0;
+    };
+    Second second;
+    AudioWorker::Window tenSeconds;   ///< maxima since the last activity line
+    std::uint64_t sampledBlocks = 0, sampledIn = 0, sampledOut = 0;
+    juce::uint32 sampledAt = 0;
 
     // Telemetry and parameter changes, message thread.
     const juce::DatagramSocket& udp;
