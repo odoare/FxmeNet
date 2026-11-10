@@ -2,7 +2,7 @@
   ------------------------------------------------------------------------------
     Panels.h
 
-    The three tabs of FxmeNet's editor (7d):
+    The four tabs of FxmeNet's editor (7d):
 
       - ParameterPanel: the selected slot's parameters, one row each: name,
         a slider (normalised; stepped ones snap), the value text, the pool
@@ -10,9 +10,11 @@
         DAW is mapped to it) and Map / Unmap (the first free pool entry);
       - MappingPanel: every mapped pool entry, with Unmap, and the state of
         a learn in progress;
+      - RoutingPanel: the routing between the chain's plugins (RoutingView),
+        Reset routing, and the two options of the default routing;
       - SettingsPanel: block size N and budget D with the latency they give,
-        one toggle per input and output channel (the masks), and the local
-        plugin scan (its extra folders, rescans).
+        the transport options, and the local plugin scan (its extra
+        folders, rescans).
 
     Each is refreshed by the editor's timer from the processor; none keeps a
     copy of anything the processor owns beyond what it shows.
@@ -111,6 +113,26 @@ private:
 };
 
 //==============================================================================
+class RoutingPanel : public juce::Component
+{
+public:
+    explicit RoutingPanel (FxmeNetAudioProcessor&);
+
+    void refresh();
+
+    void paint (juce::Graphics&) override;
+    void resized() override;
+
+private:
+    FxmeNetAudioProcessor& processor;
+    RoutingView routingView;
+    juce::TextButton resetRoutingButton { "Reset routing" };
+    juce::TextButton aroundButton { "Channels go around plugins that lack them" },
+                     extraOutputsButton { "Connect extra outputs" };
+    juce::Rectangle<int> routingLabel, routingHint, defaultsLabel;
+};
+
+//==============================================================================
 class SettingsPanel : public juce::Component
 {
 public:
@@ -129,16 +151,11 @@ private:
 
     FxmeNetAudioProcessor& processor;
     juce::ComboBox blockBox, budgetBox;
-    RoutingView routingView;
-    juce::TextButton resetRoutingButton { "Reset routing" };
     juce::TextButton rescanButton { "Rescan" }, fullRescanButton { "Full rescan" }, foldersButton { "Folders..." };
     juce::TextButton flushButton { "Silence in-flight audio at reset" }, logButton { "Log transport events" };
-    juce::TextButton aroundButton { "Channels go around plugins that lack them" },
-                     extraOutputsButton { "Connect extra outputs" };
     std::unique_ptr<juce::FileChooser> chooser;
     juce::String latencyText, localText, foldersText;
-    juce::Rectangle<int> blockLabel, budgetLabel, latencyArea, routingLabel, routingHint, localArea, foldersArea, diagnosticsLabel,
-                         defaultsLabel;
+    juce::Rectangle<int> streamLabel, blockLabel, budgetLabel, latencyArea, localArea, foldersArea, diagnosticsLabel;
 };
 
 } // namespace fxmenet::plugin

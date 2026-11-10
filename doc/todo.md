@@ -166,6 +166,11 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     - stopping the server during a full rescan (it must quit at once).
     Later, if wanted: tell connected clients that the catalog changed
     (an unsolicited `PLUGIN_LIST`), so their list follows a rescan.
+24. (written) The "Stream & channels" tab split in two (user request
+    2026-11-10): "Routing" (the routing view, Reset routing, the two
+    defaults) and "Settings" (N, D and latency, transport, local plugins).
+    To check: both tabs at the default window size and when the window
+    grows for a large plugin editor.
 13. Later, optional: mDNS publishing (`_fxmenet._tcp`) for system browsers.
 8. Phase 4: shadow editors and telemetry; port Compressor and Equalizer.
    - 8c (written): telemetry into the shadows. Build the plugin; in Reaper

@@ -387,7 +387,7 @@ The DAW glue around `ClientEngine`; product name "FxmeNet", VST3 and AU
   and hashed again (changed: the binary's size or date, not the bundle
   folder's, which a copy over an installed bundle leaves alone). Searched:
   the VST3 default folders and the user's extra folders (FxmeNet.settings,
-  "Folders..." in the Stream & channels tab), with their subfolders; a
+  "Folders..." in the Settings tab), with their subfolders; a
   plugin outside them leaves the list. Rescan and Full rescan in the same
   tab; the scan thread waits for requests, and one made during a scan
   follows it.
@@ -443,8 +443,12 @@ The DAW glue around `ClientEngine`; product name "FxmeNet", VST3 and AU
     entry, Learn, Map / Unmap;
   - Mapping: every mapped pool entry with its name and value, Unmap (multiple
     selection), Unmap all, and the learn in progress with Cancel;
-  - Stream & channels: N and D, the latency they give (network and
-    re-blocking, then the chain's), one toggle per input and output channel.
+  - Routing: the routing between the chain's plugins (`RoutingView`, all
+    the room it can get), Reset routing, and the two options of the
+    default routing;
+  - Settings: N and D and the latency they give (network and re-blocking,
+    then the chain's), the transport options, and the local plugin scan
+    (folders, rescans).
   One line of statistics at the bottom. Displays read the slots through
   `ClientEngine::getSlotInfos` (no state blobs) and
   `ClientEngine::currentValue`, which stays right across a state refresh.

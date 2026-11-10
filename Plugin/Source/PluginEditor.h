@@ -4,9 +4,9 @@
 
     FxmeNet's window: the FX-Mechanics top bar, the server (found on the
     network or typed) with its status; on the left the server's plugins and
-    the chain with its edit buttons; on the right three tabs (Panels.h): the
-    selected slot's parameters, the automation mapping, the stream and
-    channel settings; one line of statistics at the bottom.
+    the chain with its edit buttons; on the right four tabs (Panels.h): the
+    selected slot's parameters, the automation mapping, the routing, the
+    settings (stream, transport, local plugins); one line of statistics at the bottom.
 
     Everything is read from the processor and its engine by a 10 Hz timer;
     nothing here touches the network itself, apart from the discovery
@@ -109,6 +109,7 @@ private:
 
     fxmenet::plugin::ParameterPanel parameterPanel { processor };
     fxmenet::plugin::MappingPanel mappingPanel { processor };
+    fxmenet::plugin::RoutingPanel routingPanel { processor };
     fxmenet::plugin::SettingsPanel settingsPanel { processor };
     juce::TabbedComponent tabs { juce::TabbedButtonBar::TabsAtTop };
 

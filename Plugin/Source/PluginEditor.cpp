@@ -137,7 +137,8 @@ FxmeNetAudioProcessorEditor::FxmeNetAudioProcessorEditor (FxmeNetAudioProcessor&
     tabs.setOutline (0);
     tabs.addTab ("Parameters", theme::panel, &parameterPanel, false);
     tabs.addTab ("Mapping", theme::panel, &mappingPanel, false);
-    tabs.addTab ("Stream & channels", theme::panel, &settingsPanel, false);
+    tabs.addTab ("Routing", theme::panel, &routingPanel, false);
+    tabs.addTab ("Settings", theme::panel, &settingsPanel, false);
     addAndMakeVisible (tabs);
 
     setSize (theme::width, theme::height);
@@ -187,6 +188,7 @@ void FxmeNetAudioProcessorEditor::timerCallback()
     const int row = chainList.getSelectedRow();
     parameterPanel.refresh (juce::isPositiveAndBelow (row, (int) slots.size()) ? &slots[(std::size_t) row] : nullptr);
     mappingPanel.refresh();
+    routingPanel.refresh();
     settingsPanel.refresh();
     repaint (statusArea);
     repaint (statsArea);

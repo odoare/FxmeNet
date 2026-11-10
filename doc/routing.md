@@ -232,10 +232,11 @@ without audio.
 
 ### E. The view
 
-(Written, `Plugin/Source/RoutingView.cpp`.) In the "Stream & channels"
-tab, reorganized: block size, network budget and latency on top, the
-routing in the middle (scrollable, most of the room), the transport
-options and the local plugins at the bottom. The input and output toggle
+(Written, `Plugin/Source/RoutingView.cpp`.) In a tab of its own,
+"Routing" (since 2026-11-10; it shared "Stream & channels" before): the
+routing (scrollable, the whole tab but one row), Reset routing above it,
+and the two routing defaults below. Block size, network budget, latency,
+the transport options and the local plugins are in the "Settings" tab. The input and output toggle
 buttons are gone: the routing decides what is sent and received, and the
 masks are no longer saved with the project.
 

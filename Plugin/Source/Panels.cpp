@@ -491,25 +491,15 @@ void MappingPanel::resized()
 }
 
 //==============================================================================
-// SettingsPanel
+// RoutingPanel
 
-SettingsPanel::SettingsPanel (FxmeNetAudioProcessor& p) : processor (p), routingView (p)
+RoutingPanel::RoutingPanel (FxmeNetAudioProcessor& p) : processor (p), routingView (p)
 {
-    int id = 1;
-    for (int n : { 32, 64, 128, 256, 512, 1024 })
-        blockBox.addItem (juce::String (n) + " samples", id++);
-    for (int d = 1; d <= 8; ++d)
-        budgetBox.addItem (juce::String (d) + (d == 1 ? " block" : " blocks"), d);
-    blockBox.setTooltip (tips::blockSize);
-    budgetBox.setTooltip (tips::budget);
-    blockBox.onChange = [this] { apply(); };
-    budgetBox.onChange = [this] { apply(); };
-    addAndMakeVisible (blockBox);
-    addAndMakeVisible (budgetBox);
-
     resetRoutingButton.setTooltip ("Back to the default routing: each plugin fed by the one above it, in series, "
                                    "and the outputs by the last one.");
     resetRoutingButton.onClick = [this] { processor.getEngine().resetRouting(); };
+    styleButton (resetRoutingButton);
+    addAndMakeVisible (resetRoutingButton);
 
     aroundButton.setTooltip ("Default routing: a channel a plugin does not have goes around it to the next one "
                              "that has it, or to the outputs (as a plain serial chain). Off: each plugin, and the "
@@ -535,6 +525,65 @@ SettingsPanel::SettingsPanel (FxmeNetAudioProcessor& p) : processor (p), routing
         addAndMakeVisible (*b);
     }
     addAndMakeVisible (routingView);
+}
+
+void RoutingPanel::refresh()
+{
+    routingView.refresh();
+    const auto o = processor.getEngine().getRoutingOptions();
+    aroundButton.setToggleState (o.around, juce::dontSendNotification);
+    extraOutputsButton.setToggleState (o.extraOutputs, juce::dontSendNotification);
+}
+
+void RoutingPanel::paint (juce::Graphics& g)
+{
+    g.fillAll (theme::panel);
+    g.setFont (juce::Font (juce::FontOptions (12.5f)));
+    g.setColour (theme::dimText);
+    g.drawText ("ROUTING", routingLabel, juce::Justification::centredLeft);
+    g.drawText ("DEFAULTS", defaultsLabel, juce::Justification::centredLeft);
+    g.setFont (juce::Font (juce::FontOptions (11.0f)));
+    g.drawText ("Drag between pins or bus names; shift-click a connection to remove it; right-click an input pin.",
+                routingHint, juce::Justification::centredLeft, true);
+}
+
+void RoutingPanel::resized()
+{
+    auto r = getLocalBounds().reduced (12, 10);
+
+    // The default rule's options, at the bottom.
+    auto defaults = r.removeFromBottom (24);
+    defaultsLabel = defaults.removeFromLeft (80);
+    aroundButton.setBounds (defaults.removeFromLeft (270));
+    defaults.removeFromLeft (6);
+    extraOutputsButton.setBounds (defaults.removeFromLeft (160));
+    r.removeFromBottom (8);
+
+    // The routing: the rest.
+    auto head = r.removeFromTop (24);
+    resetRoutingButton.setBounds (head.removeFromRight (110));
+    routingLabel = head.removeFromLeft (70);
+    routingHint = head.withTrimmedRight (8);
+    r.removeFromTop (4);
+    routingView.setBounds (r);
+}
+
+//==============================================================================
+// SettingsPanel
+
+SettingsPanel::SettingsPanel (FxmeNetAudioProcessor& p) : processor (p)
+{
+    int id = 1;
+    for (int n : { 32, 64, 128, 256, 512, 1024 })
+        blockBox.addItem (juce::String (n) + " samples", id++);
+    for (int d = 1; d <= 8; ++d)
+        budgetBox.addItem (juce::String (d) + (d == 1 ? " block" : " blocks"), d);
+    blockBox.setTooltip (tips::blockSize);
+    budgetBox.setTooltip (tips::budget);
+    blockBox.onChange = [this] { apply(); };
+    budgetBox.onChange = [this] { apply(); };
+    addAndMakeVisible (blockBox);
+    addAndMakeVisible (budgetBox);
 
     rescanButton.setTooltip (tips::rescan);
     fullRescanButton.setTooltip (tips::fullRescan);
@@ -558,7 +607,7 @@ SettingsPanel::SettingsPanel (FxmeNetAudioProcessor& p) : processor (p), routing
     };
     logButton.onClick = [this] { setLogEvents (logButton.getToggleState()); };
 
-    for (auto* b : { &resetRoutingButton, &rescanButton, &fullRescanButton, &foldersButton })
+    for (auto* b : { &rescanButton, &fullRescanButton, &foldersButton })
     {
         styleButton (*b);
         addAndMakeVisible (*b);
@@ -575,7 +624,6 @@ void SettingsPanel::refresh()
     blockBox.setSelectedItemIndex (blockIndex, juce::dontSendNotification);
     budgetBox.setSelectedId (s.budgetBlocks, juce::dontSendNotification);
 
-
     auto& engine = processor.getEngine();
     const double rate = processor.getSampleRate() > 0.0 ? processor.getSampleRate() : 48000.0;
     const int stream = engine.getStreamLatency(), total = engine.getLatency();
@@ -587,13 +635,6 @@ void SettingsPanel::refresh()
     {
         latencyText = text;
         repaint (latencyArea);
-    }
-
-    routingView.refresh();
-    {
-        const auto o = processor.getEngine().getRoutingOptions();
-        aroundButton.setToggleState (o.around, juce::dontSendNotification);
-        extraOutputsButton.setToggleState (o.extraOutputs, juce::dontSendNotification);
     }
 
     flushButton.setToggleState (processor.getEngine().getFlushOnReset(), juce::dontSendNotification);
@@ -675,16 +716,11 @@ void SettingsPanel::paint (juce::Graphics& g)
     g.fillAll (theme::panel);
     g.setFont (juce::Font (juce::FontOptions (12.5f)));
     g.setColour (theme::dimText);
+    g.drawText ("STREAM", streamLabel, juce::Justification::centredLeft);
     g.drawText ("Block size N", blockLabel, juce::Justification::centredLeft);
     g.drawText ("Network budget D", budgetLabel, juce::Justification::centredLeft);
-    g.drawText ("ROUTING", routingLabel, juce::Justification::centredLeft);
-    g.setFont (juce::Font (juce::FontOptions (11.0f)));
-    g.drawText ("Drag between pins or bus names; shift-click a connection to remove it; right-click an input pin.",
-                routingHint, juce::Justification::centredLeft, true);
-    g.setFont (juce::Font (juce::FontOptions (12.5f)));
-    g.drawText ("LOCAL PLUGINS (for the plugins' own editors)", localArea.withHeight (18), juce::Justification::centredLeft);
     g.drawText ("TRANSPORT", diagnosticsLabel, juce::Justification::centredLeft);
-    g.drawText ("ROUTING DEFAULTS", defaultsLabel, juce::Justification::centredLeft);
+    g.drawText ("LOCAL PLUGINS (for the plugins' own editors)", localArea.withHeight (18), juce::Justification::centredLeft);
     g.setColour (theme::text);
     g.drawFittedText (latencyText, latencyArea, juce::Justification::centredLeft, 2);
     g.drawText (localText, localArea.withTrimmedTop (22).withHeight (24), juce::Justification::centredLeft, true);
@@ -696,34 +732,9 @@ void SettingsPanel::resized()
 {
     auto r = getLocalBounds().reduced (12, 10);
 
-    // Local plugins, at the bottom.
-    localArea = r.removeFromBottom (70);
-    foldersArea = localArea.withTrimmedTop (50);
-    auto buttons = localArea.withTrimmedTop (22).removeFromRight (286);
-    fullRescanButton.setBounds (buttons.removeFromRight (100).withHeight (24));
-    buttons.removeFromRight (6);
-    rescanButton.setBounds (buttons.removeFromRight (80).withHeight (24));
-    buttons.removeFromRight (6);
-    foldersButton.setBounds (buttons.removeFromRight (90).withHeight (24));
-    localArea = localArea.withTrimmedRight (296);
-    r.removeFromBottom (8);
-
-    // The default rule's options, above.
-    auto defaults = r.removeFromBottom (24);
-    defaultsLabel = defaults.removeFromLeft (130);
-    aroundButton.setBounds (defaults.removeFromLeft (270));
-    defaults.removeFromLeft (6);
-    extraOutputsButton.setBounds (defaults.removeFromLeft (160));
-    r.removeFromBottom (8);
-
-    // Reset behaviour and the events log, above.
-    auto diagnostics = r.removeFromBottom (24);
-    diagnosticsLabel = diagnostics.removeFromLeft (90);
-    flushButton.setBounds (diagnostics.removeFromLeft (230));
-    diagnostics.removeFromLeft (6);
-    logButton.setBounds (diagnostics.removeFromLeft (170));
-    r.removeFromBottom (8);
-
+    // Stream: N and D, and the latency they give.
+    streamLabel = r.removeFromTop (18);
+    r.removeFromTop (4);
     auto row = r.removeFromTop (26);
     blockLabel = row.removeFromLeft (120);
     blockBox.setBounds (row.removeFromLeft (130));
@@ -732,15 +743,27 @@ void SettingsPanel::resized()
     budgetBox.setBounds (row.removeFromLeft (110));
     r.removeFromTop (6);
     latencyArea = r.removeFromTop (34);
-    r.removeFromTop (8);
+    r.removeFromTop (18);
 
-    // The routing: the rest.
-    auto head = r.removeFromTop (24);
-    resetRoutingButton.setBounds (head.removeFromRight (110));
-    routingLabel = head.removeFromLeft (70);
-    routingHint = head.withTrimmedRight (8);
+    // Transport: reset behaviour and the events log.
+    diagnosticsLabel = r.removeFromTop (18);
     r.removeFromTop (4);
-    routingView.setBounds (r);
+    auto diagnostics = r.removeFromTop (24);
+    flushButton.setBounds (diagnostics.removeFromLeft (230));
+    diagnostics.removeFromLeft (6);
+    logButton.setBounds (diagnostics.removeFromLeft (170));
+    r.removeFromTop (18);
+
+    // Local plugins: the scan, its folders.
+    localArea = r.removeFromTop (70);
+    foldersArea = localArea.withTrimmedTop (50);
+    auto buttons = localArea.withTrimmedTop (22).removeFromRight (286);
+    fullRescanButton.setBounds (buttons.removeFromRight (100).withHeight (24));
+    buttons.removeFromRight (6);
+    rescanButton.setBounds (buttons.removeFromRight (80).withHeight (24));
+    buttons.removeFromRight (6);
+    foldersButton.setBounds (buttons.removeFromRight (90).withHeight (24));
+    localArea = localArea.withTrimmedRight (296);
 }
 
 } // namespace fxmenet::plugin
