@@ -1,0 +1,111 @@
+% fxmenet.sty: the look of the FxmeNet manual, for both outputs.
+%
+% The same source gives a PDF (latexmk, pdflatex) and an HTML site
+% (make4ht, which defines \HCode). Anything the two outputs must do
+% differently is under \ifdefined\HCode.
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{fxmenet}[2026/11/10 FxmeNet manual style]
+
+\RequirePackage[utf8]{inputenc}
+\RequirePackage[T1]{fontenc}
+\RequirePackage{lmodern}
+\RequirePackage{xcolor}
+\RequirePackage{graphicx}
+\RequirePackage{booktabs}
+\RequirePackage{longtable}
+\RequirePackage{enumitem}
+\RequirePackage{listings}
+\RequirePackage[obeyspaces,spaces]{url}
+
+\ifdefined\HCode\else
+  \RequirePackage{microtype}
+  % No -- ligature in typewriter text: options such as --name are literal.
+  \DisableLigatures[-]{encoding=*, family=tt*}
+  \RequirePackage[most]{tcolorbox}
+  \RequirePackage{caption}
+\fi
+
+% The drawings come from the doc folder, the manual's parent. For the HTML
+% the Makefile adds it to TEXINPUTS and copies the images beside the pages,
+% so that their addresses stay relative to the site.
+\ifdefined\HCode\else\graphicspath{{../}{images/}}\fi
+
+% ---------------------------------------------------------------- colours
+% From the logo: teal and gold on dark grey.
+\definecolor{fxteal}{HTML}{0AA9A0}
+\definecolor{fxgold}{HTML}{E6B422}
+\definecolor{fxgrey}{HTML}{3A3A3A}
+\definecolor{fxlight}{HTML}{F4F6F6}
+
+% ------------------------------------------------------------------ draft
+% \fxdrafttrue shows the \todo marks; \fxdraftfalse hides them (release).
+\newif\iffxdraft
+\fxdrafttrue
+
+\ifdefined\HCode
+  \newcommand{\todo}[1]{\iffxdraft\HCode{<span class="todo">}[TODO: #1]\HCode{</span>}\fi}
+\else
+  \newcommand{\todo}[1]{\iffxdraft\textcolor{red!70!black}{\textbf{[TODO: #1]}}\fi}
+\fi
+
+% ----------------------------------------------------- inline conventions
+\newcommand{\fxme}{FxmeNet}
+% Commands and options. In the HTML, tex4ht would turn -- into an en dash.
+\ifdefined\HCode
+  \RequirePackage{xstring}
+  \DeclareRobustCommand{\cmd}[1]{\texttt{\StrSubstitute{\detokenize{#1}}{--}{-{}-}}}
+\else
+  \newcommand{\cmd}[1]{\texttt{\detokenize{#1}}}
+\fi
+% \file breaks at slashes (url package); never use it in a title.
+\DeclareUrlCommand\file{\urlstyle{tt}}
+\newcommand{\ui}[1]{\textsf{#1}}                      % a control in the editor
+\newcommand{\key}[1]{\fbox{\texttt{#1}}}              % a key to press
+\newcommand{\tier}[1]{\textsf{T#1}}
+
+% ------------------------------------------------------------- call-outs
+\ifdefined\HCode
+  % tex4ht: close the open paragraph before the <div>, and again after it.
+  \newcommand{\fxcalloutbegin}[2]{\ifvmode\IgnorePar\fi\EndP\HCode{<div class="callout #1">}\par\textbf{#2}\ }
+  \newcommand{\fxcalloutend}{\par\ifvmode\IgnorePar\fi\EndP\HCode{</div>}\IgnorePar}
+  \newenvironment{note}{\fxcalloutbegin{note}{Note.}}{\fxcalloutend}
+  \newenvironment{tip}{\fxcalloutbegin{tip}{Tip.}}{\fxcalloutend}
+  \newenvironment{warning}{\fxcalloutbegin{warning}{Warning.}}{\fxcalloutend}
+\else
+  \newtcolorbox{note}{breakable, colback=fxlight, colframe=fxteal, boxrule=0.6pt,
+    left=6pt, right=6pt, top=4pt, bottom=4pt, title=Note, fonttitle=\bfseries\sffamily, coltitle=white, colbacktitle=fxteal}
+  \newtcolorbox{tip}{breakable, colback=fxlight, colframe=fxgold!80!black, boxrule=0.6pt,
+    left=6pt, right=6pt, top=4pt, bottom=4pt, title=Tip, fonttitle=\bfseries\sffamily, coltitle=black, colbacktitle=fxgold}
+  \newtcolorbox{warning}{breakable, colback=red!4, colframe=red!60!black, boxrule=0.6pt,
+    left=6pt, right=6pt, top=4pt, bottom=4pt, title=Warning, fonttitle=\bfseries\sffamily, coltitle=white, colbacktitle=red!60!black}
+\fi
+
+% ------------------------------------------------------------- listings
+\lstdefinestyle{fxshell}{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  frame=single,
+  rulecolor=\color{fxteal!60},
+  backgroundcolor=\color{fxlight},
+  xleftmargin=4pt, xrightmargin=4pt,
+  aboveskip=8pt, belowskip=6pt,
+  showstringspaces=false,
+  upquote=true
+}
+\lstdefinestyle{fxcode}{style=fxshell, language=C++,
+  keywordstyle=\color{fxteal!70!black}\bfseries, commentstyle=\color{gray}\itshape}
+\lstset{style=fxshell}
+
+\emergencystretch=3em
+
+% Definition-style lists for options and keys.
+\setlist[itemize]{itemsep=2pt, topsep=4pt}
+\setlist[enumerate]{itemsep=2pt, topsep=4pt}
+
+% A figure of the logo that works in both outputs.
+\newcommand{\fxlogo}[2][]{\includegraphics[#1]{#2}}
+
+\endinput

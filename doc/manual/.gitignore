@@ -1,0 +1,16 @@
+build/
+*.aux
+*.log
+*.toc
+*.out
+*.fls
+*.fdb_latexmk
+*.4*
+*.dvi
+*.idv
+*.lg
+*.tmp
+*.xref
+*.html
+*.css
+!fxmenet.css

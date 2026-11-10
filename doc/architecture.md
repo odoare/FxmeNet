@@ -54,6 +54,8 @@ Spikes/                 Phase 0 throwaway programs (FXMENET_BUILD_SPIKES, ON for
                         (XEmbed on Linux), for Phase 4's shadow editors
 doc/                    this file, todo.md, done.md; protocol.md (the wire
                         protocol, draft); audiogridder-notes.md
+doc/manual/             the user manual: LaTeX source for a PDF and an HTML site
+                        (make pdf, make html; README.md there)
 ```
 
 The plugin-side classes (for plugins hosted on the server) live in FxmeTools, not here: `net/TelemetryCodec.h`,

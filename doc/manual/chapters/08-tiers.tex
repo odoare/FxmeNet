@@ -1,0 +1,57 @@
+\chapter{Tiers: editors and meters}
+\label{ch:tiers}
+
+Every plugin in the server's list carries a tag, \tier{0}, \tier{1} or
+\tier{2}. It says what you can have on the client for that plugin.
+
+\begin{longtable}{@{}p{0.08\textwidth}p{0.88\textwidth}@{}}
+\toprule
+\textbf{Tier} & \textbf{What you get}\\
+\midrule
+\endhead
+\tier{2} & The plugin's own editor on the client, with its meters, spectra and other displays showing the server's real signal. The plugin is made for \fxme\ (chapter~\ref{ch:developers}) and installed in the same version on the client.\\
+\tier{1} & The plugin's own editor on the client, kept in step with the server's copy. Meters and analysers that read the audio inside the plugin stay empty, since the audio is not on the client.\\
+\tier{0} & Generic controls: a slider per parameter. Used when the plugin is not installed on the client, or is another version.\\
+\bottomrule
+\end{longtable}
+
+\section{How the plugin decides}
+
+The plugin scans the VST3 folders of the computer that runs the DAW. A server
+plugin matches a local one when the identifier, the name and the vendor are
+the same. The version then decides:
+
+\begin{itemize}
+  \item the same version, and the server says the plugin is made for \fxme:
+    tier \tier{2};
+  \item the same version otherwise: tier \tier{1};
+  \item another version, or no local copy: tier \tier{0}.
+\end{itemize}
+
+When both computers run the same operating system, the plugin also compares
+the binary files. A difference (another build of the same version) is shown
+on hover but does not stop the plugin from being used. Hover over a row of
+the list to see the reason for its tier.
+
+The \ui{FxmeNet} plugin itself is never listed, and neither are instruments.
+
+\section{What the local copy does}
+
+For tiers \tier{1} and \tier{2}, the plugin creates a local copy of the
+server's plugin when you first open its editor. This \emph{mirror} never
+processes audio; it only shows the editor. Your changes go to the server,
+and the server's state comes back to the mirror. For a plugin made for
+\fxme, whatever the plugin changes outside its parameters (a preset, a loaded
+file) is copied to the server in full.
+
+\begin{note}
+Install the same plugin versions on both machines. A tier \tier{1} or
+\tier{2} editor on a different version is a source of surprises, so \fxme\
+does not use it; the plugin shows as tier \tier{0}.
+\end{note}
+
+\section{Keeping the plugin list up to date}
+
+If you install a plugin on the client while the DAW runs, use \ui{Rescan} in
+the \ui{Settings} tab, and the tags update. If your plugins live in a
+folder that is not standard, add it with \ui{Folders\ldots}.

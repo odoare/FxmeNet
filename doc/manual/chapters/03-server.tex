@@ -1,0 +1,163 @@
+\chapter{The server}
+\label{ch:server}
+
+\cmd{fxmenet-server} is a console program with no window. It hosts plugins
+for any number of clients at once, as far as the CPU allows.
+
+\section{Command line}
+
+\begin{lstlisting}
+fxmenet-server [--name NAME] [--control-port N] [--udp-port N]
+               [--discovery-port N] [--no-discovery]
+               [--plugin-path DIR]... [--no-default-paths] [--rescan]
+               [--remote-admin]
+\end{lstlisting}
+
+\begin{longtable}{@{}p{0.34\textwidth}p{0.6\textwidth}@{}}
+\toprule
+\textbf{Option} & \textbf{Meaning}\\
+\midrule
+\endhead
+\cmd{--name NAME} & The name shown to clients. Default: the computer's name.\\
+\cmd{--control-port N} & TCP port for control. Default 54322.\\
+\cmd{--udp-port N} & UDP port for audio. Default 54321.\\
+\cmd{--discovery-port N} & UDP port answering \ui{Find}. Default 54320.\\
+\cmd{--no-discovery} & Do not answer \ui{Find}. Clients must then type the address.\\
+\cmd{--plugin-path DIR} & Also search this folder, for this run only. May be repeated.\\
+\cmd{--no-default-paths} & Do not search the standard VST3 folders, for this run only.\\
+\cmd{--rescan} & Ignore the plugin cache and examine every plugin again.\\
+\cmd{--remote-admin} & Let \cmd{fxmenet-top} change the plugin folders from other machines (section~\ref{sec:admin}).\\
+\bottomrule
+\end{longtable}
+
+The server logs to its standard output, with a time stamp on each line, so a
+service manager (such as systemd's journal) collects it.
+
+\section{Which plugins the server offers}
+\label{sec:catalog}
+
+The server offers VST3 \emph{effects}. Instruments are skipped. A plugin
+bundle that holds several plugins (a suite) offers each of them.
+
+Each plugin file is examined in a separate process. A plugin that crashes or
+hangs while it is loaded is logged, skipped, and does not take the server
+down. It stays skipped until the file changes. The results are kept in a
+cache file (\file{fxmenet-server-plugins.xml}, in the \file{FX-Mechanics}
+folder of the user's configuration directory), keyed by the file's path, size
+and date, so only new or changed plugins are examined at the next start. This
+examination also notes whether the plugin is made for \fxme\
+(chapter~\ref{ch:developers}).
+
+If the same plugin is installed in two folders, the first one found is used.
+
+\section{Plugin folders}
+\label{sec:folders}
+
+The server searches three kinds of folders:
+
+\begin{description}
+  \item[Default folders.] The standard VST3 folders of the operating system.
+    They can be turned off.
+  \item[Saved folders.] Folders you add with \cmd{fxmenet-top}
+    (chapter~\ref{ch:top}). The server remembers them from one run to the
+    next, in \file{fxmenet-server-settings.json} beside the cache file.
+  \item[This run's folders.] Those given with \cmd{--plugin-path}. They are
+    not remembered.
+\end{description}
+
+Folders are searched with their subfolders. After a change of folders, or
+when you install a plugin while the server runs, ask for a rescan in
+\cmd{fxmenet-top}. The scan runs in the background; the sessions in progress
+keep playing. A client sees the new list the next time it connects.
+
+\section{Ports and discovery}
+
+The server listens on three ports (chapter~\ref{ch:network}). \ui{Find}
+in the plugin broadcasts a question on the discovery port, and every server
+answers with its name, system and number of sessions. Broadcasts normally
+stay inside one network segment: across routers or VPNs, type the address.
+Only one server can run on a machine with discovery on; a second one says so
+in its log and runs without it.
+
+\section{Sessions}
+
+A session starts when a client connects and ends when it says goodbye. If a
+client's connection drops (a network hiccup, a DAW that crashes), the server
+keeps the session for 10 seconds, so that the client can resume it without
+losing its chain.
+
+Each session has its own audio thread. The server asks the operating system
+to run it with real-time priority; if the system refuses, the server logs a
+warning and runs it as an ordinary thread, which is less reliable under load
+(section~\ref{sec:linuxtuning}).
+
+\section{Reading the log}
+\label{sec:log}
+
+At startup the log lists the plugins found. Every 10 seconds, for each
+session that is working, it prints one line of figures (the numbers
+below are an example):
+
+\begin{lstlisting}[language={}]
+session 3: 8123 blocks, lost 0, stale 0, from cache 0, queue full 0,
+send errors 0, resets 1 | process 412 us, max 10 s 1180 us, max 2310 us |
+turnaround max 10 s 1650 us, over 1 block 0, over 2 blocks 0 |
+chain latency 256, telemetry frames 240, parameter changes 12
+\end{lstlisting}
+
+Counts are since the session started; the values marked \emph{10 s} cover the
+last interval.
+
+\begin{longtable}{@{}p{0.27\textwidth}p{0.67\textwidth}@{}}
+\toprule
+\textbf{Figure} & \textbf{Meaning}\\
+\midrule
+\endhead
+blocks & Blocks processed.\\
+lost & Blocks that never arrived in time: the server skipped them (the client conceals them).\\
+stale & Late blocks too old to answer, dropped.\\
+from cache & Duplicate requests answered from the server's cache of recent replies.\\
+queue full & Requests refused because the session could not keep up.\\
+send errors & Replies the system refused to send, typically because the send buffer was full (section~\ref{sec:linuxtuning}).\\
+resets & Times the client asked to restart the chain's audio (transport start, stop or jump).\\
+process & Time spent processing the last block, then the worst in the last 10 seconds, then the worst since the start.\\
+turnaround & Time from a request's arrival to its reply leaving, worst of the last 10 seconds.\\
+over 1 block, over 2 blocks & Replies that left more than one (two) block durations after the request arrived: the server fell behind.\\
+chain latency & Latency of the chain, in samples.\\
+\bottomrule
+\end{longtable}
+
+A \emph{process} time that gets close to the block's duration (2.9\,ms for 128
+samples at 44.1\,kHz) means the server is running out of CPU for that
+session.
+
+\section{Running the server as a service}
+
+Below is an example of a \cmd{systemd} unit for Linux. Running the server as a service is a possibility that has not been tested yet, so treat the example as a starting point. Feedback is welcome, and so are equivalents for other systems (launchd on macOS, a Windows service).
+
+\begin{lstlisting}[language={}]
+[Unit]
+Description=FxmeNet server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/fxmenet-server
+User=fxmenet
+Group=audio
+Restart=on-failure
+LimitRTPRIO=95
+LimitMEMLOCK=infinity
+
+[Install]
+WantedBy=multi-user.target
+\end{lstlisting}
+
+\section{Letting a remote \cmd{fxmenet-top} change the folders}
+\label{sec:admin}
+
+\cmd{fxmenet-top} can watch a server from any machine of the network. It may
+change the plugin folders only when it connects from the server's own
+machine, unless you start the server with \cmd{--remote-admin}. Because the
+network is not authenticated, use this option only on a network you
+trust.

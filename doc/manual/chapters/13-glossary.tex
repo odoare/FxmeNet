@@ -1,0 +1,29 @@
+\chapter{Glossary}
+\label{ch:glossary}
+
+\begin{description}
+  \item[Aux bus] A plugin input or output beyond its main ones, such as a
+    sidechain.
+  \item[Block] A group of N samples sent to the server and returned.
+  \item[Budget (D)] The number of blocks of time a reply has to come back.
+  \item[Chain] The plugins of a session, in processing order.
+  \item[Client] The \ui{FxmeNet} plugin in the DAW.
+  \item[Concealed block] A block whose reply was late, replaced by a short
+    fade to silence and back.
+  \item[Control channel] The TCP connection that carries plugin lists,
+    parameters and state.
+  \item[Discovery] The broadcast that lets \ui{Find} locate servers.
+  \item[Mirror] The local copy of a server plugin that shows its editor and
+    never processes audio.
+  \item[Monitor] A connection that watches a server without a session
+    (\cmd{fxmenet-top}).
+  \item[Pin] The place where a connection joins a plugin's input or output
+    in the routing view.
+  \item[Pool] The 256 automation parameters of an \ui{FxmeNet} instance.
+  \item[Server] \cmd{fxmenet-server}.
+  \item[Session] One \ui{FxmeNet} instance connected to the server.
+  \item[Telemetry] The values (meters, spectra) a plugin made for \fxme\ sends
+    from the server to its editor on the client.
+  \item[Tier] \tier{0}, \tier{1} or \tier{2}: how a plugin can be shown on the
+    client (chapter~\ref{ch:tiers}).
+\end{description}

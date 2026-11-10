@@ -1,0 +1,38 @@
+\chapter{Network requirements}
+\label{ch:network}
+
+\section{Ports}
+
+\begin{longtable}{@{}p{0.12\textwidth}p{0.14\textwidth}p{0.62\textwidth}@{}}
+\toprule
+\textbf{Port} & \textbf{Protocol} & \textbf{Use}\\
+\midrule
+\endhead
+54320 & UDP & Discovery: answers the plugin's \ui{Find}. Optional.\\
+54321 & UDP & Audio: requests and replies of all sessions, and telemetry.\\
+54322 & TCP & Control: the plugin lists, parameters, state, and \cmd{fxmenet-top}.\\
+\bottomrule
+\end{longtable}
+
+All three can be changed with the server's options (chapter~\ref{ch:server}).
+The client opens connections to the server; the server only needs these three
+ports open to the client.
+
+\section{Bandwidth}
+
+Audio travels as 32-bit floating-point samples, uncompressed, in both
+directions: about 2.8\,Mbit/s for a stereo track at 44.1\,kHz, 3.1\,Mbit/s at
+48\,kHz, and the more for more channels. In the first stress tests, 24
+stereo tracks used about 71\,Mbit/s each way and 32 tracks used 95\,Mbit/s
+each way. A gigabit connection carries several hundred tracks of this kind
+in theory; in practice, the server's CPU and the quality of the network
+limit the number of tracks first.
+
+Only the channels that the routing uses are sent
+(chapter~\ref{ch:routing}).
+
+\section{Security}
+
+The traffic is not encrypted or authenticated. A token in each session keeps
+stray packets out, but anyone on the network can talk to the server. Use
+\fxme\ on a network you trust, and keep the ports closed on the internet.

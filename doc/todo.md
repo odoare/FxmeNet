@@ -171,6 +171,14 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     defaults) and "Settings" (N, D and latency, transport, local plugins).
     To check: both tabs at the default window size and when the window
     grows for a large plugin editor.
+25. (draft) The user manual, `doc/manual` (LaTeX, PDF and HTML for
+    fx-mechanics.com; user request 2026-11-10). 13 chapters written from
+    the code and the notes; every gap is a visible `[TODO]`, listed in
+    `doc/manual/README.md`: screenshots, the final compatible-plugin mark
+    (the two logos are drafts: opaque JPEG, a 64 px icon) with the
+    conditions of use, installation and packaging, the server as a
+    service, and checking each statement against the running software.
+    Keep it in step when the plugin or the server change.
 13. Later, optional: mDNS publishing (`_fxmenet._tcp`) for system browsers.
 8. Phase 4: shadow editors and telemetry; port Compressor and Equalizer.
    - 8c (written): telemetry into the shadows. Build the plugin; in Reaper

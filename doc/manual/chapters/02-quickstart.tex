@@ -1,0 +1,98 @@
+\chapter{Quick start}
+\label{ch:quickstart}
+
+This chapter takes you from nothing to audio going through a plugin on the
+server, in about ten minutes.
+
+\section{Get the software}
+
+\fxme\ is built from source for now. You need a C++17 compiler, CMake 3.22 or
+newer, and the JUCE framework. From the \fxme\ folder:
+
+\begin{lstlisting}
+cmake -S . -B build
+cmake --build build --target FxmeNetServer -j2
+cmake --build build --target FxmeNetPlugin_VST3 -j2
+cmake --build build --target FxmeNetTop -j2
+\end{lstlisting}
+
+This gives three programs: the server (\cmd{fxmenet-server}), the plugin
+(\file{FxmeNet.vst3}) and the monitoring tool (\cmd{fxmenet-top},
+chapter~\ref{ch:top}). \todo{where the build leaves the files; how JUCE and
+FxmeTools are found (sibling clones or pinned versions)}
+
+\section{Install the plugins on the server}
+
+The server offers the VST3 effects it finds in its plugin folders: the
+standard VST3 folders of the machine (on Linux, typically
+\file{~/.vst3}, \file{/usr/lib/vst3} and
+\file{/usr/local/lib/vst3}), plus any you add (section~\ref{sec:folders}).
+Install the plugins you want to use there, the way you would on any computer.
+
+\section{Start the server}
+
+On the server machine, in a terminal:
+
+\begin{lstlisting}
+fxmenet-server
+\end{lstlisting}
+
+The first time, the server examines every plugin it finds (this can take a
+minute for a large collection) and then logs the list, ending with lines like:
+
+\begin{lstlisting}[language={}]
+2026-11-10 14:02:11  48 plugins (48 examined, 0 from the cache, 0 failed)
+2026-11-10 14:02:11  listening: control TCP 54322, audio UDP 54321, discovery UDP 54320
+\end{lstlisting}
+
+Later starts are quick, because only new or changed plugins are examined
+again. Leave the server running. Stop it with \key{Ctrl}+\key{C}.
+
+\begin{note}
+Your computers' firewall must let the three ports through on the local
+network (chapter~\ref{ch:network}). Under Ubuntu's \cmd{ufw}, for example,
+allow 54320 to 54322.
+\end{note}
+
+\section{Install the plugin on the client}
+
+Copy \file{FxmeNet.vst3} to your VST3 folder on the computer that runs the
+DAW (on Windows, \file{C:\Program Files\Common Files\VST3}), then let your DAW rescan its plugins.
+On macOS the plugin is also built as an Audio Unit. The AU is not notarized, so macOS may refuse to load it at first; the \file{README} on the project's GitHub page explains what to do. The AU has not been tested yet, and feedback is welcome.
+
+\section{Your first chain}
+
+\begin{enumerate}
+  \item In the DAW, add \ui{FxmeNet} to a track, as an effect.
+  \item Click \ui{Find}. The server answers on the local network; choose it
+    in the list. (If it does not appear, type its address in the field, for
+    example \cmd{192.168.1.20}.)
+  \item Click \ui{Connect}. The status line next to the button says when
+    the session is ready.
+  \item The list \ui{SERVER PLUGINS} shows what the server offers. Type a few
+    letters of a plugin's name in the \ui{Filter} field, and press
+    \key{Return} (or double-click a plugin) to add it to the chain.
+  \item Play. The audio goes through the server. The plugin's controls
+    appear in the right-hand panel; its parameters are also listed in the
+    DAW as automation parameters.
+\end{enumerate}
+
+The line at the bottom of the editor shows the latency that \fxme\ reports to
+the DAW and the count of concealed blocks. On a healthy network the count
+stays at zero, or nearly.
+
+\begin{tip}
+To see what the server is doing, open \cmd{fxmenet-top} in a terminal on the
+server (chapter~\ref{ch:top}). It shows each session, the server's load and
+the traffic.
+\end{tip}
+
+\section{Where to go next}
+
+\begin{itemize}
+  \item Choosing the block size and budget, and making the server
+    reliable: chapter~\ref{ch:performance}.
+  \item Parallel chains, sidechains and multichannel plugins:
+    chapter~\ref{ch:routing}.
+  \item Something does not work: chapter~\ref{ch:troubleshooting}.
+\end{itemize}

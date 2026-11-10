@@ -1,0 +1,92 @@
+\chapter{For plugin developers}
+\label{ch:developers}
+
+\fxme\ runs any VST3 effect. A plugin can also be made \emph{\fxme-aware}, and
+then it gets tier \tier{2} (chapter~\ref{ch:tiers}): its editor on the
+client shows the live meters, spectra and values of the copy that runs on
+the server. This chapter summarises what that takes. The reference is the
+file \file{fxmenet-howto.md} of FxmeTools, with the demonstration plugin
+\file{Examples/GainPan} in the \fxme\ source.
+
+\section{The idea}
+
+The plugin is loaded twice: a \emph{source} on the server, which processes
+audio, and a \emph{mirror} on the client, which never processes and shows
+the editor. What the editor reads that is not a parameter (a meter, a
+spectrum, a computed value) is sent from the source to the mirror as
+telemetry and written into the mirror's own objects, so the editor itself
+does not change. Outside \fxme\ the plugin behaves exactly as before.
+
+\section{What to do}
+
+\begin{enumerate}
+  \item Add an \texttt{fxme::net::NetBridge} to the processor, and return it from
+    \texttt{getVST3Client\allowbreak Extensions()}.
+  \item Register everything the editor reads that is not a parameter, with a
+    stable name each: meters, taps, atomics, computed scalars.
+  \item In the few getters that compute from the DSP, return the telemetry
+    value when the plugin is a mirror.
+  \item Skip the work that only feeds the DSP when the plugin is a mirror.
+  \item Call \texttt{notifyStateChanged()} when state that is not a parameter
+    changes (a loaded file, for example).
+\end{enumerate}
+
+\begin{lstlisting}[style=fxcode]
+#include <FxmeTools/net/NetBridge.h>
+
+class MyProcessor : public juce::AudioProcessor
+{
+public:
+    juce::VST3ClientExtensions* getVST3ClientExtensions() override { return &net; }
+private:
+    Compressor compressor;
+    fxme::net::NetBridge net;   // after everything it registers
+};
+
+MyProcessor::MyProcessor()
+{
+    net.telemetry().addMeter ("gr", compressor.getGrMeter());
+}
+\end{lstlisting}
+
+\begin{longtable}{@{}p{0.34\textwidth}p{0.6\textwidth}@{}}
+\toprule
+\textbf{The editor reads} & \textbf{Register}\\
+\midrule
+\endhead
+a level meter & \texttt{addMeter (name, meter)}\\
+a spectrum or waveform tap & \texttt{addTap (name, tap)}\\
+a \texttt{std::atomic<float>} & \texttt{addValue (name, atomic)}\\
+a function that computes a value & \texttt{addScalar (name, getter)}\\
+a read-and-reset function & \texttt{addPeak (name, function)}\\
+\bottomrule
+\end{longtable}
+
+\section{Checking}
+
+The \fxme\ source includes a test tool, \cmd{FxmeNetLoopback}, which loads
+your plugin twice in one process, as source and mirror, and pumps the
+telemetry between them. Both editors appear side by side; the mirror's
+meters must follow the source's.
+
+\begin{lstlisting}
+FxmeNetLoopback path/to/MyPlugin.vst3
+\end{lstlisting}
+
+\section{The \fxme\ compatible mark}
+\label{sec:stamp}
+
+Plugins that support \fxme\ may carry the \fxme\ mark, so that users know the
+plugin gives a tier \tier{2} experience.
+
+\begin{center}
+  \fxlogo[width=0.28\textwidth]{FxmeNetLogo3.jpg}\qquad
+  \fxlogo[width=0.08\textwidth]{fxmenet-logo.png}
+\end{center}
+
+\todo{The two marks above are drafts (a connector-shaped logo and a small
+icon). Decide the final design and supply it as SVG and as transparent PNG in
+several sizes. Write the conditions of use: what a plugin must do to carry it
+(for example, that it passes the Loopback check and that its editor works
+as a mirror), where to show it (website, manual, plugin's information
+panel), and the licence of the artwork.}

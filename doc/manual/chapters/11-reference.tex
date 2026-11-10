@@ -1,0 +1,43 @@
+\chapter{Reference}
+\label{ch:reference}
+
+\section{Files}
+
+\begin{longtable}{@{}p{0.42\textwidth}p{0.52\textwidth}@{}}
+\toprule
+\textbf{File} & \textbf{Content}\\
+\midrule
+\endhead
+\file{FX-Mechanics/fxmenet-server-plugins.xml} & The server's plugin cache.\\
+\file{FX-Mechanics/fxmenet-server-settings.json} & The folders and the default-folders switch set with \cmd{fxmenet-top}.\\
+\file{FX-Mechanics/FxmeNet.settings} & Client: the last server, the hover-help switch, the extra plugin folders (machine-wide).\\
+\file{FX-Mechanics/fxmenet-client-plugins.xml} & Client: the cache of the local plugin scan.\\
+\file{FX-Mechanics/fxmenet-client-events.log} & Client: the transport events log, when enabled.\\
+\bottomrule
+\end{longtable}
+
+\noindent The \file{FX-Mechanics} folder is in the user's application-data
+folder (on Linux, \file{~/.config}; on Windows,
+\file{%APPDATA%}; on macOS, \file{~/Library/Application Support}). \todo{verify these locations on each system}
+
+\section{Ports}
+
+See chapter~\ref{ch:network}.
+
+\section{Limits}
+
+\begin{itemize}
+  \item 256 automation parameters per \ui{FxmeNet} instance.
+  \item 1 to 64 channels in and out of each \ui{FxmeNet} instance (stereo by
+    default).
+  \item Block sizes from 32 to 1024 samples; a network budget of 1 to 8 blocks.
+  \item Plugins: VST3 effects on the server.
+\end{itemize}
+
+\section{More documentation}
+
+The project's \file{doc} folder holds the technical documents:
+\file{architecture.md} (how the code is built), \file{protocol.md} (the wire
+protocol, for anyone writing another client or tool), \file{routing.md} (the
+design of the routing) and \file{Tests/stress-tests.md} (the measurements of
+chapter~\ref{ch:performance} in full).

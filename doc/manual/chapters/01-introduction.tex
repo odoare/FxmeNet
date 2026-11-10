@@ -1,0 +1,121 @@
+\chapter{Introduction}
+\label{ch:intro}
+
+\section{What \fxme\ is}
+
+\fxme\ lets your digital audio workstation (DAW) run its effects on another
+computer. In the DAW you insert one plugin, called \ui{FxmeNet}. Behind it,
+a chain of plugins runs on a \emph{server} (the program
+\cmd{fxmenet-server}) on the same local network. The audio goes to the
+server and comes back; the DAW sees one ordinary plugin, and compensates the
+delay it reports, as it does for any plugin with latency.
+
+The reason is simple: a session with many heavy plugins can exhaust the CPU
+of the computer that runs the DAW. A second machine, even an old one, can
+take that load. In our tests (chapter~\ref{ch:performance}), 24 tracks with
+17 plugins each used 75\,\% of the client's processor when processed
+locally, and 20 to 25\,\% through \fxme.
+
+The server is a console program. It needs no screen, no desktop session and
+no keyboard, so it can live in a cupboard or a rack, and it can run on a
+different operating system than the DAW.
+
+\section{How it works}
+
+\fxme\ has two parts.
+
+\begin{itemize}
+  \item The \textbf{client} is the \ui{FxmeNet} plugin (VST3 and AU), loaded
+    in the DAW. It has the editor you work with.
+  \item The \textbf{server} is \cmd{fxmenet-server}. It loads the VST3
+    plugins you ask for and processes the audio.
+\end{itemize}
+
+\begin{lstlisting}[language={}]
+   Your DAW (client)                          Server
+ +---------------------+                +-------------------+
+ |  track 1: FxmeNet --+--- audio UDP --->  session 1: chain |
+ |                     <--- audio UDP ---+  (plugin, plugin) |
+ |  track 2: FxmeNet --+--- audio UDP --->  session 2: chain |
+ |                     <--- audio UDP ---+                   |
+ |  every instance  ---+--- control TCP -->  plugin list,    |
+ |                     <-------------------  parameters, ... |
+ +---------------------+                +-------------------+
+\end{lstlisting}
+
+Each instance of \ui{FxmeNet} in your project opens one \emph{session} on
+the server, with its own chain of plugins. Two kinds of traffic flow:
+
+\begin{itemize}
+  \item \textbf{Audio}, in small blocks of N samples, over UDP, in both
+    directions. A reply that is late is replaced by a short fade to silence
+    and back (the block is \emph{concealed}); this is how a network that is
+    sometimes slow stays inaudible most of the time.
+  \item \textbf{Control}, over TCP: the list of plugins, adding and
+    removing plugins, parameters, saving and restoring state.
+\end{itemize}
+
+The \emph{network budget} D says how many blocks of time a reply has to come
+back. The latency that \fxme\ adds is about N times D samples, plus what the
+DAW's own block size adds. Chapter~\ref{ch:performance} explains how to
+choose them.
+
+\section{What you see: native editors}
+
+When you work on a plugin that sits on the server, you do not look at a
+picture of a remote window. If the same plugin is installed on the client
+computer, \fxme\ opens the plugin's own editor locally, and keeps it in
+step with the copy on the server. Knobs respond at once, and the editor
+scales with your screen. If the plugin is made for \fxme\ (see
+chapter~\ref{ch:developers}), its meters and analysers show the server's
+real signal. Plugins that are not installed on the client still work, with a
+generic panel of sliders. These cases are the \emph{tiers} of
+chapter~\ref{ch:tiers}.
+
+\section{What \fxme\ is not}
+
+\begin{itemize}
+  \item It is not a way to play live through a very low latency. The added
+    latency is a few milliseconds at best (a few tens of milliseconds for
+    heavy loads). It suits mixing and production; for live monitoring,
+    keep latency-critical plugins local.
+  \item It is for a local network you control. The traffic is not
+    encrypted and the server does not ask for a password.
+    Do not expose its ports to the internet.
+  \item The server hosts VST3 \emph{effects}. Instruments are not offered.
+  \item It does not make plugins sound different: the server runs the same
+    plugin code your DAW would run.
+\end{itemize}
+
+\section{What you need}
+
+\begin{description}
+  \item[A server.] A computer with spare CPU and a wired network
+    connection. Linux is the reference platform (our tests use Ubuntu
+    24.04). \todo{state which other server operating systems are supported}
+  \item[A client.] A DAW on Windows, macOS or Linux that hosts VST3 (or AU on
+    macOS). The tests used Reaper on Windows. \todo{list the DAWs that
+    were tried}
+  \item[A network.] A wired gigabit network between the two machines.
+    Wi-Fi works badly for audio. A stereo track at 44.1\,kHz uses about
+    3\,Mbit/s in each direction (chapter~\ref{ch:network}).
+  \item[The plugins.] The plugins you want to run must be installed on the
+    server. For their own editors on the client, install the same version
+    there too.
+\end{description}
+
+\section{Terms used in this manual}
+
+\begin{description}
+  \item[Block size N] Samples sent to the server at a time (32 to 1024).
+  \item[Network budget D] Blocks of time allowed for a reply to come back (1
+    to 8).
+  \item[Session] One instance of the \ui{FxmeNet} plugin, connected to the
+    server, with its chain.
+  \item[Chain] The plugins of a session, processed in an order you choose,
+    and optionally wired by the routing (chapter~\ref{ch:routing}).
+  \item[Concealed block] A block whose reply came too late, replaced by a
+    short fade out and in.
+\end{description}
+
+A fuller list is in the glossary (chapter~\ref{ch:glossary}).

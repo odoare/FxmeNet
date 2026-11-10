@@ -1,0 +1,71 @@
+% FxmeNet manual. One source, two outputs:
+%   make pdf    build/fxmenet-manual.pdf
+%   make html   build/html/index.html (to publish on fx-mechanics.com)
+% See README.md.
+
+\documentclass[a4paper,11pt,openany,headings=small,numbers=noenddot]{scrbook}
+
+\usepackage{fxmenet}
+
+\usepackage[hidelinks]{hyperref}
+
+\newcommand{\fxmenetversion}{0.1.0}
+
+\title{\fxme\ User Manual}
+\subtitle{Plugins processed on a server on your network}
+\author{FX-Mechanics}
+\date{Draft, \today\ (version \fxmenetversion)}
+
+\ifdefined\HCode\else
+  \usepackage[a4paper, margin=26mm]{geometry}
+  \usepackage[automark,headsepline]{scrlayer-scrpage}
+  \clearpairofpagestyles
+  \lehead{\headmark}
+  \rohead{\headmark}
+  \cfoot{\pagemark}
+  \addtokomafont{chapter}{\color{fxteal!60!black}}
+  \addtokomafont{section}{\color{fxteal!60!black}}
+  \addtokomafont{subsection}{\color{fxgrey}}
+\fi
+
+\begin{document}
+
+\frontmatter
+
+\begin{titlepage}
+  \centering
+  \vspace*{14mm}
+  \fxlogo[width=0.42\textwidth]{FxmeNetLogo3.jpg}\par
+  \vspace{14mm}
+  {\sffamily\bfseries\Huge \fxme\ User Manual\par}
+  \vspace{4mm}
+  {\sffamily\Large Plugins processed on a server on your network\par}
+  \vspace{16mm}
+  {\large Version \fxmenetversion\par}
+  \vspace{2mm}
+  {\large Draft of \today\par}
+  \vfill
+  {\large FX-Mechanics\par}
+  {\normalsize https://fx-mechanics.com\par}
+\end{titlepage}
+
+\tableofcontents
+
+\mainmatter
+
+\input{chapters/01-introduction}
+\input{chapters/02-quickstart}
+\input{chapters/03-server}
+\input{chapters/04-top}
+\input{chapters/05-plugin}
+\input{chapters/06-routing}
+\input{chapters/07-performance}
+\input{chapters/08-tiers}
+\input{chapters/09-developers}
+\input{chapters/10-troubleshooting}
+
+\input{chapters/11-reference}
+\input{chapters/12-network}
+\input{chapters/13-glossary}
+
+\end{document}

@@ -1,0 +1,145 @@
+\chapter{Latency, reliability and performance}
+\label{ch:performance}
+
+\fxme\ trades latency for reliability. This chapter explains the two
+settings that control the trade, how to read what happens, and how to tune
+the machines.
+
+\section{Block size N and network budget D}
+
+The plugin sends the audio to the server in blocks of N samples and gives
+each reply D blocks of time to come back. Both are in the \ui{Settings}
+tab.
+
+\begin{description}
+  \item[Block size N] 32 to 1024 samples. A small block means less latency
+    but more packets per second and tighter deadlines for the server and
+    the network.
+  \item[Network budget D] 1 to 8 blocks. A larger budget survives a slower
+    network or a busier server, at the price of more latency.
+\end{description}
+
+The latency that \fxme\ reports to the DAW is roughly N times D samples
+plus the DAW's own block size, plus the latency of the chain's plugins. The
+\ui{Settings} tab shows the exact figure for your settings, in samples and
+milliseconds, split between the network and re-blocking part and the chain
+itself. The DAW compensates for all of it, so the track stays in time; what
+changes is how late a played instrument is heard, which matters when you
+record through the plugin.
+
+If a reply is not back in time, that block is \emph{concealed}: a short fade
+to silence (64 samples) and back, so that there is no click, only a
+very brief dip. Concealed blocks are counted on the bottom line of the
+window.
+
+The default is N\,=\,128 and D\,=\,2 (5.8\,ms of budget at 44.1\,kHz).
+
+\section{Choosing the settings}
+
+\begin{longtable}{@{}p{0.3\textwidth}p{0.64\textwidth}@{}}
+\toprule
+\textbf{Situation} & \textbf{Suggested settings}\\
+\midrule
+\endhead
+Mixing, many heavy tracks & 1024$\times$2 or 512$\times$2: the most robust. Latency is no concern while mixing.\\
+Recording through the plugin, light chain & 128$\times$2, or 64$\times$2 if the server has a lot of spare CPU.\\
+A server near full load & Larger blocks. A busy server sometimes stalls for 20 to 50\,ms, which small blocks cannot absorb.\\
+Network with other traffic or Wi-Fi & Raise D, or move to a wired connection.\\
+\bottomrule
+\end{longtable}
+
+\begin{tip}
+Test with the DAW's own settings in mind: the DAW's audio buffer adds to
+\fxme's latency. Using a large buffer in the DAW for mixing and a small one
+for recording is common practice, and works the same here.
+\end{tip}
+
+\section{Measured performance}
+
+These figures come from the first stress tests (details in the project's
+\file{doc/Tests} folder), on old machines: a 2015 Intel Core i7-6700K for the
+client (Windows, Reaper, an RME ASIO interface at 44.1\,kHz and a buffer of
+128) and a 2018 AMD Ryzen 5 PRO 2400G for the server (Ubuntu 24.04, four
+cores). Every track had one \ui{FxmeNet} instance, and the ``full chain''
+holds all 17 plugins of the FxmeFX collection (FX-Mechanics' effects).
+
+\begin{longtable}{@{}p{0.22\textwidth}p{0.12\textwidth}p{0.14\textwidth}p{0.4\textwidth}@{}}
+\toprule
+\textbf{Tracks} & \textbf{Chain} & \textbf{N$\times$D} & \textbf{Result}\\
+\midrule
+\endhead
+24 local & full & (local) & 75\,\% of the client's CPU.\\
+24 remote & full & 256$\times$2 & Client at 25\,\%, server at about 66\,\%, about 10 concealed blocks in 5 minutes on one track.\\
+24 remote & full & 1024$\times$2 & Client under 20\,\%, almost no concealed blocks.\\
+28 remote & full & 1024$\times$2 & Server above 75\,\%: no concealed blocks, or very rare ones. Very usable.\\
+32 remote & one equaliser & 128$\times$2 & Network at 95\,Mbit/s each way, no problem.\\
+\bottomrule
+\end{longtable}
+
+What these tests show:
+
+\begin{itemize}
+  \item The offload works: the client's processor load fell from 75\,\% to
+    20 to 25\,\% for the same session.
+  \item Heavy loads (28 tracks with 17 plugins each, 476 plugin instances)
+    are very usable with large blocks.
+  \item Small blocks need headroom. While the server has spare CPU, 128 and
+    256 work well; close to full load the server stalls for a few tens of
+    milliseconds now and then, which short deadlines cannot absorb.
+  \item These are extreme loads. Real sessions rarely put 17 plugins on every
+    track.
+\end{itemize}
+
+\section{Making the server reliable (Linux)}
+\label{sec:linuxtuning}
+
+A generic Linux system works. These are the usual steps for audio on Linux;
+try them one at a time and check after each whether the concealed count goes
+down. More testing will be done. Feedback is welcome on the performance you get on other systems and with other optimizations.
+
+\begin{enumerate}
+  \item \textbf{Real-time priority for the audio threads.} Check with
+\begin{lstlisting}
+ps -eLo tid,cls,rtprio,pcpu,comm | grep -i fxme
+\end{lstlisting}
+    while a session is open: the audio threads should be in class \cmd{RR}
+    or \cmd{FF}. If they are \cmd{TS}, the system refused real-time priority
+    (the server's log says so). Create
+    \file{/etc/security/limits.d/audio.conf}:
+\begin{lstlisting}[language={}]
+@audio - rtprio 95
+@audio - memlock unlimited
+\end{lstlisting}
+    Add the account that runs the server to the \cmd{audio} group, and log in
+    again (or restart the service).
+  \item \textbf{Bigger socket buffers.} Under heavy load the kernel can drop
+    replies when the send buffer is full (the server's log counts them as
+    \emph{send errors}; \cmd{nstat -az UdpSndbufErrors} shows the
+    system-wide count). Raise the limits, then restart the server:
+\begin{lstlisting}
+sudo sysctl -w net.core.rmem_default=4194304 net.core.rmem_max=8388608
+sudo sysctl -w net.core.wmem_default=4194304 net.core.wmem_max=8388608
+\end{lstlisting}
+    To keep them after a reboot, put the four lines (without \cmd{sudo
+    sysctl -w}) in \file{/etc/sysctl.d/90-fxmenet.conf}.
+  \item \textbf{CPU frequency.} Set the governor to performance:
+\begin{lstlisting}
+sudo cpupower frequency-set -g performance
+\end{lstlisting}
+  \item \textbf{Kernel.} A low-latency or fully preemptible kernel
+    (\cmd{linux-lowlatency}, or booting with \cmd{preempt=full}) helps the
+    worst cases.
+\end{enumerate}
+
+\todo{When the server asks for large socket buffers itself (todo item 21),
+step 2 becomes: ``the log tells you if the system limits are too low''.}
+
+\section{Making the client reliable}
+
+\begin{itemize}
+  \item Use a wired gigabit connection, and keep other heavy traffic off it.
+  \item In Reaper, try turning off \emph{anticipative FX processing} for the
+    tracks that hold \ui{FxmeNet}, and compare the concealed counts.
+  \item On the network adapter, turn interrupt moderation off or to low, and
+    use the high-performance power plan.
+\end{itemize}

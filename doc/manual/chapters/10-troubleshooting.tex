@@ -1,0 +1,79 @@
+\chapter{Troubleshooting}
+\label{ch:troubleshooting}
+
+\section{The plugin does not find the server}
+
+\begin{itemize}
+  \item Is the server running? On its machine, \cmd{fxmenet-top} should show
+    it. If not, start \cmd{fxmenet-server}.
+  \item Does \ui{Find} show nothing? Discovery uses a broadcast, which does not
+    cross routers or most VPNs, and is blocked by some firewalls. Type the
+    server's address in the field instead.
+  \item Can the client reach the server's ports? Check the firewall on the
+    server (TCP 54322, UDP 54321 and 54320) and, on the client, that the
+    DAW is allowed to use the network.
+  \item Is a second server running on the same machine? Only one can answer
+    \ui{Find}; give the other one a different port set, or no discovery.
+\end{itemize}
+
+\section{The plugin I want is not in the list}
+
+\begin{itemize}
+  \item It must be a VST3 \emph{effect} installed on the server, in a folder
+    the server searches (section~\ref{sec:folders}).
+  \item Look at the server's log (or the \key{3} view of
+    \cmd{fxmenet-top}) for ``skipped'': a plugin that crashed or hung when
+    loaded is left out until it changes.
+  \item You installed it while the server ran: rescan with \key{r} in
+    \cmd{fxmenet-top}, then reconnect the plugin.
+  \item The list is filtered: clear the \ui{Filter} field.
+\end{itemize}
+
+\section{A plugin shows tier \tier{0} when I expected \tier{1}}
+
+The plugin must be installed on the client, in a folder the client scans, in
+the same version. Hover over the row for the reason. Use \ui{Rescan} or
+\ui{Folders\ldots} in the \ui{Settings} tab (chapter~\ref{ch:tiers}).
+
+\section{Concealed blocks, dropouts or clicks}
+
+Look at where the problem is.
+
+\begin{enumerate}
+  \item In \cmd{fxmenet-top}, is the server's CPU high, or a session's load bar
+    red? Then the server is overloaded: use larger blocks (1024$\times$2),
+    reduce the load, or use a faster server.
+  \item Does a session's \emph{lost} count rise? Requests do not reach the
+    server in time: look at the network (wired? other traffic? a switch
+    that drops packets?).
+  \item Does \emph{send errors} rise in the server's log? The kernel drops
+    replies: raise the socket buffers (section~\ref{sec:linuxtuning}).
+  \item Do the threads show \cmd{TS} instead of \cmd{RR} in the check of
+    section~\ref{sec:linuxtuning}? Give the audio threads real-time priority.
+  \item Only the client's concealed count rises while the server's counts are
+    zero? Replies are delayed on their way back, or the server stalls
+    briefly. Raise D by one.
+\end{enumerate}
+
+If clicks persist, enable \ui{Log transport events} in the \ui{Settings}
+tab, reproduce the problem, and keep \file{fxmenet-client-events.log} and the
+server's log together for the report.
+
+\section{Silence at start, stop or jump}
+
+This is the \ui{Silence in-flight audio at reset} option of the
+\ui{Settings} tab doing its job: for the length of the latency after a
+restart, nothing is heard from the plugin, as with a local plugin whose delay
+line is cleared. Turn the option off to hear what was still in flight.
+
+\section{The audio is late compared with other tracks}
+
+The DAW compensates for the latency that \fxme\ reports. If a track is
+still late, check that the DAW's plugin delay compensation is on and that
+the DAW applies it to this track.
+
+\section{Everything stops when the server restarts}
+
+The plugin reconnects by itself and rebuilds the chain on the server. If the
+server does not have the same plugins any more, the affected plugins show an
+error in the chain. While the server is away, the sound becomes dry at once; when the server is back, the processed sound returns. Restarting the server during playback was tested, without audible glitches.
