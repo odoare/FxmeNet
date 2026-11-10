@@ -1,0 +1,19 @@
+# Example systemd unit. Untested: adapt it, then
+#   sudo cp fxmenet-server.service /etc/systemd/system/
+#   sudo useradd --system --create-home --groups audio fxmenet
+#   sudo systemctl enable --now fxmenet-server
+[Unit]
+Description=FxmeNet server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/fxmenet-server
+User=fxmenet
+Group=audio
+Restart=on-failure
+LimitRTPRIO=95
+LimitMEMLOCK=infinity
+
+[Install]
+WantedBy=multi-user.target

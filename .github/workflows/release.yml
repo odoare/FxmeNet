@@ -1,0 +1,217 @@
+name: Release
+
+# On a vX.Y.Z tag: builds Linux, Windows and macOS, packages each as an
+# installer and as a plain archive, and publishes a GitHub Release.
+# Run by hand (Actions tab) to build and keep the files as workflow artifacts
+# without publishing.
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+
+env:
+  # Tag name without the v, or 0.0.0-dev for a manual run.
+  VERSION: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'v0.0.0-dev' }}
+
+jobs:
+  # ── The PDF manual, installed with the programs ────────────────────────────
+  manual:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install LaTeX
+        run: |
+          sudo apt update
+          sudo apt install -y --no-install-recommends latexmk texlive-latex-base texlive-latex-recommended \
+            texlive-latex-extra texlive-fonts-recommended texlive-plain-generic
+      - name: Build the PDF
+        run: make -C doc/manual pdf && cp doc/manual/build/fxmenet-manual.pdf FxmeNet-manual.pdf
+      - uses: actions/upload-artifact@v4
+        with:
+          name: manual
+          path: FxmeNet-manual.pdf
+
+  # ── Linux x86_64: tar.gz with install.sh, and a .deb ───────────────────────
+  linux:
+    needs: manual
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            libasound2-dev libx11-dev libxrandr-dev libxinerama-dev \
+            libxcursor-dev libfreetype-dev libfontconfig1-dev libgl1-mesa-dev \
+            libxi-dev libegl-dev libcurl4-openssl-dev
+
+      - uses: actions/checkout@v4
+        with:
+          path: FxmeNet
+      - uses: actions/download-artifact@v4
+        with:
+          name: manual
+          path: manual
+
+      - name: Configure
+        run: cmake -B FxmeNet/build -S FxmeNet -DCMAKE_BUILD_TYPE=Release -DFXME_USE_SIBLINGS=OFF -DFXMENET_BUILD_SPIKES=OFF
+
+      - name: Build (one target at a time, to bound memory)
+        run: |
+          for t in FxmeNetServer FxmeNetTop FxmeNetPlugin_VST3; do
+            cmake --build FxmeNet/build --config Release --target "$t" --parallel 2
+          done
+
+      - name: Package
+        run: |
+          v="${VERSION#v}"
+          b=FxmeNet/build
+          stage="FxmeNet-$v-Linux-x86_64"
+          mkdir -p "$stage/bin" "$stage/vst3"
+          cp "$(find $b -type f -name fxmenet-server | head -1)" "$(find $b -type f -name fxmenet-top | head -1)" "$stage/bin/"
+          cp -R "$(find $b -type d -name FxmeNet.vst3 | head -1)" "$stage/vst3/"
+          cp manual/FxmeNet-manual.pdf "$stage/"
+          cp FxmeNet/packaging/linux/install.sh FxmeNet/packaging/linux/fxmenet-server.service "$stage/"
+          tar czf "$stage.tar.gz" "$stage"
+          FxmeNet/packaging/linux/build-deb.sh "$v" "$stage" "fxmenet_${v}_amd64.deb"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: |
+            FxmeNet-*-Linux-x86_64.tar.gz
+            fxmenet_*_amd64.deb
+
+  # ── Windows x86_64: installer and zip ──────────────────────────────────────
+  windows:
+    # windows-2022: see FxmeFX's release.yml (the VS 2022 generator).
+    needs: manual
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: FxmeNet
+      - uses: actions/download-artifact@v4
+        with:
+          name: manual
+          path: manual
+
+      - name: Configure
+        # Static C runtime: nothing to install for the user.
+        shell: pwsh
+        run: cmake -B FxmeNet/build -S FxmeNet -G "Visual Studio 17 2022" -DFXME_USE_SIBLINGS=OFF -DFXMENET_BUILD_SPIKES=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded
+
+      - name: Build (one target at a time)
+        shell: pwsh
+        run: |
+          foreach ($t in 'FxmeNetServer','FxmeNetTop','FxmeNetPlugin_VST3') {
+            cmake --build FxmeNet/build --config Release --target $t --parallel 2
+            if ($LASTEXITCODE -ne 0) { throw "Build of $t failed" }
+          }
+
+      - name: Stage
+        shell: bash
+        run: |
+          b=FxmeNet/build
+          mkdir -p stage
+          cp manual/FxmeNet-manual.pdf stage/
+          cp "$(find $b -type f -name fxmenet-server.exe | head -1)" stage/
+          cp "$(find $b -type f -name fxmenet-top.exe | head -1)" stage/
+          cp -R "$(find $b -type d -name FxmeNet.vst3 | head -1)" stage/
+
+      - name: Installer
+        shell: pwsh
+        run: |
+          $v = "${{ env.VERSION }}".TrimStart('v')
+          if (-not (Get-Command iscc -ErrorAction SilentlyContinue)) { choco install innosetup -y --no-progress }
+          $iscc = (Get-Command iscc -ErrorAction SilentlyContinue)
+          if ($iscc) { $iscc = $iscc.Source } else { $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" }
+          & $iscc "/DAppVersion=$v" "/DStageDir=$PWD\stage" "/DOutDir=$PWD" FxmeNet\packaging\windows\fxmenet.iss
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed" }
+
+      - name: Zip without installer
+        shell: pwsh
+        run: |
+          $v = "${{ env.VERSION }}".TrimStart('v')
+          Compress-Archive -Path stage\* -DestinationPath "FxmeNet-$v-Windows-x86_64.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            FxmeNet-*-Windows-Setup.exe
+            FxmeNet-*-Windows-x86_64.zip
+
+  # ── macOS universal: pkg installer and zip ─────────────────────────────────
+  macos:
+    needs: manual
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: FxmeNet
+      - uses: actions/download-artifact@v4
+        with:
+          name: manual
+          path: manual
+
+      - name: Configure
+        run: >
+          cmake -B FxmeNet/build -S FxmeNet
+          -DCMAKE_BUILD_TYPE=Release
+          -DFXME_USE_SIBLINGS=OFF
+          -DFXMENET_BUILD_SPIKES=OFF
+          -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+          -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13
+
+      - name: Build (one target at a time)
+        run: |
+          for t in FxmeNetServer FxmeNetTop FxmeNetPlugin_VST3 FxmeNetPlugin_AU; do
+            cmake --build FxmeNet/build --config Release --target "$t" --parallel 2
+          done
+
+      - name: Stage and check the architectures
+        run: |
+          b=FxmeNet/build
+          mkdir -p stage
+          cp manual/FxmeNet-manual.pdf stage/
+          cp "$(find $b -type f -name fxmenet-server | head -1)" "$(find $b -type f -name fxmenet-top | head -1)" stage/
+          cp -R "$(find $b -type d -name FxmeNet.vst3 | head -1)" stage/
+          cp -R "$(find $b -type d -name FxmeNet.component | head -1)" stage/
+          fail=0
+          for f in stage/fxmenet-server stage/fxmenet-top stage/FxmeNet.vst3/Contents/MacOS/FxmeNet stage/FxmeNet.component/Contents/MacOS/FxmeNet; do
+            archs=$(lipo -archs "$f"); echo "$f: $archs"
+            case " $archs " in *" arm64 "*) ;; *) echo "::error::$f: no arm64"; fail=1 ;; esac
+            case " $archs " in *" x86_64 "*) ;; *) echo "::error::$f: no x86_64"; fail=1 ;; esac
+          done
+          exit $fail
+
+      - name: Installer and zip
+        run: |
+          v="${VERSION#v}"
+          FxmeNet/packaging/macos/build-pkg.sh "$v" stage "FxmeNet-$v-macOS.pkg"
+          ditto -c -k --keepParent stage "FxmeNet-$v-macOS-universal.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: |
+            FxmeNet-*-macOS.pkg
+            FxmeNet-*-macOS-universal.zip
+
+  # ── Publish ────────────────────────────────────────────────────────────────
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [linux, windows, macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="2">
+    <title>FxmeNet</title>
+    <options customize="allow" require-scripts="false" hostArchitectures="arm64,x86_64"/>
+    <choices-outline>
+        <line choice="plugin"/>
+        <line choice="au"/>
+        <line choice="server"/>
+    </choices-outline>
+    <choice id="plugin" title="FxmeNet plugin (VST3)"
+            description="For the computer that runs the DAW. Installed in /Library/Audio/Plug-Ins/VST3.">
+        <pkg-ref id="com.FXMechanics.FxmeNet.vst3"/>
+    </choice>
+    <choice id="au" title="FxmeNet plugin (Audio Unit)"
+            description="Audio Unit version, installed in /Library/Audio/Plug-Ins/Components. Not notarized and not tested yet.">
+        <pkg-ref id="com.FXMechanics.FxmeNet.au"/>
+    </choice>
+    <choice id="server" title="FxmeNet server and fxmenet-top"
+            description="For the computer that runs the effects. Installed in /usr/local/bin.">
+        <pkg-ref id="com.FXMechanics.FxmeNet.server"/>
+    </choice>
+    <pkg-ref id="com.FXMechanics.FxmeNet.vst3" auth="root">vst3.pkg</pkg-ref>
+    <pkg-ref id="com.FXMechanics.FxmeNet.au" auth="root">au.pkg</pkg-ref>
+    <pkg-ref id="com.FXMechanics.FxmeNet.server" auth="root">server.pkg</pkg-ref>
+</installer-gui-script>
