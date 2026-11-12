@@ -19,6 +19,18 @@ Made by [FX-Mechanics](https://fx-mechanics.com).
 
 ![The FxmeNet plugin in a DAW: the server's plugin list, the chain, and the routing between the plugins](doc/img/fxme-net-routing-screen.png)
 
+## Why FxmeNet exists
+
+- Reaper once offered something similar directly in its distribution. It was removed, and I missed it.
+- The [AudioGridder](https://github.com/apohl79/audiogridder) project exists and is
+  a fine one, but it has a different philosophy. I needed something more
+  reliable, which does not have to send video streams of the plugin windows over
+  the network: FxmeNet opens each plugin's own editor on the client instead, and
+  only audio and control data travel.
+- Something for the open source world: Commercial companies such as Waves or
+  UAD offer ways to run effects on dedicated hardware. I wanted to offer
+  something similar, using a simple computer system.
+
 ## What it does
 
 - **Native editors.** If a plugin is installed on the client too, its own editor
