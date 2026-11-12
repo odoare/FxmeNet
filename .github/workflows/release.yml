@@ -24,7 +24,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y --no-install-recommends latexmk texlive-latex-base texlive-latex-recommended \
-            texlive-latex-extra texlive-fonts-recommended texlive-plain-generic
+            texlive-latex-extra texlive-pictures texlive-fonts-recommended lmodern texlive-plain-generic
       - name: Build the PDF
         run: make -C doc/manual pdf && cp doc/manual/build/fxmenet-manual.pdf FxmeNet-manual.pdf
       - uses: actions/upload-artifact@v4
