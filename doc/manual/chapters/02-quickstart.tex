@@ -5,9 +5,63 @@ This chapter takes you from nothing to audio going through a plugin on the
 server, in about ten minutes.
 
 \section{Get the software}
+\label{sec:download}
 
-\fxme\ is built from source for now. You need a C++17 compiler, CMake 3.22 or
-newer, and the JUCE framework. From the \fxme\ folder:
+Download the files for your system from the \emph{Releases} page of the
+project on GitHub, \url{https://github.com/odoare/FxmeNet/releases}. Each release
+offers an installer and, for those who prefer to copy files by hand, a plain
+archive with the same content. Install the server on the computer that runs
+the effects, and the plugin on the computer that runs the DAW (they can be the
+same computer). The installers let you choose.
+
+\begin{description}
+  \item[Windows] Run \file{FxmeNet-X.Y.Z-Windows-Setup.exe} and
+    choose \ui{Plugin only}, \ui{Server only} or both. The plugin goes to
+    \file{C:\Program Files\Common Files\VST3}, and the server and
+    \cmd{fxmenet-top} to \file{C:\Program Files\FxmeNet}, with a Start menu
+    entry for this manual. Two options are offered: adding the folder to the
+    \texttt{PATH}, and allowing the server through the Windows firewall (UDP
+    54320 and 54321, TCP 54322). The installer is not signed, so Windows may
+    show a warning on first run (choose \ui{More info}, then \ui{Run anyway}).
+    Without the installer, unzip
+    \file{FxmeNet-X.Y.Z-Windows-x86_64.zip} and copy the files
+    yourself.
+  \item[macOS] Open \file{FxmeNet-X.Y.Z-macOS.pkg} and choose the
+    parts to install: the VST3 plugin (in
+    \file{/Library/Audio/Plug-Ins/VST3}), the Audio Unit (in
+    \file{.../Components}), and the server with \cmd{fxmenet-top} (in
+    \file{/usr/local/bin}). The programs are universal (Apple silicon and
+    Intel). The package is not signed or notarized, so macOS may refuse to
+    open it; in that case use \ui{Open Anyway} in \ui{System Settings},
+    \ui{Privacy \& Security}. The same files are in
+    \file{FxmeNet-X.Y.Z-macOS-universal.zip}.
+  \item[Linux] On Debian and Ubuntu, install
+    \file{fxmenet_X.Y.Z_amd64.deb} with
+    \cmd{sudo apt install ./fxmenet_*_amd64.deb}. It puts the programs in
+    \file{/usr/bin}, the plugin in \file{/usr/lib/vst3}, and an example
+    \cmd{systemd} unit in \file{/usr/share/doc/fxmenet}. On other
+    distributions, unpack
+    \file{FxmeNet-X.Y.Z-Linux-x86_64.tar.gz} and run
+    \cmd{./install.sh} (for your user: \file{~/.local/bin} and
+    \file{~/.vst3}) or \cmd{sudo ./install.sh --system}
+    (\file{/usr/local/bin} and \file{/usr/lib/vst3}). \cmd{./install.sh
+    --uninstall} removes them.
+\end{description}
+
+Every installer also puts the PDF manual next to the programs.
+
+\begin{note}
+The installers and archives are new, and not all of them have been tried on
+every system. If one does not work for you, please tell us.
+\end{note}
+
+\subsection{Building from source}
+
+You need a C++17 compiler and CMake 3.22 or newer. JUCE and FxmeTools are
+downloaded at the versions the project pins; if clones named \file{JUCE} and
+\file{FxmeTools} sit next to the \fxme\ folder, those are used instead
+(\cmd{-DFXME_USE_SIBLINGS=OFF} forces the pinned versions). From the \fxme\
+folder:
 
 \begin{lstlisting}
 cmake -S . -B build
@@ -16,10 +70,10 @@ cmake --build build --target FxmeNetPlugin_VST3 -j2
 cmake --build build --target FxmeNetTop -j2
 \end{lstlisting}
 
-This gives three programs: the server (\cmd{fxmenet-server}), the plugin
-(\file{FxmeNet.vst3}) and the monitoring tool (\cmd{fxmenet-top},
-chapter~\ref{ch:top}). \todo{where the build leaves the files; how JUCE and
-FxmeTools are found (sibling clones or pinned versions)}
+This gives three programs, inside the \file{build} folder: the server
+(\cmd{fxmenet-server}), the plugin (\file{FxmeNet.vst3}) and the monitoring
+tool (\cmd{fxmenet-top}, chapter~\ref{ch:top}). Copy them where the
+installers would put them.
 
 \section{Install the plugins on the server}
 
@@ -56,9 +110,14 @@ allow 54320 to 54322.
 
 \section{Install the plugin on the client}
 
-Copy \file{FxmeNet.vst3} to your VST3 folder on the computer that runs the
-DAW (on Windows, \file{C:\Program Files\Common Files\VST3}), then let your DAW rescan its plugins.
-On macOS the plugin is also built as an Audio Unit. The AU is not notarized, so macOS may refuse to load it at first; the \file{README} on the project's GitHub page explains what to do. The AU has not been tested yet, and feedback is welcome.
+If you used an installer, the plugin is already in place; otherwise copy
+\file{FxmeNet.vst3} to your VST3 folder (section~\ref{sec:download}). Then let
+your DAW rescan its plugins.
+
+On macOS the plugin is also built as an Audio Unit. The AU is not notarized,
+so macOS may refuse to load it at first; the \file{README} on the project's
+GitHub page explains what to do. The AU has not been tested yet, and feedback
+is welcome.
 
 \section{Your first chain}
 

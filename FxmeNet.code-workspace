@@ -14,6 +14,9 @@
 		},
 		{
 			"path": "../StairwellToHeaven"
+		},
+		{
+			"path": "../NeuralAudio"
 		}
 	],
 	"settings": {}
