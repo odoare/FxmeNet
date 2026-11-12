@@ -199,4 +199,11 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
      to check nothing changed locally (Freeze's display especially).
 9. Phase 5: hardening, measurements, CI.
 10. Phase 6: plugin distribution.
-11. Phase 7: JSFX.
+11. Phase 7: JSFX scripts as plugins of the chain (user request
+    2026-11-12). Design and phases in `doc/jsfx-plan.md` (draft, to be
+    agreed): the Cockos sources (the fork in `~/src/JesuNet/jsfx`) as an
+    embeddable library, audio on the server, `@gfx` run on the client from
+    mirrored variables and memory. Phase 1 (the engine as a library,
+    `fxjsfx`, in the fork) is written and runs on Linux; to check by the
+    user: build `jsfx_run` and try a few scripts. Next: phase 2 (the
+    server's `JsfxInstance`, `SLOT_ADD_JSFX`, the client's script list).
