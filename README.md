@@ -93,7 +93,7 @@ cmake --build build --target FxmeNetTop -j2
 
 - [FxmeFX](https://github.com/odoare/FxmeFX): A series of 19 plugins (compressor, equalizer, tube,
   transient shaper, delay, reverbs, cabinet, limiter, gate, de-esser, neural amp modeller, and more)
-- [Stairwell to Heaven](https://github.com/odoare/StairwellToHeaven): A versatile reverberation
+- [Stairwell to Heaven](https://github.com/odoare/StairwellToHeaven): A versatile reverberation, with fancy shimmer features (not not publicly released yet, comming soon).
 - [AmbiRR2](https://github.com/odoare/AmbiRR2): A virtual room simulator with up to 16 virtual sources in space, for physically and sonnically correct scenes.
 
 Some plugins, even if not made with FxmeNet compatibility in mind, might just work well, for two reasons:
