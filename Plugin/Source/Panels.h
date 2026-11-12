@@ -148,14 +148,18 @@ private:
 
     /** The menu of the extra plugin folders: add one, remove one. */
     void foldersMenu();
+    /** The same for the JSFX script folders. */
+    void jsfxFoldersMenu();
 
     FxmeNetAudioProcessor& processor;
     juce::ComboBox blockBox, budgetBox;
     juce::TextButton rescanButton { "Rescan" }, fullRescanButton { "Full rescan" }, foldersButton { "Folders..." };
     juce::TextButton flushButton { "Silence in-flight audio at reset" }, logButton { "Log transport events" };
     std::unique_ptr<juce::FileChooser> chooser;
-    juce::String latencyText, localText, foldersText;
-    juce::Rectangle<int> streamLabel, blockLabel, budgetLabel, latencyArea, localArea, foldersArea, diagnosticsLabel;
+    juce::TextButton jsfxRescanButton { "Rescan" }, jsfxFoldersButton { "Folders..." };
+    juce::String latencyText, localText, foldersText, jsfxText, jsfxFoldersText;
+    juce::Rectangle<int> streamLabel, blockLabel, budgetLabel, latencyArea, localArea, foldersArea, diagnosticsLabel,
+                         jsfxArea, jsfxFoldersArea;
 };
 
 } // namespace fxmenet::plugin

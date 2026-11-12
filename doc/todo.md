@@ -200,10 +200,23 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
 9. Phase 5: hardening, measurements, CI.
 10. Phase 6: plugin distribution.
 11. Phase 7: JSFX scripts as plugins of the chain (user request
-    2026-11-12). Design and phases in `doc/jsfx-plan.md` (draft, to be
-    agreed): the Cockos sources (the fork in `~/src/JesuNet/jsfx`) as an
-    embeddable library, audio on the server, `@gfx` run on the client from
-    mirrored variables and memory. Phase 1 (the engine as a library,
-    `fxjsfx`, in the fork) is written and runs on Linux; to check by the
-    user: build `jsfx_run` and try a few scripts. Next: phase 2 (the
-    server's `JsfxInstance`, `SLOT_ADD_JSFX`, the client's script list).
+    2026-11-12). Design, phases and state in `doc/jsfx-plan.md`. Phases 1
+    (the engine as a library, `fxjsfx`, in the fork `~/src/JesuNet/jsfx`)
+    and 2 (the server's `JsfxInstance`, scripts sent in `SLOT_ADD`'s state,
+    the plugin's script list, generic controls) are written. To check by
+    the user, in a DAW:
+    - the scripts of REAPER's Effects folder appear after the server's
+      plugins, tagged `JS`; the filter finds one by path or description;
+    - adding one: it processes, its sliders show real values and names
+      (enums as lists), moving one changes the sound, automation through
+      the 256 parameters works;
+    - a script with `@gfx` works too (generic controls, "JS" in the chain);
+    - saving and reopening the project, and stopping and restarting the
+      server while the project is open, bring the script back with its
+      slider values;
+    - a script with a syntax error shows the compiler's message in the
+      chain; a script importing a missing file is refused with a dialog;
+    - Settings tab: the script count, "Folders..." and "Rescan".
+    Before the next release: commit and push the fork, then update its pin
+    in `cmake/Dependencies.cmake`; build `fxjsfx` on macOS and Windows
+    (never built). Next: phase 3 (the `@gfx` display on the client).

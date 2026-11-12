@@ -43,7 +43,7 @@ jobs:
           sudo apt install -y \
             libasound2-dev libx11-dev libxrandr-dev libxinerama-dev \
             libxcursor-dev libfreetype-dev libfontconfig1-dev libgl1-mesa-dev \
-            libxi-dev libegl-dev libcurl4-openssl-dev
+            libxi-dev libegl-dev libcurl4-openssl-dev nasm   # nasm: the JSFX engine's EEL2 glue
 
       - uses: actions/checkout@v4
         with:

@@ -11,7 +11,9 @@ in the repository, and is kept in sync with it.
 CMakeLists.txt          root project; JUCE and FxmeTools via cmake/Dependencies.cmake
 cmake/FxmeDeps.cmake    shared resolver (sibling clone or pinned commit), identical
                         in every FX-Mechanics project: copy, never edit here only
-cmake/Dependencies.cmake  pins: JUCE 9.0.4, FxmeTools 94e4e4d
+cmake/Dependencies.cmake  pins: JUCE 9.0.4, FxmeTools 94e4e4d, jsfx (the JSFX engine,
+                        github.com/odoare/jsfx branch fxmenet-branch; sibling
+                        ~/src/JesuNet/jsfx; FXMENET_JSFX=OFF leaves it out)
 Common/                 shared by server and client, header-only:
   FxmeNet/protocol/     Wire.h (datagram header, audio request/reply, telemetry
                         bodies), Fragmentation.h (Fragmenter, Reassembler); JUCE-free
@@ -24,6 +26,10 @@ Common/                 shared by server and client, header-only:
                         binary's sha256 (server catalog and client matching);
                         Buses.h: the buses a hosted plugin gets everywhere (its
                         default layout, main buses on; never enableAllBuses)
+  FxmeNet/jsfx/         JSFX scripts (doc/jsfx-plan.md): JsfxBundle.h (a script
+                        with its files and a JSFX slot's state on the wire;
+                        JUCE-free), JsfxScripts.h (finding scripts on disk,
+                        packing one with what it imports; juce_core)
   FxmeNet/client/       the client: BlockStream (re-blocking, latency, jitter
                         buffer, concealment) and ReplyRing, JUCE-free; AudioLink
                         (one session's UDP audio) and ClientEngine (chain,
@@ -35,8 +41,10 @@ Server/Source/          fxmenet-server: Main (options, signals, message loop),
                         Server (listener, handshakes, UDP routing, orphans),
                         Session (control handling), Chain (slots, snapshots),
                         AudioWorker (ordering, reply cache, processing),
-                        PluginCatalog (scan, folders, rescans), Monitor
-                        (fxmenet-top's connections), SystemLoad, UdpPeer, Log
+                        PluginCatalog (scan, folders, rescans), JsfxInstance (a
+                        JSFX script as a plugin of the chain, on the fxjsfx
+                        library), Monitor (fxmenet-top's connections),
+                        SystemLoad, UdpPeer, Log
 Plugin/                 FxmeNetPlugin ("FxmeNet", VST3 and AU): the client in the DAW,
                         processor, 256-parameter pool, editor and its panels
 Examples/GainPan/       FxmeNetGainPan: gain, balance, stereo in/out meters, the
@@ -53,7 +61,8 @@ Spikes/                 Phase 0 throwaway programs (FXMENET_BUILD_SPIKES, ON for
   NestedEditor/         spike 3: a VST3 hosting a VST3 and embedding its editor
                         (XEmbed on Linux), for Phase 4's shadow editors
 doc/                    this file, todo.md, done.md; protocol.md (the wire
-                        protocol, draft); audiogridder-notes.md
+                        protocol, draft); jsfx-plan.md (JSFX scripts in the
+                        chain: design, phases, state); audiogridder-notes.md
 doc/manual/             the user manual: LaTeX source for a PDF and an HTML site
                         (make pdf, make html; README.md there)
 ```

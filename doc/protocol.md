@@ -146,6 +146,35 @@ default), number of steps (0 = continuous), automatable, bypass, group path, and
 text of up to 32 sample values for stepped ones. Enough for the tier 0 generic
 editor and the automation pool; values always travel normalised.
 
+A parameter may also carry `rangeMin`, `rangeMax` and `rangeStep` (added
+2026-11-12): its values in the plugin's own units, linear over the
+normalised range. JSFX sliders have them; the generic editor then shows
+real values.
+
+### 4.4b JSFX scripts
+
+A JSFX script (doc/jsfx-plan.md) is added with `SLOT_ADD` like a plugin:
+uid `0x4A534658` ("JSFX"), vendor `"JSFX"`, the script's path under the
+client's Effects folder as the name. It is not in the server's catalog: the
+script comes in the state blob, which is (little-endian, `u32` lengths):
+
+```
+u32 magic 0x53464A46, u32 version 1
+blob main            the script's path, one of the files below
+u32 count            at most 256 files, 32 MiB together
+count x { blob path, u8 data (1: under Data/, 0: under Effects/), blob bytes }
+blob sliders         the engine's slider state (text), may be empty
+blob serialized      what @serialize wrote, may be empty
+```
+
+Paths are relative, `/` separated, without empty, `.` or `..` parts,
+backslash, colon or control characters; a blob that breaks a rule is
+refused. The server writes the files to a temporary folder and loads the
+script from there. `STATE` returns the same blob (with the current sliders),
+so a saved project carries its scripts. `SLOT_READY` then has
+`"kind": "jsfx"` and `"hasGfx"`. A script that does not compile is answered
+with `ERROR` (plugin load failed) and the compiler's message with its line.
+
 ### 4.5 Buses (in `SLOT_READY`)
 
 Added 2026-11-06, for routing. `buses`: the plugin's buses, inputs then

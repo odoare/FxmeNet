@@ -113,7 +113,11 @@ private:
     fxmenet::plugin::SettingsPanel settingsPanel { processor };
     juce::TabbedComponent tabs { juce::TabbedButtonBar::TabsAtTop };
 
+    /** The server's plugins, then this machine's JSFX scripts (as entries
+        of the vendor "JSFX", named by their path): one list. */
     std::vector<fxmenet::control::PluginEntry> catalog;
+    std::vector<fxmenet::jsfx::Script> scripts;   ///< those entries' scripts, in order
+    int numServerEntries = 0;                      ///< catalog[numServerEntries + i] is scripts[i]
     std::vector<int> shown;   ///< the catalog rows listed: filtered, T2 then T1 then T0, by name
     std::vector<fxmenet::client::SlotModel> slots;
     juce::String catalogSignature, chainSignature, statusLine, statsLine, catalogCount, shownFilter;

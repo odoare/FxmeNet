@@ -436,6 +436,16 @@ void FxmeNetAudioProcessor::addPlugin (const fxmenet::control::PluginEntry& entr
     engine.addSlot (entry.uid, entry.name, entry.vendor, (int) engine.getSlots().size());
 }
 
+bool FxmeNetAudioProcessor::addScript (const fxmenet::jsfx::Script& script, juce::String& error, juce::StringArray* notes)
+{
+    fxmenet::jsfx::Bundle bundle;
+    if (! fxmenet::jsfx::BundleBuilder (script.effectsFolder).build (script.path, bundle, error, notes))
+        return false;
+    engine.addSlot (fxmenet::jsfx::jsfxUid, script.path, fxmenet::jsfx::jsfxVendor,
+                    (int) engine.getSlots().size(), fxmenet::jsfx::makeSlotState (std::move (bundle)));
+    return true;
+}
+
 //==============================================================================
 fxmenet::plugin::Shadow* FxmeNetAudioProcessor::findShadow (std::uint32_t slotId) const
 {
@@ -465,6 +475,9 @@ fxmenet::plugin::Shadow* FxmeNetAudioProcessor::getShadow (std::uint32_t slotId,
         }
     if (! found || ! slot.loaded)
         return fail ("not loaded on the server");
+    if (isJsfx (slot))
+        return fail (slot.info.jsfxGfx ? "a JSFX script: generic controls (its @gfx display is not shown yet)"
+                                       : "a JSFX script: generic controls");
 
     fxmenet::control::PluginEntry entry;
     if (! findCatalogEntry (slot, entry))

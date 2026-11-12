@@ -35,6 +35,13 @@ namespace
     {
         if (p.stepTexts.size() > 1)
             return p.stepTexts[juce::jlimit (0, p.stepTexts.size() - 1, (int) std::lround (v * (float) (p.stepTexts.size() - 1)))];
+        if (p.hasRange)   // the plugin's own units (a JSFX slider), as fine as its step
+        {
+            const double real = p.rangeMin + (double) v * (p.rangeMax - p.rangeMin);
+            const int decimals = p.rangeStep > 0.0 ? juce::jlimit (0, 4, (int) std::ceil (-std::log10 (p.rangeStep) - 1.0e-9))
+                                                   : (std::abs (p.rangeMax - p.rangeMin) >= 100.0 ? 1 : 3);
+            return juce::String (real, decimals);
+        }
         return juce::String (v, 3);
     }
 }
@@ -607,7 +614,12 @@ SettingsPanel::SettingsPanel (FxmeNetAudioProcessor& p) : processor (p)
     };
     logButton.onClick = [this] { setLogEvents (logButton.getToggleState()); };
 
-    for (auto* b : { &rescanButton, &fullRescanButton, &foldersButton })
+    jsfxRescanButton.setTooltip (tips::jsfxRescan);
+    jsfxRescanButton.onClick = [this] { processor.getJsfxLibrary().rescan(); };
+    jsfxFoldersButton.setTooltip (tips::jsfxFolders);
+    jsfxFoldersButton.onClick = [this] { jsfxFoldersMenu(); };
+
+    for (auto* b : { &rescanButton, &fullRescanButton, &foldersButton, &jsfxRescanButton, &jsfxFoldersButton })
     {
         styleButton (*b);
         addAndMakeVisible (*b);
@@ -658,6 +670,57 @@ void SettingsPanel::refresh()
         foldersText = ft;
         repaint (foldersArea);
     }
+
+    auto& library = processor.getJsfxLibrary();
+    jsfxRescanButton.setEnabled (! library.isScanning());
+    const auto jt = library.isScanning() ? juce::String ("Looking for scripts...")
+                                         : juce::String (library.getNumScripts()) + " scripts on this computer";
+    const auto jf = "Searched: " + JsfxLibrary::getFolders().joinIntoString ("; ");
+    if (jt != jsfxText || jf != jsfxFoldersText)
+    {
+        jsfxText = jt;
+        jsfxFoldersText = jf;
+        repaint (jsfxArea);
+    }
+}
+
+void SettingsPanel::jsfxFoldersMenu()
+{
+    const auto folders = getJsfxFolders();
+
+    juce::PopupMenu menu, remove;
+    for (int i = 0; i < folders.size(); ++i)
+        remove.addItem (100 + i, folders[i]);
+    menu.addItem (1, "Add a folder...");
+    menu.addSubMenu ("Remove", remove, ! folders.isEmpty());
+
+    menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (jsfxFoldersButton),
+                        [this, folders] (int result)
+    {
+        if (result >= 100 && result - 100 < folders.size())
+        {
+            auto remaining = getJsfxFolders();
+            remaining.removeString (folders[result - 100]);
+            processor.getJsfxLibrary().setExtraFolders (remaining);
+        }
+        else if (result == 1)
+        {
+            chooser = std::make_unique<juce::FileChooser> ("A folder holding JSFX scripts (laid out as REAPER's Effects folder)",
+                                                           juce::File::getSpecialLocation (juce::File::userHomeDirectory));
+            chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectDirectories,
+                                  [this] (const juce::FileChooser& fc)
+            {
+                const auto folder = fc.getResult();
+                if (! folder.isDirectory())
+                    return;
+                auto current = getJsfxFolders();
+                if (current.contains (folder.getFullPathName()))
+                    return;
+                current.add (folder.getFullPathName());
+                processor.getJsfxLibrary().setExtraFolders (current);
+            });
+        }
+    });
 }
 
 void SettingsPanel::foldersMenu()
@@ -726,6 +789,12 @@ void SettingsPanel::paint (juce::Graphics& g)
     g.drawText (localText, localArea.withTrimmedTop (22).withHeight (24), juce::Justification::centredLeft, true);
     g.setColour (theme::dimText);
     g.drawText (foldersText, foldersArea, juce::Justification::centredLeft, true);
+
+    g.drawText ("JSFX SCRIPTS (sent to the server when added to the chain)", jsfxArea.withHeight (18), juce::Justification::centredLeft);
+    g.setColour (theme::text);
+    g.drawText (jsfxText, jsfxArea.withTrimmedTop (22).withHeight (24), juce::Justification::centredLeft, true);
+    g.setColour (theme::dimText);
+    g.drawText (jsfxFoldersText, jsfxFoldersArea, juce::Justification::centredLeft, true);
 }
 
 void SettingsPanel::resized()
@@ -764,6 +833,15 @@ void SettingsPanel::resized()
     buttons.removeFromRight (6);
     foldersButton.setBounds (buttons.removeFromRight (90).withHeight (24));
     localArea = localArea.withTrimmedRight (296);
+    r.removeFromTop (14);
+
+    // JSFX scripts: the scan, its folders.
+    jsfxArea = r.removeFromTop (70);
+    jsfxFoldersArea = jsfxArea.withTrimmedTop (50);
+    auto jsfxButtons = jsfxArea.withTrimmedTop (22).removeFromRight (180);
+    jsfxRescanButton.setBounds (jsfxButtons.removeFromRight (80).withHeight (24));
+    jsfxButtons.removeFromRight (6);
+    jsfxFoldersButton.setBounds (jsfxButtons.removeFromRight (90).withHeight (24));
 }
 
 } // namespace fxmenet::plugin

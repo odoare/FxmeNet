@@ -8,6 +8,9 @@
 */
 
 #include "Chain.h"
+#if FXMENET_JSFX
+ #include "JsfxInstance.h"
+#endif
 #include "Log.h"
 
 #include <FxmeNet/catalog/Buses.h>
@@ -147,6 +150,13 @@ juce::String Chain::addSlot (std::uint32_t slotId, int position,
     ready.buses = describeBuses (*instance);
     ready.params = describeParameters (*instance);
     ready.fxmenetAbi = 0;
+   #if FXMENET_JSFX
+    if (auto* script = dynamic_cast<JsfxInstance*> (instance.get()))
+    {
+        ready.jsfx = true;
+        ready.jsfxGfx = script->hasGfx();
+    }
+   #endif
     if (slot->net != nullptr)
     {
         ready.fxmenetAbi = (int) slot->net->getAbiVersion();
@@ -486,6 +496,10 @@ std::vector<control::ParamInfo> describeParameters (juce::AudioPluginInstance& i
         i.value = p->getValue();
         i.automatable = p->isAutomatable();
         i.isBypass = p == bypass;
+       #if FXMENET_JSFX
+        if (auto* ranged = dynamic_cast<RangedParameter*> (p))
+            i.hasRange = ranged->getRange (i.rangeMin, i.rangeMax, i.rangeStep);
+       #endif
 
         const int steps = p->getNumSteps();
         const bool stepped = (p->isDiscrete() || p->isBoolean()) && steps > 1

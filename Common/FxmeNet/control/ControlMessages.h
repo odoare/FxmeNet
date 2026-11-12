@@ -321,6 +321,10 @@ struct ParamInfo
     int numSteps = 0;   ///< 0: continuous
     bool automatable = true, isBypass = false;
     juce::StringArray stepTexts;   ///< for stepped parameters, up to 32
+    /** The values in the plugin's own units, linear over the normalised
+        range (a JSFX slider). hasRange false: only the normalised value. */
+    bool hasRange = false;
+    double rangeMin = 0.0, rangeMax = 1.0, rangeStep = 0.0;
 
     juce::var toVar() const
     {
@@ -337,6 +341,12 @@ struct ParamInfo
         o->setProperty ("bypass", isBypass);
         if (! stepTexts.isEmpty())
             o->setProperty ("stepTexts", json::stringArray (stepTexts));
+        if (hasRange)
+        {
+            o->setProperty ("rangeMin", rangeMin);
+            o->setProperty ("rangeMax", rangeMax);
+            o->setProperty ("rangeStep", rangeStep);
+        }
         return o;
     }
 
@@ -354,6 +364,13 @@ struct ParamInfo
         p.automatable = (bool) json::get (v, "automatable", true);
         p.isBypass = (bool) json::get (v, "bypass", false);
         p.stepTexts = json::toStringArray (v["stepTexts"]);
+        p.hasRange = ! v["rangeMin"].isVoid() && ! v["rangeMax"].isVoid();
+        if (p.hasRange)
+        {
+            p.rangeMin = (double) v["rangeMin"];
+            p.rangeMax = (double) v["rangeMax"];
+            p.rangeStep = (double) json::get (v, "rangeStep", 0.0);
+        }
         return p;
     }
 };
@@ -398,6 +415,8 @@ struct SlotReady
     std::vector<ParamInfo> params;
     juce::MemoryBlock telemetrySchema;   ///< TelemetryCodec schema; empty when not FxmeNet-aware
     int fxmenetAbi = 0;
+    bool jsfx = false;      ///< a JSFX script (doc/jsfx-plan.md)
+    bool jsfxGfx = false;   ///< ... that has a @gfx section
 
     juce::var toVar() const
     {
@@ -416,6 +435,11 @@ struct SlotReady
         o->setProperty ("params", a);
         o->setProperty ("telemetrySchema", telemetrySchema.toBase64Encoding());
         o->setProperty ("fxmenetAbi", fxmenetAbi > 0 ? juce::var (fxmenetAbi) : juce::var());
+        if (jsfx)
+        {
+            o->setProperty ("kind", "jsfx");
+            o->setProperty ("hasGfx", jsfxGfx);
+        }
         return o;
     }
 
@@ -434,6 +458,8 @@ struct SlotReady
                 s.params.push_back (ParamInfo::fromVar (p));
         s.telemetrySchema.fromBase64Encoding (v["telemetrySchema"].toString());
         s.fxmenetAbi = v["fxmenetAbi"].isVoid() ? 0 : (int) v["fxmenetAbi"];
+        s.jsfx = v["kind"].toString() == "jsfx";
+        s.jsfxGfx = s.jsfx && (bool) json::get (v, "hasGfx", false);
         return s;
     }
 };

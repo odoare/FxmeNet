@@ -42,5 +42,7 @@ namespace fxmenet::plugin::tips
     inline constexpr auto fullRescan    = "Scan every plugin on this computer again, ignoring the cache.";
     inline constexpr auto flushOnReset  = "When the DAW resets the plugin (start, stop, seek), drop the audio on its way back from the server: silence for the latency, as a local plugin clearing its delay line. For every FxmeNet instance.";
     inline constexpr auto logEvents     = "Write what the audio thread sees around transport events (resets, play / stop, jumps, concealed blocks) to fxmenet-client-events.log in the FX-Mechanics settings folder. For every FxmeNet instance.";
+    inline constexpr auto jsfxRescan    = "Look again for JSFX scripts on this computer.";
+    inline constexpr auto jsfxFolders   = "Folders searched for JSFX scripts besides REAPER's Effects folder. A folder is laid out as REAPER's: scripts in subfolders, their data in a Data folder next to it.";
     inline constexpr auto pluginFolders = "Folders searched for plugins besides the standard VST3 ones (with their subfolders).";
 }

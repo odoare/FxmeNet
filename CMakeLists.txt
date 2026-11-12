@@ -27,6 +27,11 @@ endif()
 
 enable_testing()
 
+# ── The JSFX engine (the static library fxjsfx; its own tool is not built) ────
+if(FXMENET_JSFX)
+    add_subdirectory(${JSFX_DIR} jsfx EXCLUDE_FROM_ALL)
+endif()
+
 # ── Shared code: wire protocol, audio transports, their tests ─────────────────
 add_subdirectory(Common)
 

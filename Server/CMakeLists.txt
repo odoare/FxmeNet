@@ -28,6 +28,15 @@ target_compile_definitions(FxmeNetServer
         FXMENET_VERSION="${PROJECT_VERSION}"
 )
 
+# JSFX scripts in the chain (doc/jsfx-plan.md).
+if(FXMENET_JSFX)
+    target_sources(FxmeNetServer PRIVATE Source/JsfxInstance.cpp)
+    target_compile_definitions(FxmeNetServer PRIVATE FXMENET_JSFX=1)
+    target_link_libraries(FxmeNetServer PRIVATE fxjsfx)
+else()
+    target_compile_definitions(FxmeNetServer PRIVATE FXMENET_JSFX=0)
+endif()
+
 # SystemLoad: the process's memory (GetProcessMemoryInfo).
 if(WIN32)
     target_link_libraries(FxmeNetServer PRIVATE psapi)

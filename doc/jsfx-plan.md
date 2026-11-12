@@ -6,8 +6,9 @@ LGPL 2.1) and of FxmeNet as released (0.1.0). This is Phase 7 of
 `doc/todo.md`. Agreed with the user on 2026-11-12: no commercial build for
 now, scripts come from the client only, `nasm` is a build dependency.
 
-State: phase 1 is written and runs on Linux (see "Phases"). The rest is
-not started.
+State: phases 1 and 2 are written (see "Phases"); on Linux the engine and
+the server side were built and run, the plugin side compiles and is to be
+tried in a DAW. Phases 3 to 5 are not started.
 
 ## Goal
 
@@ -132,8 +133,8 @@ per session.
 
 | Message | Direction | Content |
 | --- | --- | --- |
-| `SLOT_ADD_JSFX` | client | slot position, bundle (names and bytes), initial state |
-| `SLOT_READY` | server | as today, plus `kind: "jsfx"`, `hasGfx`, the variable table hash, or the compile error with its line |
+| `SLOT_ADD` | client | as today (phase 2: no message of its own). A script is the uid `JSFX`, the vendor `"JSFX"`, its path as the name, and the bundle inside the state blob (`Common/FxmeNet/jsfx/JsfxBundle.h`) |
+| `SLOT_READY` | server | as today, plus `kind: "jsfx"`, `hasGfx` and a range per slider (phase 2); the variable table hash (phase 3). A script that does not compile is an `ERROR` with the message and its line |
 | `JSFX_SYNC_ACTIVE` | client | slotId, on/off (the editor is open), frame rate |
 | `JSFX_SUBSCRIBE` | client | slotId, the memory blocks the display touched |
 | `JSFX_SYNC` | server | slotId, frame number, changed variables, changed memory ranges, changed strings |
@@ -225,10 +226,32 @@ Known limit: `@gfx` code that computes from memory it never read before
    written but never built; a comparison with REAPER's render of the same
    script; the display role and the state access for the mirror (they come
    with phase 3).
-2. **Server and generic controls.** `JsfxInstance`, `SLOT_ADD_JSFX`, the
-   client's script list and folders, the bundle in the project state.
-   Result: any script processes on the server, with sliders, automation,
-   routing and state; scripts with `@gfx` work too, without their drawing.
+2. **Server and generic controls (written 2026-11-12).** No new message:
+   a script is a `SLOT_ADD` whose state blob carries the bundle, so the
+   client's slot model, the project state and the rebuild after a
+   reconnection needed no change.
+   - Common: `jsfx/JsfxBundle.h` (the bundle and the slot state on the
+     wire, path rules, limits; JUCE-free, tested in FxmeNetProtocolTests),
+     `jsfx/JsfxScripts.h` (finding scripts in an Effects folder; packing one
+     with its imports, its `filename:` files and its file sliders' data).
+   - Server: `JsfxInstance` (an `AudioPluginInstance`: sliders as
+     parameters with their ranges, pins as channels, MIDI through the
+     engine's hook, `pdc_delay` as latency, bundle + sliders + `@serialize`
+     as state), created by `Session::handleSlotAdd`. `FXMENET_JSFX` (CMake,
+     ON) leaves it out.
+   - Plugin: `JsfxLibrary` (the scan, shared by the instances), the scripts
+     listed after the server's plugins with the tag `JS` (the filter also
+     matches their description), "JSFX SCRIPTS" in the Settings tab (count,
+     folders, rescan), slider values shown in the script's units.
+   - fxmenet-wavclient: `--jsfx EFFECTS_FOLDER SCRIPT_PATH`.
+   - Run on Linux with the wavclient against a local server:
+     `utility/volume`, `delay/delay` (echoes build up), `analysis/gfxanalyzer`
+     (reported with `@gfx`); a script with a syntax error is refused with
+     "@sample:4: syntax error"; the temporary folders are removed.
+   - Not done: the plugin in a DAW (list, add, sliders, automation, state
+     in the project, reconnection); hidden sliders (names starting with
+     `-`) are shown; scripts outside the searched folders; macOS and
+     Windows builds of `fxjsfx`.
 3. **Display, read only.** The display role, `JsfxView`, the variable and
    memory mirror from server to client. Result: meters, spectra and scopes
    move.

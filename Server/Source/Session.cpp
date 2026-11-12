@@ -8,8 +8,13 @@
 */
 
 #include "Session.h"
+#if FXMENET_JSFX
+ #include "JsfxInstance.h"
+#endif
 #include "Log.h"
 #include "Server.h"
+
+#include <FxmeNet/jsfx/JsfxBundle.h>
 
 namespace fxmenet::server
 {
@@ -482,14 +487,31 @@ void Session::handleSlotAdd (const Frame& f)
     if (! decode (f.payload, add))
         return fail (f, ErrorMessage::badRequest, "malformed SLOT_ADD");
 
-    const auto* description = catalog.find (add.uid, add.name, add.vendor);
-    if (description == nullptr)
-        return fail (f, ErrorMessage::pluginNotFound, juce::String (add.name) + " is not on this server");
+    juce::String error, label;
+    std::unique_ptr<juce::AudioPluginInstance> instance;
+    if (add.uid == jsfx::jsfxUid && add.vendor == jsfx::jsfxVendor)
+    {
+        // A JSFX script: it comes with the message, in the state (JsfxBundle.h).
+        label = "JSFX " + juce::String::fromUTF8 (add.name.c_str());
+       #if FXMENET_JSFX
+        instance = JsfxInstance::create (add.state, config.sampleRate, error);
+       #else
+        error = "this server was built without JSFX";
+       #endif
+        if (instance == nullptr)
+            return fail (f, ErrorMessage::pluginLoadFailed, juce::String::fromUTF8 (add.name.c_str()) + ": " + error);
+    }
+    else
+    {
+        const auto* description = catalog.find (add.uid, add.name, add.vendor);
+        if (description == nullptr)
+            return fail (f, ErrorMessage::pluginNotFound, juce::String (add.name) + " is not on this server");
 
-    juce::String error;
-    auto instance = catalog.createInstance (*description, config.sampleRate, config.blockSize, error);
-    if (instance == nullptr)
-        return fail (f, ErrorMessage::pluginLoadFailed, "cannot load " + description->name + ": " + error);
+        label = description->name;
+        instance = catalog.createInstance (*description, config.sampleRate, config.blockSize, error);
+        if (instance == nullptr)
+            return fail (f, ErrorMessage::pluginLoadFailed, "cannot load " + description->name + ": " + error);
+    }
 
     control::SlotReady ready;
     error = chain.addSlot (add.slotId, (int) add.position, std::move (instance), add.state, ready);
@@ -497,7 +519,7 @@ void Session::handleSlotAdd (const Frame& f)
         return fail (f, ErrorMessage::pluginLoadFailed, error);
 
     log ("session " + juce::String ((int) sessionId) + ": slot " + juce::String ((int) add.slotId) + " = "
-         + description->name + (ready.fxmenetAbi > 0 ? " (FxmeNet-aware)" : ""));
+         + label + (ready.fxmenetAbi > 0 ? " (FxmeNet-aware)" : "") + (ready.jsfxGfx ? " (with @gfx)" : ""));
     connection->sendJson (Type::slotReady, f.requestId, ready.toVar());
 }
 

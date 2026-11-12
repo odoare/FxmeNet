@@ -133,4 +133,25 @@ inline void setLocalPluginFolders (const juce::StringArray& folders)
     }
 }
 
+/** Effects folders searched for JSFX scripts besides REAPER's. */
+inline juce::StringArray getJsfxFolders()
+{
+    auto* s = appProperties().getUserSettings();
+    if (s == nullptr)
+        return {};
+    juce::StringArray folders;
+    folders.addLines (s->getValue ("jsfxFolders"));
+    folders.removeEmptyStrings();
+    return folders;
+}
+
+inline void setJsfxFolders (const juce::StringArray& folders)
+{
+    if (auto* s = appProperties().getUserSettings())
+    {
+        s->setValue ("jsfxFolders", folders.joinIntoString ("\n"));
+        s->saveIfNeeded();
+    }
+}
+
 } // namespace fxmenet::plugin

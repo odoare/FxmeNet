@@ -31,6 +31,7 @@
       fxmenet-wavclient --in in.wav --out out.wav --plugin a.vst3 [--plugin b.vst3]...
                         [--server host[:port]] [--block N] [--realtime] [--budget D]
                         [--settle ms] [--no-compare] [--telemetry]
+                        [--jsfx EFFECTS_FOLDER SCRIPT_PATH]...
                         [--engine [--host-block N] [--random-blocks]]
       fxmenet-wavclient --discover
 
@@ -51,6 +52,7 @@
 #include <FxmeNet/client/ClientEngine.h>
 #include <FxmeNet/control/ControlConnection.h>
 #include <FxmeNet/control/Discovery.h>
+#include <FxmeNet/jsfx/JsfxScripts.h>
 #include <FxmeNet/transport/UdpTransport.h>
 
 #include <iostream>
@@ -75,6 +77,7 @@ struct Options
     int port = 54322;
     juce::File in, out;
     juce::StringArray plugins;
+    juce::StringArray jsfxFolders, jsfxPaths;   ///< --jsfx: scripts, after the plugins, on the server only
     int blockSize = 128;
     bool realtime = false;
     int budgetBlocks = 2;
@@ -103,6 +106,12 @@ struct Options
             else if (a == "--in" && hasValue)        in = cwd.getChildFile (args[++i]);
             else if (a == "--out" && hasValue)       out = cwd.getChildFile (args[++i]);
             else if (a == "--plugin" && hasValue)    plugins.add (cwd.getChildFile (args[++i]).getFullPathName());
+            else if (a == "--jsfx" && i + 2 < args.size())
+            {
+                jsfxFolders.add (cwd.getChildFile (args[++i]).getFullPathName());
+                jsfxPaths.add (args[++i]);
+                compare = false;   // no local copy of a script to compare with
+            }
             else if (a == "--block" && hasValue)     blockSize = args[++i].getIntValue();
             else if (a == "--budget" && hasValue)    budgetBlocks = args[++i].getIntValue();
             else if (a == "--settle" && hasValue)    settleMs = args[++i].getIntValue();
@@ -121,8 +130,8 @@ struct Options
         }
         if (discover)
             return true;
-        if (in == juce::File() || out == juce::File() || plugins.isEmpty())
-            error = "--in, --out and at least one --plugin are required";
+        if (in == juce::File() || out == juce::File() || (plugins.isEmpty() && jsfxPaths.isEmpty()))
+            error = "--in, --out and at least one --plugin or --jsfx are required";
         else if (blockSize < 16 || blockSize > 4096)
             error = "--block must be between 16 and 4096";
         else if (hostBlock < 1 || hostBlock > 8192)
@@ -807,6 +816,39 @@ int run (const Options& o)
         }
     }
 
+    // The JSFX scripts, each packed with what it imports (JsfxScripts.h).
+    for (int i = 0; i < o.jsfxPaths.size(); ++i)
+    {
+        jsfx::Bundle bundle;
+        juce::String error;
+        juce::StringArray notes;
+        if (! jsfx::BundleBuilder (juce::File (o.jsfxFolders[i])).build (o.jsfxPaths[i], bundle, error, &notes))
+        {
+            fail (error);
+            return 1;
+        }
+        for (auto& n : notes)
+            say ("  note: " + n);
+
+        control::SlotAdd add;
+        add.slotId = (std::uint32_t) (descriptions.size() + i) + 1;
+        add.position = (std::uint32_t) (descriptions.size() + i);
+        add.uid = jsfx::jsfxUid;
+        add.name = o.jsfxPaths[i].toStdString();
+        add.vendor = jsfx::jsfxVendor;
+        add.state = jsfx::makeSlotState (std::move (bundle));
+        const auto sent = add.state.size();
+        if (! request (*connection, Type::slotAdd, id++, 0, encode (add), Type::slotReady, reply, 30000))
+            return 1;
+        const auto ready = control::SlotReady::fromVar (control::fromPayload (reply.payload));
+        say ("  slot " + juce::String ((int) ready.slotId) + ": JSFX " + o.jsfxPaths[i] + " (" + juce::String ((int) sent)
+             + " bytes sent), " + juce::String ((int) ready.params.size()) + " sliders, latency " + juce::String (ready.latency)
+             + (ready.jsfxGfx ? ", has @gfx" : ""));
+        for (auto& p : ready.params)
+            say ("      " + p.name + (p.hasRange ? "  [" + juce::String (p.rangeMin) + " .. " + juce::String (p.rangeMax) + "]" : juce::String())
+                 + (p.stepTexts.isEmpty() ? juce::String() : "  {" + p.stepTexts.joinIntoString (", ") + "}"));
+    }
+
     if (o.settleMs > 0)
         juce::Thread::sleep (o.settleMs);   // the server's plugins settle on its message loop
 
@@ -896,6 +938,7 @@ int main (int argc, char* argv[])
         std::cerr << error << "\nusage: fxmenet-wavclient --in in.wav --out out.wav --plugin a.vst3 [--plugin b.vst3]...\n"
                      "                         [--server host[:port]] [--block N] [--realtime] [--budget D]\n"
                      "                         [--settle ms] [--no-compare] [--telemetry]\n"
+                     "                         [--jsfx EFFECTS_FOLDER SCRIPT_PATH]...   (JSFX scripts, after the plugins; no comparison)\n"
                      "                         [--engine [--host-block N] [--random-blocks]]\n"
                      "       fxmenet-wavclient --discover" << std::endl;
 

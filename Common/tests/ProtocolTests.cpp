@@ -13,6 +13,7 @@
   ------------------------------------------------------------------------------
 */
 
+#include <FxmeNet/jsfx/JsfxBundle.h>
 #include <FxmeNet/control/ControlFrame.h>
 #include <FxmeNet/protocol/Fragmentation.h>
 #include <FxmeNet/protocol/Wire.h>
@@ -438,6 +439,48 @@ int main()
             std::vector<Route> none;
             CHECK (decode (encode (none), badRoutes) && badRoutes.empty());   // an empty graph
         }
+    }
+
+    //--------------------------------------------------------------------------
+    // A JSFX slot's state: the script bundle, the sliders, @serialize's bytes.
+    {
+        namespace jsfx = fxmenet::jsfx;
+        jsfx::SlotState s;
+        s.bundle.main = "utility/volume";
+        s.bundle.files.push_back ({ "utility/volume", false, { 'd', 'e', 's', 'c', ':' } });
+        s.bundle.files.push_back ({ "lib/common.jsfx-inc", false, { 1, 2, 3 } });
+        s.bundle.files.push_back ({ "img/knob.png", true, {} });
+        s.sliders = "-6.0 0.0";
+        s.serialized = { 9, 8, 7, 6 };
+
+        const auto bytes = jsfx::encode (s);
+        jsfx::SlotState g;
+        CHECK (jsfx::decode (bytes.data(), bytes.size(), g));
+        CHECK (g.bundle.main == "utility/volume" && g.bundle.files.size() == 3);
+        CHECK (g.bundle.files[1].path == "lib/common.jsfx-inc" && g.bundle.files[1].bytes.size() == 3 && ! g.bundle.files[1].data);
+        CHECK (g.bundle.files[2].data && g.bundle.files[2].bytes.empty());
+        CHECK (g.sliders == "-6.0 0.0" && g.serialized.size() == 4 && g.serialized[3] == 6);
+
+        // Cut short, or not a bundle at all.
+        CHECK (! jsfx::decode (bytes.data(), bytes.size() - 1, g));
+        CHECK (! jsfx::decode (bytes.data(), 6, g));
+        const std::uint8_t junk[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+        CHECK (! jsfx::decode (junk, sizeof (junk), g));
+
+        // The main script must be one of the files.
+        auto noMain = s;
+        noMain.bundle.main = "utility/other";
+        const auto noMainBytes = jsfx::encode (noMain);
+        CHECK (! jsfx::decode (noMainBytes.data(), noMainBytes.size(), g));
+
+        // Paths that would leave the folder they are written to.
+        CHECK (jsfx::isSafePath ("a/b c/d.jsfx-inc") && jsfx::isSafePath ("volume"));
+        for (const char* bad : { "", "/etc/passwd", "../x", "a/../../x", "a//b", "a/./b", "a/", "C:/x", "a\\b", "a/b\n" })
+            CHECK (! jsfx::isSafePath (bad));
+        auto escaping = s;
+        escaping.bundle.files[1].path = "../../.bashrc";
+        const auto escapingBytes = jsfx::encode (escaping);
+        CHECK (! jsfx::decode (escapingBytes.data(), escapingBytes.size(), g));
     }
 
     //--------------------------------------------------------------------------

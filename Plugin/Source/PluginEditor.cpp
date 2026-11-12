@@ -199,12 +199,26 @@ void FxmeNetAudioProcessorEditor::refreshCatalog()
     const auto filter = filterBox.getText().trim();
     auto latest = processor.getEngine().getCatalog();
     juce::String signature;
-    signature << (int) processor.getLocalCatalog().getRevision() << ":" << filter << ":";
+    signature << (int) processor.getLocalCatalog().getRevision() << ":"
+              << processor.getJsfxLibrary().getRevision() << ":" << filter << ":";
     for (auto& e : latest)
         signature << fxmenet::control::json::hex32 (e.uid) << e.name << ";";
     if (signature == catalogSignature)
         return;
     catalogSignature = signature;
+
+    // This machine's JSFX scripts, after the server's plugins.
+    numServerEntries = (int) latest.size();
+    scripts = processor.getJsfxLibrary().getScripts();
+    for (auto& s : scripts)
+    {
+        fxmenet::control::PluginEntry e;
+        e.uid = fxmenet::jsfx::jsfxUid;
+        e.name = s.path;
+        e.vendor = fxmenet::jsfx::jsfxVendor;
+        e.category = s.description;
+        latest.push_back (std::move (e));
+    }
 
     // The selection follows its plugin, not its row.
     const auto* previous = catalogEntryAt (catalogList.getSelectedRow());
@@ -222,22 +236,27 @@ void FxmeNetAudioProcessorEditor::refreshCatalog()
     shown.clear();
     for (std::size_t i = 0; i < catalog.size(); ++i)
     {
-        matches.push_back (processor.matchLocal (catalog[i]));
+        const bool script = (int) i >= numServerEntries;
+        matches.push_back (script ? fxmenet::plugin::LocalMatch {} : processor.matchLocal (catalog[i]));
         bool keep = true;
-        for (auto& w : words)
-            keep = keep && catalog[i].name.containsIgnoreCase (w);
+        for (auto& w : words)   // a script: its path or its description
+            keep = keep && (catalog[i].name.containsIgnoreCase (w)
+                            || (script && catalog[i].category.containsIgnoreCase (w)));
         if (keep)
             shown.push_back ((int) i);
     }
 
-    // T2, T1, T0 (and "T?" while the local scan runs), then by name.
-    const auto rank = [] (const fxmenet::plugin::LocalMatch& m)
+    // T2, T1, T0 (and "T?" while the local scan runs), then the JSFX scripts; by name.
+    const auto rank = [&] (int i)
     {
+        if (i >= numServerEntries)
+            return -2;
+        const auto& m = matches[(std::size_t) i];
         return m.kind == fxmenet::plugin::LocalMatch::Kind::unknown ? -1 : m.tier;
     };
     std::stable_sort (shown.begin(), shown.end(), [&] (int a, int b)
     {
-        const int ra = rank (matches[(std::size_t) a]), rb = rank (matches[(std::size_t) b]);
+        const int ra = rank (a), rb = rank (b);
         if (ra != rb)
             return ra > rb;
         const auto& ea = catalog[(std::size_t) a];
@@ -255,6 +274,13 @@ void FxmeNetAudioProcessorEditor::refreshCatalog()
         const auto& m = matches[(std::size_t) i];
         if (hadSelection && e.uid == selectedUid && e.name == selectedName)
             reselect = (int) catalogRows.rows.size();
+        if (i >= numServerEntries)
+        {
+            catalogRows.rows.push_back ({ e.name, "JSFX  JS", theme::text,
+                                          e.category + "\nA JSFX script of this machine: sent to the server when added, "
+                                                       "processed there, shown here with generic controls." });
+            continue;
+        }
         catalogRows.rows.push_back ({ e.name,
                                       e.vendor + "  " + juce::String (e.inputs) + "/" + juce::String (e.outputs)
                                           + "  " + tierTag (m),
@@ -294,7 +320,11 @@ void FxmeNetAudioProcessorEditor::refreshChain()
         juce::String detail;
         juce::Colour colour = theme::text;
         fxmenet::control::PluginEntry entry;
-        const auto m = processor.findCatalogEntry (s, entry) ? processor.matchLocal (entry) : fxmenet::plugin::LocalMatch {};
+        const bool script = FxmeNetAudioProcessor::isJsfx (s);
+        auto m = ! script && processor.findCatalogEntry (s, entry) ? processor.matchLocal (entry) : fxmenet::plugin::LocalMatch {};
+        if (script)
+            m.text = "A JSFX script, processed on the server. Generic controls"
+                     + juce::String (s.info.jsfxGfx ? " (its @gfx display is not shown yet)." : ".");
         if (s.error.isNotEmpty())
         {
             detail = s.error;
@@ -307,7 +337,7 @@ void FxmeNetAudioProcessorEditor::refreshChain()
         }
         else
         {
-            detail = tierTag (m) + "  " + juce::String ((int) s.info.params.size()) + " parameters"
+            detail = (script ? juce::String ("JS") : tierTag (m)) + "  " + juce::String ((int) s.info.params.size()) + " parameters"
                    + (s.info.latency > 0 ? ", latency " + juce::String (s.info.latency) : juce::String());
         }
         if (s.bypassed)
@@ -365,8 +395,25 @@ void FxmeNetAudioProcessorEditor::showServers (const std::vector<fxmenet::discov
 
 void FxmeNetAudioProcessorEditor::addSelected()
 {
-    if (const auto* e = catalogEntryAt (catalogList.getSelectedRow()))
-        processor.addPlugin (*e);
+    const int row = catalogList.getSelectedRow();
+    const auto* e = catalogEntryAt (row);
+    if (e == nullptr)
+        return;
+
+    const int index = shown[(std::size_t) row] - numServerEntries;
+    if (! juce::isPositiveAndBelow (index, (int) scripts.size()))
+        return processor.addPlugin (*e);
+
+    // A JSFX script: packed with what it imports, then sent.
+    juce::String error;
+    juce::StringArray notes;
+    if (! processor.addScript (scripts[(std::size_t) index], error, &notes))
+        juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::WarningIcon, "JSFX",
+                                                scripts[(std::size_t) index].path + "\n\n" + error);
+    else if (! notes.isEmpty())
+        juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::InfoIcon, "JSFX",
+                                                scripts[(std::size_t) index].path + " was added, without:\n\n"
+                                                    + notes.joinIntoString ("\n"));
 }
 
 const fxmenet::control::PluginEntry* FxmeNetAudioProcessorEditor::catalogEntryAt (int row) const

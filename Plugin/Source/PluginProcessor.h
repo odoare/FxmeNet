@@ -31,6 +31,7 @@
 
 #include <FxmeNet/client/ClientEngine.h>
 
+#include "JsfxLibrary.h"
 #include "LocalCatalog.h"
 #include "ParameterPool.h"
 #include "Shadow.h"
@@ -116,6 +117,20 @@ public:
 
     /** Adds a server plugin at the end of the chain. */
     void addPlugin (const fxmenet::control::PluginEntry&);
+
+    /** The JSFX scripts of this machine. */
+    fxmenet::plugin::JsfxLibrary& getJsfxLibrary() noexcept   { return *jsfxLibrary; }
+
+    /** Adds a JSFX script at the end of the chain: packs it with what it
+        imports and sends it. False, with the reason, when it cannot be
+        packed (a file it imports is missing). `notes`: what was left out. */
+    bool addScript (const fxmenet::jsfx::Script&, juce::String& error, juce::StringArray* notes = nullptr);
+
+    /** A slot that holds a JSFX script. */
+    static bool isJsfx (const fxmenet::client::SlotModel& s)
+    {
+        return s.uid == fxmenet::jsfx::jsfxUid && s.vendor == fxmenet::jsfx::jsfxVendor;
+    }
 
     /** How many pool parameters are mapped. */
     int getNumMapped() const;
@@ -252,6 +267,7 @@ private:
 
     // One scan for every instance in the process.
     juce::SharedResourcePointer<fxmenet::plugin::LocalCatalog> localCatalog;
+    juce::SharedResourcePointer<fxmenet::plugin::JsfxLibrary> jsfxLibrary;
 
     // Last, so it is destroyed first: its connection thread calls back into
     // the members above until it stops.
