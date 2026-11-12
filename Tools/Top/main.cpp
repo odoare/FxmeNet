@@ -1024,7 +1024,7 @@ int main (int argc, char* argv[])
 
     for (int i = 1; i < argc; ++i)
     {
-        const juce::String arg (juce::CharPointer_UTF8 (argv[i]));
+        const auto arg = juce::String (juce::CharPointer_UTF8 (argv[i]));
         if (arg == "--once")
             once = true;
         else if (arg == "--find")

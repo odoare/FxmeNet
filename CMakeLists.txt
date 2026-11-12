@@ -19,6 +19,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # -DFXME_USE_SIBLINGS=OFF.
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Dependencies.cmake)
 
+# windows.h defines min and max as macros, which breaks std::min and std::max
+# in every file that includes it (JUCE does).
+if(WIN32)
+    add_compile_definitions(NOMINMAX)
+endif()
+
 enable_testing()
 
 # ── Shared code: wire protocol, audio transports, their tests ─────────────────
