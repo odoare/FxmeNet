@@ -60,6 +60,9 @@ enum class Type : std::uint16_t
     stateGet        = 33,
     state           = 34,
     telemetryActive = 40,
+    // JSFX scripts' @gfx display (Common/FxmeNet/jsfx/JsfxSync.h).
+    jsfxSubscribe   = 41,
+    jsfxSync        = 42,
     // A monitor connection (HELLO role "monitor", fxmenet-top): no session.
     monitorStatus   = 50,
     monitorPaths    = 51,

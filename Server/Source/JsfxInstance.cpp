@@ -442,6 +442,35 @@ void JsfxInstance::timerCallback()
             slider->notifyIfChanged();
 }
 
+//==============================================================================
+void JsfxInstance::syncReset()
+{
+    struct Table
+    {
+        std::vector<std::string> names;
+        std::vector<const double*> values;
+    } table;
+    jsfx_embed_enum_vars (sx, [] (void* context, const char* varName, double* value)
+    {
+        auto& t = *static_cast<Table*> (context);
+        t.names.emplace_back (varName);
+        t.values.push_back (value);
+    }, &table);
+    sync.reset (std::move (table.names), std::move (table.values));
+}
+
+bool JsfxInstance::syncCollect (std::uint32_t slotId, std::size_t budget, jsfx::SyncFrame& out)
+{
+    // The engine's lock: the audio thread takes it to free or clear memory.
+    jsfx_embed_lock (sx);
+    const bool any = sync.collect (slotId, [this] (std::uint32_t block) -> const double*
+    {
+        return jsfx_embed_mem_block (sx, (int) block, false);
+    }, budget, out);
+    jsfx_embed_unlock (sx);
+    return any;
+}
+
 void JsfxInstance::getStateInformation (juce::MemoryBlock& destination)
 {
     jsfx::SlotState state;

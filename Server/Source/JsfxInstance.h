@@ -20,6 +20,7 @@
 #pragma once
 
 #include <FxmeNet/jsfx/JsfxBundle.h>
+#include <FxmeNet/jsfx/JsfxSync.h>
 
 #include <juce_audio_processors_headless/juce_audio_processors_headless.h>
 #include <juce_events/juce_events.h>
@@ -55,6 +56,15 @@ public:
     ~JsfxInstance() override;
 
     bool hasGfx() const;
+
+    //==============================================================================
+    // The mirror for the client's @gfx display (JsfxSync.h). Message thread.
+
+    /** The editor opened (again): everything is sent anew. */
+    void syncReset();
+    void syncSubscribe (const std::vector<std::uint32_t>& blocks)   { sync.subscribe (blocks); }
+    /** The next JSFX_SYNC, at most `budget` bytes of memory; false: nothing new. */
+    bool syncCollect (std::uint32_t slotId, std::size_t budget, jsfx::SyncFrame&);
 
     //==============================================================================
     const juce::String getName() const override   { return name; }
@@ -101,6 +111,7 @@ private:
     std::vector<double> work;  ///< interleaved, as the engine wants it
     int workFrames = 0;
     std::unique_ptr<Midi> midi;
+    jsfx::SyncSource sync;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JsfxInstance)
 };

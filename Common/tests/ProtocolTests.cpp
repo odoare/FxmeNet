@@ -14,6 +14,8 @@
 */
 
 #include <FxmeNet/jsfx/JsfxBundle.h>
+#include <map>
+#include <FxmeNet/jsfx/JsfxSync.h>
 #include <FxmeNet/control/ControlFrame.h>
 #include <FxmeNet/protocol/Fragmentation.h>
 #include <FxmeNet/protocol/Wire.h>
@@ -481,6 +483,92 @@ int main()
         escaping.bundle.files[1].path = "../../.bashrc";
         const auto escapingBytes = jsfx::encode (escaping);
         CHECK (! jsfx::decode (escapingBytes.data(), escapingBytes.size(), g));
+    }
+
+    //--------------------------------------------------------------------------
+    // The JSFX @gfx mirror: SyncSource on one side, a copy kept on the other.
+    {
+        namespace jsfx = fxmenet::jsfx;
+        double a = 1.0, b = 2.0;
+        std::vector<double> mem (jsfx::blockItems * 2, 0.0);   // the server's blocks 3 and 7
+        const auto memory = [&mem] (std::uint32_t block) -> const double*
+        {
+            return block == 3 ? mem.data() : block == 7 ? mem.data() + jsfx::blockItems : nullptr;
+        };
+
+        // The client's copy: variables by index, blocks by number.
+        std::vector<double> vars;
+        std::map<std::uint32_t, std::vector<double>> blocks;
+        std::vector<std::uint8_t> wire;
+        const auto apply = [&] (const jsfx::SyncFrame& sent)
+        {
+            jsfx::encode (sent, wire);
+            jsfx::SyncFrame f;
+            if (! jsfx::decode (wire.data(), wire.size(), f))
+                return false;
+            if (f.reset)
+                vars.assign (f.names.size(), 0.0);
+            for (auto& v : f.vars)
+                vars.at (v.index) = v.value;
+            for (auto& r : f.ranges)
+            {
+                auto& blk = blocks[r.offset / jsfx::blockItems];
+                blk.resize (jsfx::blockItems, 0.0);
+                std::copy (r.values.begin(), r.values.end(), blk.begin() + r.offset % jsfx::blockItems);
+            }
+            return true;
+        };
+
+        jsfx::SyncSource source;
+        source.reset ({ "a", "b" }, { &a, &b });
+        jsfx::SyncFrame f;
+        CHECK (source.collect (5, memory, 1 << 20, f) && f.reset && f.names.size() == 2 && f.vars.size() == 2);
+        CHECK (apply (f) && vars[0] == 1.0 && vars[1] == 2.0);
+        CHECK (! source.collect (5, memory, 1 << 20, f));   // nothing changed
+
+        b = 3.5;
+        CHECK (source.collect (5, memory, 1 << 20, f) && ! f.reset && f.vars.size() == 1 && f.vars[0].index == 1);
+        CHECK (apply (f) && vars[1] == 3.5);
+
+        // Memory: only what differs from what the client has (zeros at first).
+        mem[10] = 0.5;
+        mem[jsfx::blockItems + 1000] = -1.0;
+        source.subscribe ({ 3, 7, 9 });   // 9: not allocated on the server, all zeros
+        CHECK (source.collect (5, memory, 1 << 20, f) && f.ranges.size() == 2);
+        CHECK (apply (f) && blocks[3][10] == 0.5 && blocks[7][1000] == -1.0);
+        CHECK (! source.collect (5, memory, 1 << 20, f));
+
+        // A small budget: the rest waits for the next frames, nothing is lost.
+        for (std::size_t i = 0; i < jsfx::blockItems; ++i)
+            mem[i] = (double) i;
+        int frames = 0;
+        while (source.collect (5, memory, 8 * 1024, f))
+        {
+            CHECK (wire.size() < 9 * 1024 || frames == 0);
+            CHECK (apply (f));
+            ++frames;
+            if (frames > 1000)
+                break;
+        }
+        CHECK (frames > 1 && frames < 1000);
+        bool same = true;
+        for (std::size_t i = 0; i < jsfx::blockItems; ++i)
+            same = same && blocks[3][i] == mem[i];
+        CHECK (same);
+
+        // Malformed frames: a range past its block, cut short.
+        jsfx::SyncFrame bad;
+        bad.ranges.push_back ({ jsfx::blockItems - 2, { 1.0, 2.0, 3.0 } });
+        jsfx::encode (bad, wire);
+        CHECK (! jsfx::decode (wire.data(), wire.size(), f));
+        jsfx::SyncFrame good;
+        good.vars.push_back ({ 0, 1.0 });
+        jsfx::encode (good, wire);
+        CHECK (! jsfx::decode (wire.data(), wire.size() - 1, f));
+
+        std::uint32_t slot = 0;
+        std::vector<std::uint32_t> list;
+        CHECK (jsfx::decodeSubscribe (jsfx::encodeSubscribe (4, { 1, 2, 2047 }), slot, list) && slot == 4 && list.size() == 3);
     }
 
     //--------------------------------------------------------------------------

@@ -476,8 +476,7 @@ fxmenet::plugin::Shadow* FxmeNetAudioProcessor::getShadow (std::uint32_t slotId,
     if (! found || ! slot.loaded)
         return fail ("not loaded on the server");
     if (isJsfx (slot))
-        return fail (slot.info.jsfxGfx ? "a JSFX script: generic controls (its @gfx display is not shown yet)"
-                                       : "a JSFX script: generic controls");
+        return fail ("a JSFX script");
 
     fxmenet::control::PluginEntry entry;
     if (! findCatalogEntry (slot, entry))

@@ -201,22 +201,22 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
 10. Phase 6: plugin distribution.
 11. Phase 7: JSFX scripts as plugins of the chain (user request
     2026-11-12). Design, phases and state in `doc/jsfx-plan.md`. Phases 1
-    (the engine as a library, `fxjsfx`, in the fork `~/src/JesuNet/jsfx`)
-    and 2 (the server's `JsfxInstance`, scripts sent in `SLOT_ADD`'s state,
-    the plugin's script list, generic controls) are written. To check by
-    the user, in a DAW:
-    - the scripts of REAPER's Effects folder appear after the server's
-      plugins, tagged `JS`; the filter finds one by path or description;
-    - adding one: it processes, its sliders show real values and names
-      (enums as lists), moving one changes the sound, automation through
-      the 256 parameters works;
-    - a script with `@gfx` works too (generic controls, "JS" in the chain);
-    - saving and reopening the project, and stopping and restarting the
-      server while the project is open, bring the script back with its
-      slider values;
-    - a script with a syntax error shows the compiler's message in the
-      chain; a script importing a missing file is refused with a dialog;
-    - Settings tab: the script count, "Folders..." and "Rescan".
+    (the engine, `fxjsfx`, in the fork `~/src/JesuNet/jsfx`) and 2 (scripts
+    sent in `SLOT_ADD`'s state, processed on the server, generic controls)
+    were tried in a DAW by the user (2026-11-12): they work.
+    Phase 3 (the `@gfx` display, read-only) is written. To check in a DAW:
+    - a script with `@gfx` (`analysis/gfxanalyzer`, `analysis/gfxscope`,
+      `meters/vumeter`, `analysis/gfxspectrograph`): its display shows in the
+      Parameters tab and moves with the audio processed on the server;
+      "Generic controls" switches to the sliders and back;
+    - the window takes the script's size; resizing redraws;
+    - closing the display (another slot, another tab, the window): the
+      server stops sending (fxmenet-top: the session's outgoing traffic
+      falls back);
+    - stopping and restarting the server with the display open: it comes
+      back;
+    - the DAW's CPU with a display open, compared with the script running
+      in REAPER itself.
     Before the next release: commit and push the fork, then update its pin
-    in `cmake/Dependencies.cmake`; build `fxjsfx` on macOS and Windows
-    (never built). Next: phase 3 (the `@gfx` display on the client).
+    in `cmake/Dependencies.cmake`; build `fxjsfx` on macOS and Windows.
+    Next: phase 4 (clicks and keys in `@gfx`, sliders moved from it).

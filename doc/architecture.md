@@ -29,7 +29,9 @@ Common/                 shared by server and client, header-only:
   FxmeNet/jsfx/         JSFX scripts (doc/jsfx-plan.md): JsfxBundle.h (a script
                         with its files and a JSFX slot's state on the wire;
                         JUCE-free), JsfxScripts.h (finding scripts on disk,
-                        packing one with what it imports; juce_core)
+                        packing one with what it imports; juce_core),
+                        JsfxSync.h (the @gfx display's mirror: messages and
+                        the server's side; JUCE-free)
   FxmeNet/client/       the client: BlockStream (re-blocking, latency, jitter
                         buffer, concealment) and ReplyRing, JUCE-free; AudioLink
                         (one session's UDP audio) and ClientEngine (chain,

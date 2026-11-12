@@ -53,6 +53,7 @@
 
 #include <juce_core/juce_core.h>
 
+#include <FxmeNet/jsfx/JsfxSync.h>
 #include <FxmeNet/client/AudioLink.h>
 #include <FxmeNet/client/BlockStream.h>
 #include <FxmeNet/chain/Routing.h>
@@ -561,8 +562,45 @@ public:
         if (slot == nullptr || slot->telemetryWanted == on)
             return;
         slot->telemetryWanted = on;
+        {
+            const std::lock_guard<std::mutex> jl (jsfxLock);
+            jsfxQueues.erase (slotId);   // a JSFX display starts again from a reset
+        }
         if (ready && slot->onServer)
             sendFrame (control::Type::telemetryActive, 0, encode (control::SlotValue { slotId, on ? 1u : 0u }));
+    }
+
+    //==============================================================================
+    // JSFX scripts' @gfx display (Common/FxmeNet/jsfx/JsfxSync.h): JSFX_SYNC
+    // frames arrive while the slot's telemetry is on (its editor shown).
+
+    /** Message thread: a slot's JSFX_SYNC payloads since the last call, oldest
+        first. `overflowed`: some were dropped (the display was not read for
+        long); the caller asks for a fresh start with restartJsfxSync(). */
+    std::vector<std::vector<std::uint8_t>> takeJsfxSync (std::uint32_t slotId, bool& overflowed)
+    {
+        const std::lock_guard<std::mutex> l (jsfxLock);
+        auto& q = jsfxQueues[slotId];
+        overflowed = q.overflowed;
+        q.overflowed = false;
+        return std::exchange (q.frames, {});
+    }
+
+    /** The display touched these memory blocks: the server sends them. */
+    void subscribeJsfx (std::uint32_t slotId, const std::vector<std::uint32_t>& blocks)
+    {
+        if (! blocks.empty())
+            sendFrame (control::Type::jsfxSubscribe, 0, jsfx::encodeSubscribe (slotId, blocks));
+    }
+
+    /** Asks the server to send a slot's mirror again from the start (its
+        next JSFX_SYNC is a reset). */
+    void restartJsfxSync (std::uint32_t slotId)
+    {
+        const std::lock_guard<std::mutex> l (lock);
+        auto* slot = find (slotId);
+        if (slot != nullptr && slot->telemetryWanted && ready && slot->onServer)
+            sendFrame (control::Type::telemetryActive, 0, encode (control::SlotValue { slotId, 1u }));
     }
 
     /** Message thread: the telemetry frames received since the last call,
@@ -1276,6 +1314,23 @@ private:
             return;
         }
 
+        if (f.type == control::Type::jsfxSync)
+        {
+            if (f.payload.size() < 4)
+                return;
+            fxme::net::ByteReader r (f.payload.data(), f.payload.size());
+            const auto slotId = r.u32();
+            const std::lock_guard<std::mutex> l (jsfxLock);
+            auto& q = jsfxQueues[slotId];
+            if (q.frames.size() >= maxJsfxQueued)
+            {
+                q.frames.clear();   // deltas: no use keeping a part of them
+                q.overflowed = true;
+            }
+            q.frames.push_back (f.payload);
+            return;
+        }
+
         if (f.type == control::Type::paramChanged)
         {
             std::vector<control::ParamChange> changes;
@@ -1515,6 +1570,15 @@ private:
     bool dirty = false;
     std::atomic<bool> ready { false };
     std::vector<control::PluginEntry> catalog;
+
+    struct JsfxQueue
+    {
+        std::vector<std::vector<std::uint8_t>> frames;
+        bool overflowed = false;
+    };
+    static constexpr std::size_t maxJsfxQueued = 300;   ///< 10 s at 30 Hz
+    std::mutex jsfxLock;
+    std::map<std::uint32_t, JsfxQueue> jsfxQueues;
 
     // Routing, under `lock` (routedInputs and serverRoutes also read without).
     chain::Routing routing;

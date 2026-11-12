@@ -8,6 +8,9 @@
 */
 
 #include "Panels.h"
+#if FXMENET_JSFX
+ #include "JsfxView.h"
+#endif
 #include "AppSettings.h"
 #include "Theme.h"
 #include "Tooltips.h"
@@ -246,7 +249,16 @@ void ParameterPanel::refresh (const client::SlotModel* slot)
     fxmenet::plugin::Shadow* shadow = nullptr;
     if (slot != nullptr && slot->loaded)
         shadow = processor.getShadow (id, &why);
-    const bool canShowEditor = shadow != nullptr && shadow->getInstance().hasEditor();
+   #if FXMENET_JSFX
+    // A JSFX script with @gfx: its display, drawn here (JsfxView).
+    const bool jsfxDisplay = slot != nullptr && slot->loaded && FxmeNetAudioProcessor::isJsfx (*slot)
+                          && slot->info.jsfxGfx && id != jsfxFailedSlot;
+    if (slot != nullptr && id == jsfxFailedSlot)
+        why = jsfxFailure;
+   #else
+    const bool jsfxDisplay = false;
+   #endif
+    const bool canShowEditor = jsfxDisplay || (shadow != nullptr && shadow->getInstance().hasEditor());
 
     viewButton.setVisible (canShowEditor);
     viewButton.setButtonText (preferPluginEditor ? "Generic controls" : "Plugin editor");
@@ -258,7 +270,24 @@ void ParameterPanel::refresh (const client::SlotModel* slot)
             rows.clear();
             viewport.setVisible (false);
             message = {};
-            pluginEditor.reset (shadow->getInstance().createEditorAndMakeActive());
+            editorIsJsfx = jsfxDisplay;
+           #if FXMENET_JSFX
+            if (jsfxDisplay)
+            {
+                auto view = std::make_unique<JsfxView> (processor, id);   // turns the slot's telemetry on
+                if (view->getError().isEmpty())
+                    pluginEditor = std::move (view);
+                else
+                {
+                    jsfxFailedSlot = id;
+                    jsfxFailure = view->getError();
+                    shownSignature = {};
+                    return;   // the next refresh shows the generic controls, with the reason
+                }
+            }
+            else
+           #endif
+                pluginEditor.reset (shadow->getInstance().createEditorAndMakeActive());
             if (pluginEditor != nullptr)
             {
                 editorSlot = id;
@@ -266,7 +295,8 @@ void ParameterPanel::refresh (const client::SlotModel* slot)
                 pluginEditor->addComponentListener (this);
                 editorViewport.setViewedComponent (pluginEditor.get(), false);
                 editorViewport.setVisible (true);
-                info = slot->name + ": its own editor";
+                info = slot->name + (editorIsJsfx ? ": its @gfx display, drawn here from the server's data"
+                                                   : ": its own editor");
                 shownSlot = id;
                 shownSignature = "editor";
                 if (onWantsSize)
@@ -274,6 +304,11 @@ void ParameterPanel::refresh (const client::SlotModel* slot)
                 resized();
                 repaint();
             }
+        }
+        if (pluginEditor != nullptr && editorIsJsfx)
+        {
+            lastTouchedButton.setVisible (false);   // a script's display has no controls to map (yet)
+            return;
         }
         if (pluginEditor != nullptr)
         {

@@ -6,9 +6,9 @@ LGPL 2.1) and of FxmeNet as released (0.1.0). This is Phase 7 of
 `doc/todo.md`. Agreed with the user on 2026-11-12: no commercial build for
 now, scripts come from the client only, `nasm` is a build dependency.
 
-State: phases 1 and 2 are written (see "Phases"); on Linux the engine and
-the server side were built and run, the plugin side compiles and is to be
-tried in a DAW. Phases 3 to 5 are not started.
+State: phases 1 and 2 are written and were tried in a DAW (2026-11-12).
+Phase 3 (the `@gfx` display, read-only) is written; to be tried in a DAW.
+Phases 4 and 5 are not started.
 
 ## Goal
 
@@ -135,9 +135,9 @@ per session.
 | --- | --- | --- |
 | `SLOT_ADD` | client | as today (phase 2: no message of its own). A script is the uid `JSFX`, the vendor `"JSFX"`, its path as the name, and the bundle inside the state blob (`Common/FxmeNet/jsfx/JsfxBundle.h`) |
 | `SLOT_READY` | server | as today, plus `kind: "jsfx"`, `hasGfx` and a range per slider (phase 2); the variable table hash (phase 3). A script that does not compile is an `ERROR` with the message and its line |
-| `JSFX_SYNC_ACTIVE` | client | slotId, on/off (the editor is open), frame rate |
-| `JSFX_SUBSCRIBE` | client | slotId, the memory blocks the display touched |
-| `JSFX_SYNC` | server | slotId, frame number, changed variables, changed memory ranges, changed strings |
+| `TELEMETRY_ACTIVE` | client | as for VST3 slots: the display is open. On (also on again) restarts the slot's mirror: its next `JSFX_SYNC` is a reset |
+| `JSFX_SUBSCRIBE` (41) | client | slotId, the memory blocks the display touched |
+| `JSFX_SYNC` (42) | server | slotId, frame number, [reset: the variables' names], changed variables, changed memory ranges (strings: phase 5) |
 | `JSFX_WRITE` | client | slotId, variables and memory ranges `@gfx` changed |
 
 Over TCP, not the telemetry datagrams: the sync is a delta, so it must
@@ -252,9 +252,33 @@ Known limit: `@gfx` code that computes from memory it never read before
      in the project, reconnection); hidden sliders (names starting with
      `-`) are shown; scripts outside the searched folders; macOS and
      Windows builds of `fxjsfx`.
-3. **Display, read only.** The display role, `JsfxView`, the variable and
-   memory mirror from server to client. Result: meters, spectra and scopes
-   move.
+3. **Display, read only (written 2026-11-12).**
+   - Fork: `jsfx_embed_set_display` (an instance where no audio code runs),
+     `jsfx_embed_enum_vars`, `jsfx_embed_var`, `jsfx_embed_mem_block`,
+     `jsfx_embed_mem_blocks_used`, `jsfx_embed_lock`, `jsfx_embed_gfx_request`;
+     `jsfx_run --mirror` draws from a display instance fed by copies of an
+     audio instance's state. Checked: `analysis/gfxanalyzer` (129 variables,
+     1 block) and `analysis/gfxscope` (111 variables, 1 block) draw the same
+     as from the audio instance itself.
+   - Common: `jsfx/JsfxSync.h`: the codec of the two messages and
+     `SyncSource` (the server's copy of what the client has; changed
+     variables by their bits, memory compared in chunks of 256 items, a
+     byte budget per frame with the blocks served in turn). Tested in
+     FxmeNetProtocolTests (a budget of 8 kB brings a whole block across in
+     several frames, the copy ends equal).
+   - Server: `JsfxInstance::syncReset / syncSubscribe / syncCollect` (the
+     engine's lock held while memory is read), `Session::pumpJsfxSync` at
+     the telemetry rate, 64 kB per slot and 256 kB per session per tick,
+     counted with the telemetry in fxmenet-top.
+   - Client: `ClientEngine` queues `JSFX_SYNC` per slot (300 at most, then a
+     restart), `JsfxView` (Plugin/Source) shows the display in the
+     Parameters tab in place of the plugin editor ("Generic controls"
+     switches), sized as the script's `@gfx w h` line asks, at its gfx_hz.
+     Scripts with `gfx_ext_retina` draw at the screen's density. The mouse
+     position reaches `@gfx` (hover); clicks do not.
+   - Limits: `@init` does not run in the display, so what it leaves only in
+     strings (`#name = "..."`) is missing; `gmem[]` is not mirrored; a
+     block first touched draws zeros for one frame.
 4. **Display, interactive.** Mouse and keys, `JSFX_WRITE`, sliders from
    `@gfx`, images (`gfx_loadimg`). Result: scripts whose interface is their
    `@gfx`.

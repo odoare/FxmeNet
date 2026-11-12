@@ -80,7 +80,10 @@ private:
     std::vector<std::unique_ptr<Row>> rows;
 
     juce::Viewport editorViewport;
-    std::unique_ptr<juce::AudioProcessorEditor> pluginEditor;
+    std::unique_ptr<juce::Component> pluginEditor;   ///< a shadow's editor, or a JSFX script's display (JsfxView)
+    bool editorIsJsfx = false;
+    std::uint32_t jsfxFailedSlot = 0;   ///< a script whose display cannot run here: not tried again
+    juce::String jsfxFailure;
     std::uint32_t editorSlot = 0;
     bool preferPluginEditor = true;
 

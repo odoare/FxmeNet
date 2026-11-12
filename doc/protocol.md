@@ -175,6 +175,26 @@ so a saved project carries its scripts. `SLOT_READY` then has
 `"kind": "jsfx"` and `"hasGfx"`. A script that does not compile is answered
 with `ERROR` (plugin load failed) and the compiler's message with its line.
 
+### 4.4c A JSFX script's @gfx display
+
+While a JSFX slot's telemetry is on, the server keeps the client's copy of
+the script's state, for the client to run `@gfx` there
+(`Common/FxmeNet/jsfx/JsfxSync.h`, doc/jsfx-plan.md):
+
+| Type | Name | From | Payload |
+|---:|---|---|---|
+| 41 | `JSFX_SUBSCRIBE` | client | binary: u32 slotId, u32 count, count x u32 memory block (65536 items each). No answer |
+| 42 | `JSFX_SYNC` | server | binary: u32 slotId, u32 frame, u8 flags (1: reset), [reset: u32 count, count x (u16 length, name)], u32 count, count x (u32 variable index, f64), u32 count, count x (u32 first item, u32 n, n x f64) |
+
+`TELEMETRY_ACTIVE` on (also when already on) makes the next `JSFX_SYNC` a
+reset: every variable, by name, then by index; nothing subscribed, the
+client's memory taken as all zero. After it, a frame carries what changed
+since the one before: variables compared by their bits, memory in chunks
+of 256 items, ranges never across a block. At most 64 kB of memory per
+slot and per frame, 256 kB per session: the rest follows in later frames.
+Unsolicited, over the control connection (the frames are deltas: they must
+all arrive, in order).
+
 ### 4.5 Buses (in `SLOT_READY`)
 
 Added 2026-11-06, for routing. `buses`: the plugin's buses, inputs then

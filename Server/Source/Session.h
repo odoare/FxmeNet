@@ -28,6 +28,7 @@
 #include "Chain.h"
 #include "PluginCatalog.h"
 
+#include <FxmeNet/jsfx/JsfxSync.h>
 #include <FxmeNet/control/ControlConnection.h>
 #include <FxmeNet/protocol/Fragmentation.h>
 
@@ -93,6 +94,7 @@ private:
         slot whose editor is open, and the parameters plugins changed. */
     void timerCallback() override;
     void pumpTelemetry();
+    void pumpJsfxSync();   ///< JSFX scripts' @gfx mirrors (FXMENET_JSFX)
     void flushParamChanges();
 
     void handleConfigure (const control::Frame&);
@@ -149,6 +151,8 @@ private:
     std::vector<std::uint8_t> telemetryFrame, telemetryBody;
     std::vector<control::ParamChange> paramChanges;
     std::uint64_t telemetrySent = 0, paramChangesSent = 0;
+    jsfx::SyncFrame jsfxFrame;
+    std::vector<std::uint8_t> jsfxPayload;
 
     JUCE_DECLARE_NON_COPYABLE (Session)
 };

@@ -15,6 +15,7 @@
 #include "Server.h"
 
 #include <FxmeNet/jsfx/JsfxBundle.h>
+#include <FxmeNet/jsfx/JsfxSync.h>
 
 namespace fxmenet::server
 {
@@ -271,6 +272,10 @@ void Session::timerCallback()
 
 void Session::pumpTelemetry()
 {
+   #if FXMENET_JSFX
+    pumpJsfxSync();
+   #endif
+
     const auto* peer = worker.getPeer();
     if (peer == nullptr)
         return;   // no datagram from the client yet: nowhere to send
@@ -309,6 +314,31 @@ void Session::pumpTelemetry()
         ++telemetrySent;
     });
 }
+
+#if FXMENET_JSFX
+void Session::pumpJsfxSync()
+{
+    // Over the control connection, in order (deltas): budgets bound it, per
+    // slot and for the whole session, at each tick of the telemetry rate.
+    if (connection == nullptr)
+        return;
+    std::size_t left = jsfx::defaultFrameBudget * 4;
+    chain.forEachSlot ([this, &left] (Chain::Slot& s)
+    {
+        if (! s.telemetryActive || left == 0)
+            return;
+        auto* script = dynamic_cast<JsfxInstance*> (s.instance.get());
+        if (script == nullptr || ! script->hasGfx())
+            return;
+        if (! script->syncCollect (s.slotId, juce::jmin (left, jsfx::defaultFrameBudget), jsfxFrame))
+            return;
+        jsfx::encode (jsfxFrame, jsfxPayload);
+        left -= juce::jmin (left, jsfxPayload.size());
+        connection->send (Type::jsfxSync, 0, 0, jsfxPayload.data(), jsfxPayload.size());
+        telemetryBytes += jsfxPayload.size();   // fxmenet-top counts it with the telemetry
+    });
+}
+#endif
 
 void Session::flushParamChanges()
 {
@@ -403,6 +433,20 @@ void Session::handleFrame (const Frame& f, int gen)
             handleTelemetryActive (f);
             break;
 
+        case Type::jsfxSubscribe:
+        {
+            std::uint32_t slotId = 0;
+            std::vector<std::uint32_t> blocks;
+            if (! jsfx::decodeSubscribe (f.payload, slotId, blocks))
+                return fail (f, ErrorMessage::badRequest, "malformed JSFX_SUBSCRIBE");
+           #if FXMENET_JSFX
+            if (auto* slot = chain.findSlot (slotId))
+                if (auto* script = dynamic_cast<JsfxInstance*> (slot->instance.get()))
+                    script->syncSubscribe (blocks);
+           #endif
+            break;   // no answer: the next JSFX_SYNC is it
+        }
+
         case Type::bye:
             log ("session " + juce::String ((int) sessionId) + ": bye");
             server.removeSession (sessionId);   // destroys this session: nothing after this line
@@ -416,6 +460,7 @@ void Session::handleFrame (const Frame& f, int gen)
         case Type::slotReady:
         case Type::paramChanged:
         case Type::state:
+        case Type::jsfxSync:
         case Type::monitorStatus:
         case Type::monitorPaths:
         case Type::monitorRescan:
@@ -478,6 +523,12 @@ void Session::handleTelemetryActive (const Frame& f)
     slot->telemetryActive = v.value != 0;
     if (slot->net != nullptr)
         slot->net->setTelemetryActive (v.value != 0 ? 1 : 0);
+   #if FXMENET_JSFX
+    // A JSFX script's display: on (also on again) starts its mirror anew.
+    if (v.value != 0)
+        if (auto* script = dynamic_cast<JsfxInstance*> (slot->instance.get()))
+            script->syncReset();
+   #endif
     ack (f);   // also for a plugin with no telemetry: there is simply nothing to send
 }
 

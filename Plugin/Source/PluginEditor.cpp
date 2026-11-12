@@ -323,8 +323,9 @@ void FxmeNetAudioProcessorEditor::refreshChain()
         const bool script = FxmeNetAudioProcessor::isJsfx (s);
         auto m = ! script && processor.findCatalogEntry (s, entry) ? processor.matchLocal (entry) : fxmenet::plugin::LocalMatch {};
         if (script)
-            m.text = "A JSFX script, processed on the server. Generic controls"
-                     + juce::String (s.info.jsfxGfx ? " (its @gfx display is not shown yet)." : ".");
+            m.text = "A JSFX script, processed on the server. "
+                     + juce::String (s.info.jsfxGfx ? "Its @gfx display is drawn here, from the server's data."
+                                                    : "Generic controls (it has no @gfx section).");
         if (s.error.isNotEmpty())
         {
             detail = s.error;
