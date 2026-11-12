@@ -4,19 +4,13 @@
 			"path": "."
 		},
 		{
-			"path": "../JesuNet"
-		},
-		{
 			"path": "../FxmeTools"
 		},
 		{
 			"path": "../FxmeFX"
 		},
 		{
-			"path": "../StairwellToHeaven"
-		},
-		{
-			"path": "../NeuralAudio"
+			"path": "../JesuNet/jsfx"
 		}
 	],
 	"settings": {}

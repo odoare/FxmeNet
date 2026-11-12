@@ -1,24 +1,45 @@
-/* The FxmeNet manual, HTML output. Colours from the logo. */
-:root { --teal: #0aa9a0; --gold: #e6b422; --dark: #2b2b2b; --light: #f4f6f6; }
-body { font-family: "Helvetica Neue", Arial, sans-serif; color: var(--dark); background: #fff;
+/* The FxmeNet manual, HTML output: dark theme. Colours from the logo. */
+:root {
+  color-scheme: dark;
+  --bg: #16181b;        /* page */
+  --panel: #1f2328;     /* code, call-outs */
+  --text: #d9dee2;
+  --muted: #8d969e;
+  --line: #333a41;
+  --teal: #2fc4ba;      /* links, headings */
+  --teal-dim: #0aa9a0;
+  --gold: #e6b422;
+}
+html { background: var(--bg); }
+body { font-family: "Helvetica Neue", Arial, sans-serif; color: var(--text); background: var(--bg);
        max-width: 52rem; margin: 0 auto; padding: 1.2rem 1.4rem 4rem; line-height: 1.55; font-size: 1.02rem; }
-h1, h2, h3, h4 { color: #07807a; line-height: 1.25; }
+h1, h2, h3, h4 { color: var(--teal); line-height: 1.25; }
 h1.chapterHead, h2.chapterHead { border-bottom: 3px solid var(--gold); padding-bottom: .3rem; }
-a { color: #07807a; }
-a:hover { color: #000; }
+a { color: var(--teal); }
+a:hover { color: #fff; }
 .titlepage, .maketitle { text-align: center; margin: 2rem 0 3rem; }
 .titlepage img, .maketitle img { max-width: 18rem; height: auto; }
 .crosslinks { margin: 1rem 0; }
 .crosslinks a { padding-right: 1.2rem; }
-pre, .lstlisting, .verbatim { background: var(--light); border-left: 4px solid var(--teal); padding: .6rem .8rem;
-                              overflow-x: auto; font-size: .92rem; }
+pre, .lstlisting, .verbatim { background: var(--panel); border-left: 4px solid var(--teal-dim); padding: .6rem .8rem;
+                              overflow-x: auto; font-size: .92rem; color: var(--text); }
 code, .ectt-1000, .ectt-1095 { font-family: "DejaVu Sans Mono", Consolas, monospace; font-size: .93em; }
 table { border-collapse: collapse; margin: 1rem 0; }
-th, td { border-bottom: 1px solid #d5dada; padding: .3rem .7rem; text-align: left; vertical-align: top; }
-thead th, tr.hline th { border-bottom: 2px solid var(--teal); }
-.callout { border-left: 5px solid var(--teal); background: var(--light); padding: .5rem .9rem; margin: 1rem 0; }
+th, td { border-bottom: 1px solid var(--line); padding: .3rem .7rem; text-align: left; vertical-align: top; }
+thead th, tr.hline th { border-bottom: 2px solid var(--teal-dim); }
+.callout { border-left: 5px solid var(--teal-dim); background: var(--panel); padding: .5rem .9rem; margin: 1rem 0; }
 .callout.tip { border-left-color: var(--gold); }
-.callout.warning { border-left-color: #b03030; background: #fbeeee; }
-.todo { background: #fff3a8; color: #7a1d1d; font-weight: bold; padding: 0 .25rem; }
-img { max-width: 100%; height: auto; }
+.callout.warning { border-left-color: #d05050; background: #2a1c1e; }
+.todo { background: #5c4a00; color: #ffd9d9; font-weight: bold; padding: 0 .25rem; }
+img { max-width: 100%; height: auto; border-radius: 3px; }
 .tableofcontents { line-height: 1.7; }
+hr { border: 0; border-top: 1px solid var(--line); }
+::selection { background: var(--teal-dim); color: #000; }
+
+/* tex4ht writes its own colours inline (black text, light listing
+   backgrounds, dark teal): adapt them to the dark page. */
+span[style*="color:#000000"] { color: inherit !important; }
+span[style*="color:#077670"] { color: var(--teal) !important; }
+span[style*="color:#808080"] { color: var(--muted) !important; }
+[id^="listing-"] { background-color: var(--panel) !important; }
+div.lstlisting, .lstlisting { color: var(--text); }
