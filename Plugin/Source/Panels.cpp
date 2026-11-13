@@ -305,11 +305,6 @@ void ParameterPanel::refresh (const client::SlotModel* slot)
                 repaint();
             }
         }
-        if (pluginEditor != nullptr && editorIsJsfx)
-        {
-            lastTouchedButton.setVisible (false);   // a script's display has no controls to map (yet)
-            return;
-        }
         if (pluginEditor != nullptr)
         {
             // The last control touched in the plugin's editor, to map it.

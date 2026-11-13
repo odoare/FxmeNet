@@ -44,6 +44,7 @@ JsfxView::JsfxView (FxmeNetAudioProcessor& p, std::uint32_t id) : processor (p),
     jsfx_embed_gfx_request (sx, &w, &h, &hz);
     setSize (w > 0 ? w : 640, h > 0 ? h : 400);
     setOpaque (true);
+    setWantsKeyboardFocus (true);
 
     processor.setEditorShown (slotId, true);   // the server starts with a reset
     shown = true;
@@ -53,6 +54,8 @@ JsfxView::JsfxView (FxmeNetAudioProcessor& p, std::uint32_t id) : processor (p),
 JsfxView::~JsfxView()
 {
     stopTimer();
+    for (int p : gestures)
+        processor.endSlotParameterGesture ({ slotId, (std::uint32_t) p });
     if (shown)
         processor.setEditorShown (slotId, false);
     destroyInstance();
@@ -115,6 +118,20 @@ void JsfxView::apply (const jsfx::SyncFrame& f)
         vars.reserve (f.names.size());
         for (auto& name : f.names)
             vars.push_back (jsfx_embed_var (sx, name.c_str()));
+
+        // What may go back: not the display's own state (gfx_*, mouse_*),
+        // not the sliders (they go as parameters).
+        sliderVars.clear();
+        for (int p = 0, n = sx_getNumParms (sx); p < n; ++p)
+            sliderVars.push_back (jsfx_embed_slider_var (sx, p));
+        writable.assign (vars.size(), true);
+        for (std::size_t i = 0; i < vars.size(); ++i)
+        {
+            const auto& name = f.names[i];
+            writable[i] = vars[i] != nullptr
+                       && name.rfind ("gfx_", 0) != 0 && name.rfind ("mouse_", 0) != 0
+                       && std::find (sliderVars.begin(), sliderVars.end(), vars[i]) == sliderVars.end();
+        }
         haveReset = true;
     }
     if (! haveReset || sx == nullptr)
@@ -164,9 +181,98 @@ void JsfxView::timerCallback()
     if (sx == nullptr || getWidth() <= 0 || getHeight() <= 0)
         return;
 
+    if (haveReset)
+        snapshot();
     drawFrame();
     if (haveReset)
+    {
+        sendChanges();
         subscribeNewBlocks();
+    }
+}
+
+//==============================================================================
+void JsfxView::snapshot()
+{
+    sliderBefore.resize (sliderVars.size());
+    for (std::size_t p = 0; p < sliderVars.size(); ++p)
+        sliderBefore[p] = sliderVars[p] != nullptr ? *sliderVars[p] : 0.0;
+
+    beforeBlocks.clear();
+    before.clear();
+    if (juce::Time::getMillisecondCounter() - lastInteraction > interactionHoldMs && buttons == 0)
+        return;   // nobody is acting on the display: what @gfx changes is its own
+
+    before.resize (vars.size());
+    for (std::size_t i = 0; i < vars.size(); ++i)
+        before[i] = writable[i] ? *vars[i] : 0.0;
+    for (auto b : subscribed)
+    {
+        if (beforeBlocks.size() >= maxSnapshotBlocks)
+            break;
+        if (const auto* block = jsfx_embed_mem_block (sx, (int) b, false))
+            beforeBlocks[b].assign (block, block + jsfx::blockItems);
+    }
+}
+
+void JsfxView::sendChanges()
+{
+    // Sliders: as parameters, normalised as the server's are (JsfxInstance).
+    for (std::size_t p = 0; p < sliderVars.size() && p < sliderBefore.size(); ++p)
+    {
+        if (sliderVars[p] == nullptr || std::memcmp (sliderVars[p], &sliderBefore[p], sizeof (double)) == 0)
+            continue;
+        double lo = 0.0, hi = 1.0, step = 0.0;
+        const double v = sx_getParmVal (sx, (int) p, &lo, &hi, &step);
+        const float normalised = std::abs (hi - lo) > 0.0 ? (float) juce::jlimit (0.0, 1.0, (v - lo) / (hi - lo)) : 0.0f;
+        const Mapping target { slotId, (std::uint32_t) p };
+        if (buttons != 0 && gestures.insert ((int) p).second)
+            processor.beginSlotParameterGesture (target);
+        processor.setLastTouched (target);
+        processor.setSlotParameter (target, normalised);
+    }
+    if (buttons == 0 && ! gestures.empty())
+    {
+        for (int p : gestures)
+            processor.endSlotParameterGesture ({ slotId, (std::uint32_t) p });
+        gestures.clear();
+    }
+
+    if (before.empty())
+        return;   // not acting on it: nothing else goes back
+
+    writeFrame = {};
+    writeFrame.slotId = slotId;
+    for (std::size_t i = 0; i < vars.size() && i < before.size(); ++i)
+        if (writable[i] && std::memcmp (vars[i], &before[i], sizeof (double)) != 0)
+            writeFrame.vars.push_back ({ (std::uint32_t) i, *vars[i] });
+
+    for (auto& [b, copy] : beforeBlocks)
+    {
+        const auto* now = jsfx_embed_mem_block (sx, (int) b, false);
+        if (now == nullptr)
+            continue;
+        jsfx::SyncFrame::Range* open = nullptr;
+        for (std::uint32_t c = 0; c < jsfx::blockItems; c += jsfx::chunkItems)
+        {
+            if (std::memcmp (now + c, copy.data() + c, jsfx::chunkItems * sizeof (double)) == 0)
+            {
+                open = nullptr;
+                continue;
+            }
+            if (open == nullptr)
+            {
+                writeFrame.ranges.push_back ({ b * jsfx::blockItems + c, {} });
+                open = &writeFrame.ranges.back();
+            }
+            open->values.insert (open->values.end(), now + c, now + c + jsfx::chunkItems);
+        }
+    }
+
+    if (writeFrame.vars.empty() && writeFrame.ranges.empty())
+        return;
+    jsfx::encode (writeFrame, writePayload);
+    processor.getEngine().writeJsfx (writePayload);
 }
 
 void JsfxView::drawFrame()
@@ -184,7 +290,7 @@ void JsfxView::drawFrame()
     const unsigned int* pixels = nullptr;
     int span = 0;
     bool flipped = false;
-    const int r = jsfx_embed_gfx_frame (sx, w, h, mx, my, juce::roundToInt (k * 256.0f), &pixels, &span, &flipped);
+    const int r = jsfx_embed_gfx_frame (sx, w, h, mx, my, buttons | modifiers, juce::roundToInt (k * 256.0f), &pixels, &span, &flipped);
     if (r < 0 || pixels == nullptr)
         return;
 
@@ -220,7 +326,141 @@ void JsfxView::paint (juce::Graphics& g)
     }
 }
 
-void JsfxView::mouseMove (const juce::MouseEvent& e)   { mouse = e.getPosition(); }
-void JsfxView::mouseExit (const juce::MouseEvent&)     { mouse = { -1, -1 }; }
+void JsfxView::touched()   { lastInteraction = juce::Time::getMillisecondCounter(); }
+
+int JsfxView::mouseCap (const juce::ModifierKeys& m) const
+{
+    int cap = 0;
+   #if JUCE_MAC
+    if (m.isCommandDown()) cap |= 4;
+    if (m.isCtrlDown())    cap |= 32;
+   #else
+    if (m.isCtrlDown())    cap |= 4;
+   #endif
+    if (m.isShiftDown())   cap |= 8;
+    if (m.isAltDown())     cap |= 16;
+    return cap;
+}
+
+void JsfxView::mouseMove (const juce::MouseEvent& e)
+{
+    mouse = e.getPosition();
+    modifiers = mouseCap (e.mods);
+}
+
+void JsfxView::mouseDrag (const juce::MouseEvent& e)
+{
+    mouse = e.getPosition();
+    modifiers = mouseCap (e.mods);
+    touched();
+}
+
+void JsfxView::mouseDown (const juce::MouseEvent& e)
+{
+    grabKeyboardFocus();
+    mouse = e.getPosition();
+    modifiers = mouseCap (e.mods);
+    buttons = (e.mods.isLeftButtonDown() ? 1 : 0) | (e.mods.isRightButtonDown() ? 2 : 0) | (e.mods.isMiddleButtonDown() ? 64 : 0);
+    touched();
+}
+
+void JsfxView::mouseUp (const juce::MouseEvent& e)
+{
+    mouse = e.getPosition();
+    modifiers = mouseCap (e.mods);
+    buttons = 0;   // JUCE reports the buttons still down after the one released: none, here
+    touched();
+}
+
+void JsfxView::mouseExit (const juce::MouseEvent&)
+{
+    if (buttons == 0)
+        mouse = { -1, -1 };
+}
+
+void JsfxView::mouseWheelMove (const juce::MouseEvent& e, const juce::MouseWheelDetails& wheel)
+{
+    // mouse_wheel counts 120 a notch; JUCE gives about 0.2 a notch.
+    if (sx != nullptr)
+        jsfx_embed_gfx_wheel (sx, wheel.deltaY * 600.0 * (wheel.isReversed ? -1.0 : 1.0), wheel.deltaX * 600.0);
+    mouse = e.getPosition();
+    touched();
+}
+
+//==============================================================================
+namespace
+{
+    constexpr int chars (const char* s)
+    {
+        int v = 0;
+        for (; *s != 0; ++s)
+            v = (v << 8) | (unsigned char) *s;
+        return v;
+    }
+}
+
+int JsfxView::scriptKeyCode (const juce::KeyPress& k)
+{
+    using K = juce::KeyPress;
+    const int code = k.getKeyCode();
+    if (code == K::upKey)         return chars ("up");
+    if (code == K::downKey)       return chars ("down");
+    if (code == K::leftKey)       return chars ("left");
+    if (code == K::rightKey)      return chars ("rght");
+    if (code == K::homeKey)       return chars ("home");
+    if (code == K::endKey)        return chars ("end");
+    if (code == K::pageUpKey)     return chars ("pgup");
+    if (code == K::pageDownKey)   return chars ("pgdn");
+    if (code == K::insertKey)     return chars ("ins");
+    if (code == K::deleteKey)     return chars ("del");
+    if (code == K::returnKey)     return 13;
+    if (code == K::escapeKey)     return 27;
+    if (code == K::backspaceKey)  return 8;
+    if (code == K::tabKey)        return 9;
+    for (int f = 1; f <= 12; ++f)
+        if (code == K::F1Key + (f - 1))
+            return f < 10 ? chars ("f") << 8 | ('0' + f) : chars ("f1") << 8 | ('0' + f - 10);
+
+    // Control + a letter: 1 to 26.
+    if (k.getModifiers().isCtrlDown() && code >= 'A' && code <= 'Z')
+        return code - 'A' + 1;
+    if (k.getModifiers().isCtrlDown() && code >= 'a' && code <= 'z')
+        return code - 'a' + 1;
+
+    const auto c = (int) k.getTextCharacter();
+    if (c >= 32 && c < 256)
+        return c;
+    if (c >= 256)
+        return ('u' << 24) | c;
+    return code > 0 && code < 128 ? code : 0;
+}
+
+bool JsfxView::keyPressed (const juce::KeyPress& k)
+{
+    const int code = scriptKeyCode (k);
+    if (sx == nullptr || code == 0)
+        return false;
+    jsfx_embed_gfx_key (sx, code, 1);
+    heldKeys[code] = k.getKeyCode();
+    touched();
+    return true;   // the DAW does not get it while the display has the focus
+}
+
+bool JsfxView::keyStateChanged (bool isKeyDown)
+{
+    if (isKeyDown || sx == nullptr)
+        return false;
+    for (auto it = heldKeys.begin(); it != heldKeys.end();)
+    {
+        if (! juce::KeyPress::isKeyCurrentlyDown (it->second))
+        {
+            jsfx_embed_gfx_key (sx, it->first, 0);
+            it = heldKeys.erase (it);
+        }
+        else
+            ++it;
+    }
+    return false;
+}
 
 } // namespace fxmenet::plugin

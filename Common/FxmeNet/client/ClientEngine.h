@@ -593,6 +593,13 @@ public:
             sendFrame (control::Type::jsfxSubscribe, 0, jsfx::encodeSubscribe (slotId, blocks));
     }
 
+    /** What a display's @gfx changed (JSFX_WRITE, an encoded SyncFrame). */
+    void writeJsfx (const std::vector<std::uint8_t>& payload)
+    {
+        if (! payload.empty())
+            sendFrame (control::Type::jsfxWrite, 0, payload);
+    }
+
     /** Asks the server to send a slot's mirror again from the start (its
         next JSFX_SYNC is a reset). */
     void restartJsfxSync (std::uint32_t slotId)

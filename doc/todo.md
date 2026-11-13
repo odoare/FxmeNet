@@ -204,19 +204,22 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     (the engine, `fxjsfx`, in the fork `~/src/JesuNet/jsfx`) and 2 (scripts
     sent in `SLOT_ADD`'s state, processed on the server, generic controls)
     were tried in a DAW by the user (2026-11-12): they work.
-    Phase 3 (the `@gfx` display, read-only) is written. To check in a DAW:
-    - a script with `@gfx` (`analysis/gfxanalyzer`, `analysis/gfxscope`,
-      `meters/vumeter`, `analysis/gfxspectrograph`): its display shows in the
-      Parameters tab and moves with the audio processed on the server;
-      "Generic controls" switches to the sliders and back;
-    - the window takes the script's size; resizing redraws;
-    - closing the display (another slot, another tab, the window): the
-      server stops sending (fxmenet-top: the session's outgoing traffic
-      falls back);
-    - stopping and restarting the server with the display open: it comes
-      back;
-    - the DAW's CPU with a display open, compared with the script running
-      in REAPER itself.
+    Phase 3 (the `@gfx` display, read-only) was tried by the user: all
+    checks pass (2026-11-12).
+    Phase 4 (the display interactive) is written. To check in a DAW, with
+    scripts whose interface is their `@gfx` (REAPER's stock set: an EQ or a
+    compressor with a curve to drag; `analysis/gfxanalyzer` reacts to clicks
+    on its settings line; anything using `gfx_getchar` for keys):
+    - clicking and dragging in the display acts as in REAPER;
+    - a slider moved from the display: the generic controls follow, the
+      sound changes, and the DAW records it once mapped ("Map last
+      touched");
+    - the wheel and modifiers (shift, control, alt) act as in REAPER;
+    - keys reach the script once it was clicked (the DAW may keep some);
+    - a state the display sets (a mode, a curve) survives closing and
+      reopening it, and saving and reopening the project;
+    - the outgoing traffic of the client while dragging (fxmenet-top shows
+      the server's side; the client's is in its stats line).
     Before the next release: commit and push the fork, then update its pin
     in `cmake/Dependencies.cmake`; build `fxjsfx` on macOS and Windows.
-    Next: phase 4 (clicks and keys in `@gfx`, sliders moved from it).
+    Next: phase 5 (strings, gmem, presets, a script editor, the manual).

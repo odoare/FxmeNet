@@ -566,6 +566,20 @@ int main()
         jsfx::encode (good, wire);
         CHECK (! jsfx::decode (wire.data(), wire.size() - 1, f));
 
+        // The display wrote: into the script, and not sent back.
+        jsfx::SyncFrame w;
+        w.slotId = 5;
+        w.vars.push_back ({ 0, 42.0 });
+        w.ranges.push_back ({ 3 * jsfx::blockItems + 20, std::vector<double> (jsfx::chunkItems, 7.0) });
+        double* const block3 = mem.data();
+        CHECK (source.applyWrite (w, [block3] (std::uint32_t block) { return block == 3 ? block3 : nullptr; }));
+        CHECK (a == 42.0 && mem[20] == 7.0 && mem[20 + jsfx::chunkItems - 1] == 7.0);
+        while (source.collect (5, memory, 1 << 20, f))   // what the budget left behind, then nothing of the write
+            CHECK (f.vars.empty() && apply (f) && blocks[3][20] != 7.0);
+        jsfx::SyncFrame unknown;
+        unknown.vars.push_back ({ 99, 1.0 });
+        CHECK (! source.applyWrite (unknown, [] (std::uint32_t) -> double* { return nullptr; }));
+
         std::uint32_t slot = 0;
         std::vector<std::uint32_t> list;
         CHECK (jsfx::decodeSubscribe (jsfx::encodeSubscribe (4, { 1, 2, 2047 }), slot, list) && slot == 4 && list.size() == 3);

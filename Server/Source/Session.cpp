@@ -447,6 +447,19 @@ void Session::handleFrame (const Frame& f, int gen)
             break;   // no answer: the next JSFX_SYNC is it
         }
 
+        case Type::jsfxWrite:
+        {
+            jsfx::SyncFrame w;
+            if (! jsfx::decode (f.payload.data(), f.payload.size(), w) || w.reset)
+                return fail (f, ErrorMessage::badRequest, "malformed JSFX_WRITE");
+           #if FXMENET_JSFX
+            if (auto* slot = chain.findSlot (w.slotId))
+                if (auto* script = dynamic_cast<JsfxInstance*> (slot->instance.get()))
+                    script->syncWrite (w);
+           #endif
+            break;   // no answer
+        }
+
         case Type::bye:
             log ("session " + juce::String ((int) sessionId) + ": bye");
             server.removeSession (sessionId);   // destroys this session: nothing after this line

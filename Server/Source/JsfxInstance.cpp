@@ -448,7 +448,7 @@ void JsfxInstance::syncReset()
     struct Table
     {
         std::vector<std::string> names;
-        std::vector<const double*> values;
+        std::vector<double*> values;
     } table;
     jsfx_embed_enum_vars (sx, [] (void* context, const char* varName, double* value)
     {
@@ -457,6 +457,13 @@ void JsfxInstance::syncReset()
         t.values.push_back (value);
     }, &table);
     sync.reset (std::move (table.names), std::move (table.values));
+}
+
+void JsfxInstance::syncWrite (const jsfx::SyncFrame& w)
+{
+    jsfx_embed_lock (sx);
+    sync.applyWrite (w, [this] (std::uint32_t block) { return jsfx_embed_mem_block (sx, (int) block, true); });
+    jsfx_embed_unlock (sx);
 }
 
 bool JsfxInstance::syncCollect (std::uint32_t slotId, std::size_t budget, jsfx::SyncFrame& out)

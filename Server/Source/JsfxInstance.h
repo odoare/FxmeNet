@@ -63,6 +63,8 @@ public:
     /** The editor opened (again): everything is sent anew. */
     void syncReset();
     void syncSubscribe (const std::vector<std::uint32_t>& blocks)   { sync.subscribe (blocks); }
+    /** What the client's display changed (JSFX_WRITE). */
+    void syncWrite (const jsfx::SyncFrame&);
     /** The next JSFX_SYNC, at most `budget` bytes of memory; false: nothing new. */
     bool syncCollect (std::uint32_t slotId, std::size_t budget, jsfx::SyncFrame&);
 

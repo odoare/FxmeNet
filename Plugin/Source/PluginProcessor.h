@@ -95,6 +95,9 @@ public:
         when none: what "Map last touched" acts on, since a plugin's own
         editor has no FxmeNet controls of its own. */
     fxmenet::plugin::Mapping getLastTouched() const noexcept   { return lastTouched; }
+    /** A slot parameter moved from somewhere else than a shadow's editor (a
+        JSFX script's display). */
+    void setLastTouched (fxmenet::plugin::Mapping m) noexcept   { lastTouched = m; }
 
     /** A slot's own editor was shown or closed: the server sends its
         telemetry only while shown (TELEMETRY_ACTIVE). */

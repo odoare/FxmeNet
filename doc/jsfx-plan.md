@@ -6,9 +6,9 @@ LGPL 2.1) and of FxmeNet as released (0.1.0). This is Phase 7 of
 `doc/todo.md`. Agreed with the user on 2026-11-12: no commercial build for
 now, scripts come from the client only, `nasm` is a build dependency.
 
-State: phases 1 and 2 are written and were tried in a DAW (2026-11-12).
-Phase 3 (the `@gfx` display, read-only) is written; to be tried in a DAW.
-Phases 4 and 5 are not started.
+State: phases 1 to 3 are written and were tried in a DAW (2026-11-12).
+Phase 4 (the display interactive) is written; to be tried in a DAW.
+Phase 5 is not started.
 
 ## Goal
 
@@ -138,7 +138,7 @@ per session.
 | `TELEMETRY_ACTIVE` | client | as for VST3 slots: the display is open. On (also on again) restarts the slot's mirror: its next `JSFX_SYNC` is a reset |
 | `JSFX_SUBSCRIBE` (41) | client | slotId, the memory blocks the display touched |
 | `JSFX_SYNC` (42) | server | slotId, frame number, [reset: the variables' names], changed variables, changed memory ranges (strings: phase 5) |
-| `JSFX_WRITE` | client | slotId, variables and memory ranges `@gfx` changed |
+| `JSFX_WRITE` (43) | client | a `JSFX_SYNC` without reset: the variables (server indices) and memory ranges `@gfx` changed while the user acted on the display |
 
 Over TCP, not the telemetry datagrams: the sync is a delta, so it must
 arrive complete and in order.
@@ -279,9 +279,36 @@ Known limit: `@gfx` code that computes from memory it never read before
    - Limits: `@init` does not run in the display, so what it leaves only in
      strings (`#name = "..."`) is missing; `gmem[]` is not mirrored; a
      block first touched draws zeros for one frame.
-4. **Display, interactive.** Mouse and keys, `JSFX_WRITE`, sliders from
-   `@gfx`, images (`gfx_loadimg`). Result: scripts whose interface is their
-   `@gfx`.
+4. **Display, interactive (written 2026-11-12).**
+   - Fork: `jsfx_embed_gfx_frame` takes `mouse_cap` (buttons and modifiers
+     from the host), `jsfx_embed_gfx_wheel`, `jsfx_embed_gfx_key` (the queue
+     `gfx_getchar()` reads and the keys held), `jsfx_embed_slider_var`. In
+     WDL, `eel_lice.h`: with `EEL_LICE_EMBED_NOWINDOW` (fxjsfx only),
+     `gfx_getchar()` reads the queue without a window instead of answering
+     -1 ("closed"), and `gfx_getchar(65536)` reports the display focused and
+     visible. REAPER's own build of the fork is unchanged.
+   - Common: `SyncSource::applyWrite` (into the script, and into the copy
+     of what the client has, so nothing comes back).
+   - Server: `JSFX_WRITE` (43), `JsfxInstance::syncWrite` under the engine's
+     lock.
+   - Client: `JsfxView` feeds the mouse (position, buttons, modifiers,
+     wheel) and the keys (it takes the keyboard focus on a click). After
+     each `@gfx` run:
+     - a slider that changed goes as its parameter (`setSlotParameter`, in a
+       gesture while a button is held, "last touched" for the mapping), so
+       that `@slider` runs on the server and the DAW records it;
+     - while the user acts on the display and for 500 ms after, the other
+       variables (not `gfx_*`, `mouse_*`) and the memory blocks it reads (8
+       at most) are compared with what they were before the run, and what
+       changed goes as `JSFX_WRITE`. Outside of that, what `@gfx` changes is
+       taken as its own scratch and stays here.
+   - Conflicts: a value written on both sides in the same frame takes the
+     last writer, as between REAPER's two threads. Loop counters shared by
+     `@gfx` and the audio code travel during an interaction, as they race in
+     REAPER.
+   - Not done: `gfx_loadimg` of a file not in the bundle; the cursor
+     (`gfx_setcursor`), `gfx_showmenu` (no window to open a menu from);
+     drag and drop of files.
 5. **The rest.** Strings, `gmem[]`, file sliders, presets (`.rpl`), a
    script editor in the plugin (edit, resend, see the compile error),
    measurements, the manual.

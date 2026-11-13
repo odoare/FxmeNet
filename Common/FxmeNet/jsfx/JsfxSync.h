@@ -16,7 +16,13 @@
         value, and nothing subscribed. The client starts a fresh instance;
       - the client subscribes (JSFX_SUBSCRIBE) to a memory block when its
         @gfx first touches it. The server then sends what differs from zero,
-        and after that what changed (in chunks of chunkItems).
+        and after that what changed (in chunks of chunkItems);
+      - while the user acts on the display (and shortly after), the client
+        sends what its @gfx changed (JSFX_WRITE, a SyncFrame without reset,
+        with the server's variable indices): the server writes it into the
+        script and into its copy of what the client has, so that it does not
+        come back. Sliders do not go this way: as parameters (PARAM_SET), so
+        that @slider runs and the DAW sees them.
 
     Each frame of a slot is bounded (budget): what does not fit waits for
     the next frame. A client then sees a slower display, not more traffic.
@@ -201,7 +207,7 @@ class SyncSource
 public:
     /** Starts again: the table of variables (names and where their values
         are), everything to send, nothing subscribed. */
-    void reset (std::vector<std::string> names, std::vector<const double*> values)
+    void reset (std::vector<std::string> names, std::vector<double*> values)
     {
         varNames = std::move (names);
         varValues = std::move (values);
@@ -221,6 +227,36 @@ public:
     }
 
     std::size_t numSubscribed() const noexcept   { return blocks.size(); }
+
+    /** What the client's display wrote (JSFX_WRITE): into the script
+        (`memory (block)`: the live block, allocated if need be, or nullptr),
+        and into the copy of what the client has. Returns false when the
+        frame names a variable the table does not have. */
+    bool applyWrite (const SyncFrame& w, const std::function<double* (std::uint32_t)>& memory)
+    {
+        bool ok = true;
+        for (auto& v : w.vars)
+        {
+            if (v.index >= varValues.size())
+            {
+                ok = false;
+                continue;
+            }
+            *varValues[v.index] = v.value;
+            varSent[v.index] = detail::bits (v.value);
+            varKnown[v.index] = true;
+        }
+        for (auto& r : w.ranges)
+        {
+            const auto block = r.offset / blockItems, item = r.offset % blockItems;
+            if (auto* live = memory (block))
+                std::copy (r.values.begin(), r.values.end(), live + item);
+            const auto copy = blocks.find (block);
+            if (copy != blocks.end())
+                std::copy (r.values.begin(), r.values.end(), copy->second.begin() + item);
+        }
+        return ok;
+    }
 
     /** The next frame, at most `budget` bytes of memory (variables and the
         table always go). `memory (block)`: the live block, or nullptr when
@@ -295,7 +331,7 @@ public:
 
 private:
     std::vector<std::string> varNames;
-    std::vector<const double*> varValues;
+    std::vector<double*> varValues;
     std::vector<std::uint64_t> varSent;
     std::vector<bool> varKnown;
     std::map<std::uint32_t, std::vector<double>> blocks;   ///< the client's copy of each subscribed block
