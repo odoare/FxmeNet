@@ -37,7 +37,8 @@ target_include_directories(FxmeNetPlugin PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Sou
 # JSFX scripts' @gfx display, drawn here from the server's data (doc/jsfx-plan.md).
 if(FXMENET_JSFX)
     target_sources(FxmeNetPlugin PRIVATE Source/JsfxView.cpp)
-    target_compile_definitions(FxmeNetPlugin PRIVATE FXMENET_JSFX=1)
+    # gfx_showmenu() returns the item chosen from within @gfx: a modal menu.
+    target_compile_definitions(FxmeNetPlugin PRIVATE FXMENET_JSFX=1 JUCE_MODAL_LOOPS_PERMITTED=1)
     target_link_libraries(FxmeNetPlugin PRIVATE fxjsfx)
 else()
     target_compile_definitions(FxmeNetPlugin PRIVATE FXMENET_JSFX=0)

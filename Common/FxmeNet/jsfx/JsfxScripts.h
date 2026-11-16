@@ -220,6 +220,8 @@ private:
         if (! addFile (file, false, error))
             return false;
 
+        addImagesNamedInCode (file);
+
         for (auto line : juce::StringArray::fromLines (file.loadFileAsString()))
         {
             if (line.startsWithChar ('@'))
@@ -270,6 +272,34 @@ private:
             }
         }
         return true;
+    }
+
+    /** Images @gfx loads by a name in its code (gfx_loadimg (0, "knob.png")),
+        not on a filename: line: the quoted .png and .jpg names found beside
+        the script or in the Data folder. An absolute path is left as it is:
+        the display, on this machine, reads it there. */
+    void addImagesNamedInCode (const juce::File& file)
+    {
+        const auto text = file.loadFileAsString();
+        for (int start = text.indexOfChar ('"'); start >= 0;)
+        {
+            const int end = text.indexOfChar (start + 1, '"');
+            if (end < 0)
+                break;
+            const auto name = text.substring (start + 1, end);
+            start = text.indexOfChar (end + 1, '"');
+            if (name.length() > 255 || name.containsAnyOf ("\r\n") || juce::File::isAbsolutePath (name))
+                continue;
+            const auto lower = name.toLowerCase();
+            if (! (lower.endsWith (".png") || lower.endsWith (".jpg") || lower.endsWith (".jpeg")))
+                continue;
+            const auto beside = file.getParentDirectory().getChildFile (name);
+            const auto inData = dataFolder.getChildFile (name);
+            if (beside.existsAsFile())
+                addOptional (beside, false);
+            else if (inData.existsAsFile())
+                addOptional (inData, true);
+        }
     }
 
     /** Images and data: left out, not an error, past the optional budget. */

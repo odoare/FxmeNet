@@ -44,6 +44,7 @@ namespace fxmenet::plugin
 {
 
 class JsfxView : public juce::Component,
+                 public juce::FileDragAndDropTarget,
                  private juce::Timer
 {
 public:
@@ -65,6 +66,8 @@ public:
     void mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheelDetails&) override;
     bool keyPressed (const juce::KeyPress&) override;
     bool keyStateChanged (bool isKeyDown) override;
+    bool isInterestedInFileDrag (const juce::StringArray&) override;
+    void filesDropped (const juce::StringArray&, int x, int y) override;
 
     /** A key as gfx_getchar() returns it, 0 for none. */
     static int scriptKeyCode (const juce::KeyPress&);
@@ -87,6 +90,10 @@ private:
     void sendChanges();
     jsfx::Strings readStrings() const;
     void touched();   ///< the user acted on the display
+
+    // The engine's host (jsfx_embed_gfx_host): gfx_showmenu, gfx_setcursor.
+    static int showMenuHook (void* ctx, const char* menu, int x, int y);
+    static void setCursorHook (void* ctx, int resourceId, const char* name);
     int mouseCap (const juce::ModifierKeys&) const;
 
     FxmeNetAudioProcessor& processor;
@@ -102,6 +109,7 @@ private:
     bool haveReset = false;       ///< the server's reset arrived: its frames apply
     bool shown = false;           ///< the slot's telemetry was turned on here
     bool usesGmem = false;        ///< the script's code names gmem
+    bool inFrame = false;         ///< @gfx is running (a menu of it may be open)
 
     juce::Image frame;
     bool retina = false;          ///< the script draws at the screen's pixel density

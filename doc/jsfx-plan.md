@@ -336,6 +336,14 @@ Known limit: `@gfx` code that computes from memory it never read before
    - Hidden sliders (2026-11-16): a slider named `-name` is a parameter
      (automatable) left out of the generic controls; `slider_show()` at run
      time is not followed.
+   - Display features without a window (2026-11-16): `gfx_showmenu` (a
+     JUCE menu, modal: the script gets the choice from within `@gfx`, so
+     the plugin is built with `JUCE_MODAL_LOOPS_PERMITTED`), `gfx_setcursor`
+     (Windows cursor ids to JUCE cursors), `gfx_getdropfile` (files dropped
+     on the display; their paths are this machine's), images named in the
+     code (`gfx_loadimg (0, "knob.png")`: quoted .png/.jpg names found beside
+     the script or in Data are sent). Hooks in `eel_lice.h` under
+     `EEL_LICE_EMBED_NOWINDOW`; `jsfx_embed_set_gfx_host`, `jsfx_embed_gfx_drop`.
    - Not done: presets (`.rpl`), a script editor in the plugin, the manual.
 
 Each phase ends usable. Phases 1 and 2 carry little risk (the throwaway

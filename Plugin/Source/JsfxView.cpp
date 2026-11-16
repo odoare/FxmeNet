@@ -92,6 +92,8 @@ bool JsfxView::createInstance()
         return false;
     }
     jsfx_embed_set_display (sx);
+    jsfx_embed_gfx_host host { this, &JsfxView::showMenuHook, &JsfxView::setCursorHook };
+    jsfx_embed_set_gfx_host (sx, &host);
     error = {};
     return true;
 }
@@ -99,7 +101,10 @@ bool JsfxView::createInstance()
 void JsfxView::destroyInstance()
 {
     if (sx != nullptr)
+    {
+        jsfx_embed_set_gfx_host (sx, nullptr);
         sx_destroyInstance (sx);
+    }
     sx = nullptr;
     vars.clear();
     subscribed.clear();
@@ -184,8 +189,9 @@ void JsfxView::subscribeNewBlocks()
 
 void JsfxView::timerCallback()
 {
-    if (sx == nullptr && ! error.isEmpty())
-        return;
+    if (inFrame || (sx == nullptr && ! error.isEmpty()))
+        return;   // a menu of the script is open: its modal loop runs the timers
+    const juce::ScopedValueSetter<bool> busy (inFrame, true);
 
     bool overflowed = false;
     for (auto& payload : processor.getEngine().takeJsfxSync (slotId, overflowed))
@@ -504,6 +510,99 @@ bool JsfxView::keyStateChanged (bool isKeyDown)
             ++it;
     }
     return false;
+}
+
+
+//==============================================================================
+// gfx_showmenu(), gfx_setcursor(), gfx_getdropfile(): what REAPER's window does.
+
+namespace
+{
+    /** As eel_lice's PopulateMenuFromStr: items separated by '|'; '>' opens
+        a submenu (the item is its title), '<' closes it after this item, '#'
+        greys an item, '!' checks it; an empty item is a separator. Items are
+        numbered from 1 in order, submenu titles excepted. */
+    void fillMenu (juce::PopupMenu& menu, juce::StringArray& items, int& at, int& id)
+    {
+        while (at < items.size())
+        {
+            auto text = items[at++];
+            bool sub = false, grey = false, check = false, last = false;
+            while (text.isNotEmpty() && juce::String (">#!<").containsChar (text[0]))
+            {
+                sub = sub || text[0] == '>';
+                grey = grey || text[0] == '#';
+                check = check || text[0] == '!';
+                last = last || text[0] == '<';
+                text = text.substring (1);
+            }
+            if (sub)
+            {
+                juce::PopupMenu child;
+                fillMenu (child, items, at, id);
+                menu.addSubMenu (text, child, ! grey);
+            }
+            else if (text.isNotEmpty())
+                menu.addItem (id++, text, ! grey, check);
+            else if (! last)
+                menu.addSeparator();
+            if (last)
+                return;
+        }
+    }
+}
+
+int JsfxView::showMenuHook (void* ctx, const char* text, int x, int y)
+{
+    auto& view = *static_cast<JsfxView*> (ctx);
+    auto items = juce::StringArray::fromTokens (juce::String::fromUTF8 (text), "|", "");
+    juce::PopupMenu menu;
+    int at = 0, id = 1;
+    fillMenu (menu, items, at, id);
+
+    // Where the script asks (gfx_x, gfx_y: its frame's pixels).
+    const float k = view.retina ? juce::jmax (1.0f, (float) juce::Component::getApproximateScaleFactorForComponent (&view)) : 1.0f;
+    const auto at2 = view.localPointToGlobal (juce::Point<int> (juce::roundToInt ((float) x / k), juce::roundToInt ((float) y / k)));
+    const int chosen = menu.showMenu (juce::PopupMenu::Options().withTargetScreenArea ({ at2.x, at2.y, 1, 1 }));
+
+    // The click that opened it went to the menu: no button is held now.
+    view.buttons = 0;
+    view.touched();
+    return juce::jmax (0, chosen);
+}
+
+void JsfxView::setCursorHook (void* ctx, int id, const char*)
+{
+    using C = juce::MouseCursor;
+    C::StandardCursorType type = C::NormalCursor;
+    switch (id)   // Windows' IDC_ values, as scripts use them
+    {
+        case 32513: type = C::IBeamCursor; break;
+        case 32514: type = C::WaitCursor; break;
+        case 32515: type = C::CrosshairCursor; break;
+        case 32642: type = C::TopLeftCornerResizeCursor; break;
+        case 32643: type = C::TopRightCornerResizeCursor; break;
+        case 32644: type = C::LeftRightResizeCursor; break;
+        case 32645: type = C::UpDownResizeCursor; break;
+        case 32646: type = C::UpDownLeftRightResizeCursor; break;
+        case 32648: type = C::NoCursor; break;
+        case 32649: type = C::PointingHandCursor; break;
+        default: break;
+    }
+    static_cast<JsfxView*> (ctx)->setMouseCursor (type);
+}
+
+bool JsfxView::isInterestedInFileDrag (const juce::StringArray&)   { return sx != nullptr; }
+
+void JsfxView::filesDropped (const juce::StringArray& files, int x, int y)
+{
+    if (sx == nullptr)
+        return;
+    jsfx_embed_gfx_drop (sx, nullptr);   // gfx_getdropfile() sees these, until it clears them
+    for (auto& f : files)
+        jsfx_embed_gfx_drop (sx, f.toRawUTF8());
+    mouse = { x, y };
+    touched();
 }
 
 } // namespace fxmenet::plugin
