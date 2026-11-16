@@ -78,6 +78,7 @@ private:
     juce::Viewport viewport;
     juce::Component content;
     std::vector<std::unique_ptr<Row>> rows;
+    std::vector<std::size_t> rowParams;   ///< the parameter each row shows (hidden ones have none)
 
     juce::Viewport editorViewport;
     std::unique_ptr<juce::Component> pluginEditor;   ///< a shadow's editor, or a JSFX script's display (JsfxView)

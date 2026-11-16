@@ -44,6 +44,9 @@ public:
     /** A list of named values (a JSFX slider with {a,b,c}, or a file slider):
         a combobox, as REAPER shows it. */
     virtual bool isChoice() const = 0;
+    /** Not shown with the others (a JSFX slider named "-name"): still a
+        parameter, automatable, but left out of the generic controls. */
+    virtual bool isHidden() const = 0;
 };
 
 class JsfxInstance : public juce::AudioPluginInstance,

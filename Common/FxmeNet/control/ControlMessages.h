@@ -325,6 +325,7 @@ struct ParamInfo
         range (a JSFX slider). hasRange false: only the normalised value. */
     bool hasRange = false;
     bool choices = false;   ///< named values to choose from (stepTexts): a combobox
+    bool hidden = false;    ///< not shown in the generic controls (a JSFX "-name" slider)
     double rangeMin = 0.0, rangeMax = 1.0, rangeStep = 0.0;
 
     juce::var toVar() const
@@ -344,6 +345,8 @@ struct ParamInfo
             o->setProperty ("stepTexts", json::stringArray (stepTexts));
         if (choices)
             o->setProperty ("choices", true);
+        if (hidden)
+            o->setProperty ("hidden", true);
         if (hasRange)
         {
             o->setProperty ("rangeMin", rangeMin);
@@ -368,6 +371,7 @@ struct ParamInfo
         p.isBypass = (bool) json::get (v, "bypass", false);
         p.stepTexts = json::toStringArray (v["stepTexts"]);
         p.choices = (bool) json::get (v, "choices", false);
+        p.hidden = (bool) json::get (v, "hidden", false);
         p.hasRange = ! v["rangeMin"].isVoid() && ! v["rangeMax"].isVoid();
         if (p.hasRange)
         {

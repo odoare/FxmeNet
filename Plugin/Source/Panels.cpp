@@ -387,19 +387,27 @@ void ParameterPanel::showGeneric (const client::SlotModel* slot)
                 : ! slot->loaded  ? slot->name + " is not loaded on the server."
                                   : juce::String();
 
+        rowParams.clear();
         if (slot != nullptr && slot->loaded)
-            for (auto& paramInfo : slot->info.params)
+            for (std::size_t k = 0; k < slot->info.params.size(); ++k)
             {
+                const auto& paramInfo = slot->info.params[k];
+                if (paramInfo.hidden)
+                    continue;   // a JSFX "-name" slider: a parameter, not a control
                 rows.push_back (std::make_unique<Row> (processor, id, paramInfo));
+                rowParams.push_back (k);
                 content.addAndMakeVisible (*rows.back());
             }
+        if (slot != nullptr && slot->loaded && rows.empty() && ! slot->info.params.empty())
+            message = "Every slider of this script is hidden: it is set from its display.";
         resized();
         repaint();
     }
 
     if (slot != nullptr && slot->loaded)
-        for (std::size_t i = 0; i < rows.size() && i < slot->info.params.size(); ++i)
-            rows[i]->update (client::ClientEngine::currentValue (*slot, slot->info.params[i]));
+        for (std::size_t i = 0; i < rows.size() && i < rowParams.size(); ++i)
+            if (rowParams[i] < slot->info.params.size())
+                rows[i]->update (client::ClientEngine::currentValue (*slot, slot->info.params[rowParams[i]]));
 }
 
 void ParameterPanel::componentMovedOrResized (juce::Component& c, bool, bool wasResized)

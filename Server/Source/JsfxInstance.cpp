@@ -104,6 +104,7 @@ public:
     }
 
     bool isChoice() const override   { return isEnum; }
+    bool isHidden() const override   { return ! jsfx_embed_slider_shown (sx, index); }
 
     bool getRange (double& lo, double& hi, double& stepOut) const override
     {

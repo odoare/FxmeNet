@@ -501,6 +501,7 @@ std::vector<control::ParamInfo> describeParameters (juce::AudioPluginInstance& i
         {
             i.hasRange = ranged->getRange (i.rangeMin, i.rangeMax, i.rangeStep);
             i.choices = ranged->isChoice();
+            i.hidden = ranged->isHidden();
         }
        #endif
 

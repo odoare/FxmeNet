@@ -845,7 +845,7 @@ int run (const Options& o)
              + " bytes sent), " + juce::String ((int) ready.params.size()) + " sliders, latency " + juce::String (ready.latency)
              + (ready.jsfxGfx ? ", has @gfx" : ""));
         for (auto& p : ready.params)
-            say ("      " + p.name + (p.hasRange ? "  [" + juce::String (p.rangeMin) + " .. " + juce::String (p.rangeMax) + "]" : juce::String())
+            say ("      " + p.name + (p.hidden ? "  (hidden)" : "") + (p.hasRange ? "  [" + juce::String (p.rangeMin) + " .. " + juce::String (p.rangeMax) + "]" : juce::String())
                  + (p.stepTexts.isEmpty() ? juce::String() : "  {" + p.stepTexts.joinIntoString (", ") + "}"));
     }
 
