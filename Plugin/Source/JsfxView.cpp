@@ -12,8 +12,94 @@
 
 #include <jsfx_embed.h>
 
+#include <cctype>
+#include <cstring>
+
 namespace fxmenet::plugin
 {
+
+namespace
+{
+    /** The variables assigned in the @sample and @block sections of the
+        script's code files (lower case: EEL names ignore case). A lexical
+        guess: `name =`, `name += ...`, not memory (`name[...] =`), not what
+        functions called from there assign. */
+    std::set<std::string> audioAssigned (const jsfx::Bundle& bundle)
+    {
+        std::set<std::string> out;
+        for (auto& f : bundle.files)
+        {
+            const auto ext = juce::File (juce::String::fromUTF8 (f.path.c_str())).getFileExtension().toLowerCase();
+            if (f.data || ! (ext.isEmpty() || ext == ".jsfx" || ext == ".jsfx-inc" || ext == ".eel"))
+                continue;
+            const std::string text (f.bytes.begin(), f.bytes.end());
+            const auto n = text.size();
+            bool audio = false, lineStart = true;
+            for (std::size_t i = 0; i < n;)
+            {
+                const char c = text[i];
+                if (lineStart && c == '@')
+                {
+                    std::size_t e = i + 1;
+                    while (e < n && (std::isalnum ((unsigned char) text[e]) || text[e] == '_'))
+                        ++e;
+                    const auto section = text.substr (i + 1, e - i - 1);
+                    audio = section == "sample" || section == "block";
+                    i = e;
+                    lineStart = false;
+                    continue;
+                }
+                if (c == '\n')                          { lineStart = true; ++i; continue; }
+                if (c == ' ' || c == '\t' || c == '\r') { ++i; continue; }
+                lineStart = false;
+                if (c == '/' && i + 1 < n && text[i + 1] == '/')
+                {
+                    while (i < n && text[i] != '\n')
+                        ++i;
+                    continue;
+                }
+                if (c == '/' && i + 1 < n && text[i + 1] == '*')
+                {
+                    const auto e = text.find ("*/", i + 2);
+                    i = e == std::string::npos ? n : e + 2;
+                    continue;
+                }
+                if (c == '"' || c == '\'')
+                {
+                    std::size_t e = i + 1;
+                    while (e < n && text[e] != c)
+                        e += text[e] == '\\' ? 2 : 1;
+                    i = e + 1;
+                    continue;
+                }
+                if (std::isalpha ((unsigned char) c) || c == '_')
+                {
+                    std::size_t e = i + 1;
+                    while (e < n && (std::isalnum ((unsigned char) text[e]) || text[e] == '_' || text[e] == '.'))
+                        ++e;
+                    auto name = text.substr (i, e - i);
+                    i = e;
+                    if (! audio)
+                        continue;
+                    std::size_t k = e;
+                    while (k < n && (text[k] == ' ' || text[k] == '\t'))
+                        ++k;
+                    const bool plain = k < n && text[k] == '=' && (k + 1 >= n || text[k + 1] != '=');
+                    const bool compound = k + 1 < n && text[k + 1] == '=' && std::strchr ("+-*/%|&^~", text[k]) != nullptr;
+                    if (plain || compound)
+                    {
+                        for (auto& ch : name)
+                            ch = (char) std::tolower ((unsigned char) ch);
+                        out.insert (name);
+                    }
+                    continue;
+                }
+                ++i;
+            }
+        }
+        return out;
+    }
+}
 
 JsfxView::JsfxView (FxmeNetAudioProcessor& p, std::uint32_t id) : processor (p), slotId (id)
 {
@@ -140,6 +226,11 @@ void JsfxView::apply (const jsfx::SyncFrame& f)
                        && name.rfind ("gfx_", 0) != 0 && name.rfind ("mouse_", 0) != 0
                        && std::find (sliderVars.begin(), sliderVars.end(), vars[i]) == sliderVars.end();
         }
+        remote.assign (vars.size(), 0.0);
+        audioOwned.assign (vars.size(), false);
+        const auto assigned = audioAssigned (bundle);
+        for (std::size_t i = 0; i < vars.size(); ++i)
+            audioOwned[i] = writable[i] && assigned.count (juce::String (f.names[i]).toLowerCase().toStdString()) > 0;
         haveReset = true;
     }
     if (! haveReset || sx == nullptr)
@@ -147,7 +238,7 @@ void JsfxView::apply (const jsfx::SyncFrame& f)
 
     for (auto& v : f.vars)
         if (v.index < vars.size() && vars[v.index] != nullptr)
-            *vars[v.index] = v.value;
+            *vars[v.index] = remote[v.index] = v.value;
 
     for (auto& r : f.ranges)
         if (auto* block = memoryBlock (r.offset / jsfx::blockItems, true))
@@ -213,7 +304,13 @@ void JsfxView::timerCallback()
         return;
 
     if (haveReset)
+    {
+        // What the audio code keeps setting there (see the header).
+        for (std::size_t i = 0; i < vars.size() && i < audioOwned.size(); ++i)
+            if (audioOwned[i])
+                *vars[i] = remote[i];
         snapshot();
+    }
     drawFrame();
     if (haveReset)
     {
@@ -290,7 +387,10 @@ void JsfxView::sendChanges()
     writeFrame.slotId = slotId;
     for (std::size_t i = 0; i < vars.size() && i < before.size(); ++i)
         if (writable[i] && std::memcmp (vars[i], &before[i], sizeof (double)) != 0)
+        {
             writeFrame.vars.push_back ({ (std::uint32_t) i, *vars[i] });
+            remote[i] = *vars[i];   // the server's value now (it does not echo it)
+        }
 
     for (auto& [b, copy] : beforeBlocks)
     {

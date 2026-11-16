@@ -23,6 +23,12 @@
         the display and for a moment after (interactionHoldMs), since
         @gfx also changes its own scratch at every frame.
 
+    The variables the script's audio code assigns (@sample, @block) are put
+    back to the server's last value before each frame: in REAPER that code
+    keeps setting them (an `update = 1` that @gfx clears after drawing),
+    here it runs only on the server, where the value then never changes and
+    so is never sent again.
+
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-FXME-Commercial
   ------------------------------------------------------------------------------
@@ -107,6 +113,8 @@ private:
     juce::File folder;            ///< the script's files, for the engine
     SX_Instance* sx = nullptr;
     std::vector<double*> vars;    ///< the server's variables, by index, here
+    std::vector<double> remote;   ///< by index: the server's last value of each
+    std::vector<bool> audioOwned; ///< by index: assigned in @sample or @block
     std::set<std::uint32_t> subscribed;
     bool haveReset = false;       ///< the server's reset arrived: its frames apply
     bool shown = false;           ///< the slot's telemetry was turned on here
