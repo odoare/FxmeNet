@@ -94,6 +94,8 @@ private:
     // The engine's host (jsfx_embed_gfx_host): gfx_showmenu, gfx_setcursor.
     static int showMenuHook (void* ctx, const char* menu, int x, int y);
     static void setCursorHook (void* ctx, int resourceId, const char* name);
+    void openMenu();
+    void menuChosen (int chosen);
     int mouseCap (const juce::ModifierKeys&) const;
 
     FxmeNetAudioProcessor& processor;
@@ -109,7 +111,17 @@ private:
     bool haveReset = false;       ///< the server's reset arrived: its frames apply
     bool shown = false;           ///< the slot's telemetry was turned on here
     bool usesGmem = false;        ///< the script's code names gmem
-    bool inFrame = false;         ///< @gfx is running (a menu of it may be open)
+    bool inFrame = false;         ///< @gfx is running
+
+    // gfx_showmenu (JsfxView.cpp): asked, open, then the frame played again.
+    juce::String menuRequest, menuText;
+    juce::Point<int> menuAt;
+    bool menuOpen = false;
+    int menuResult = -1, capOverride = -1, replayCap = 0;
+    std::vector<double> replayBefore;
+    std::map<std::uint32_t, std::vector<double>> replayBlocks;
+    jsfx::Strings replayStrings;
+    juce::Point<int> replayMouse;
 
     juce::Image frame;
     bool retina = false;          ///< the script draws at the screen's pixel density

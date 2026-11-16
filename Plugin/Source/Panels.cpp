@@ -267,6 +267,12 @@ void ParameterPanel::dropPluginEditor (std::uint32_t slotId)
     pluginEditor.reset();   // editorBeingDeleted on the shadow
     processor.setEditorShown (editorSlot, false);   // no more telemetry
     editorSlot = 0;
+    if (editorIsJsfx)
+    {
+        rows.clear();
+        shownSignature = {};   // the generic controls are built again in full
+    }
+    editorIsJsfx = false;
     editorViewport.setVisible (false);
     if (onWantsSize)
         onWantsSize (0, 0);
@@ -333,11 +339,22 @@ void ParameterPanel::refresh (const client::SlotModel* slot)
                                                    : ": its own editor");
                 shownSlot = id;
                 shownSignature = "editor";
+                if (editorIsJsfx)
+                {
+                    // As REAPER's effect window: the sliders above the display.
+                    showGeneric (slot);
+                    message = {};
+                }
                 if (onWantsSize)
-                    onWantsSize (pluginEditor->getWidth(), pluginEditor->getHeight());
+                    onWantsSize (pluginEditor->getWidth(), pluginEditor->getHeight() + jsfxRowsHeight());
                 resized();
                 repaint();
             }
+        }
+        if (pluginEditor != nullptr && editorIsJsfx)
+        {
+            showGeneric (slot);   // the sliders above the display follow the values
+            message = {};
         }
         if (pluginEditor != nullptr)
         {
@@ -413,7 +430,7 @@ void ParameterPanel::showGeneric (const client::SlotModel* slot)
 void ParameterPanel::componentMovedOrResized (juce::Component& c, bool, bool wasResized)
 {
     if (&c == pluginEditor.get() && wasResized && onWantsSize)
-        onWantsSize (c.getWidth(), c.getHeight());
+        onWantsSize (c.getWidth(), c.getHeight() + jsfxRowsHeight());
 }
 
 void ParameterPanel::paint (juce::Graphics& g)
@@ -429,6 +446,11 @@ void ParameterPanel::paint (juce::Graphics& g)
     }
 }
 
+int ParameterPanel::jsfxRowsHeight() const
+{
+    return editorIsJsfx ? juce::jmin ((int) rows.size() * 26, 10 * 26) : 0;   // more scroll
+}
+
 void ParameterPanel::resized()
 {
     auto r = getLocalBounds();
@@ -438,8 +460,17 @@ void ParameterPanel::resized()
     lastTouchedButton.setBounds (top.removeFromRight (juce::jmin (300, top.getWidth() / 2)));
     infoArea = top;
 
-    editorViewport.setBounds (r);
-    viewport.setBounds (r);
+    if (pluginEditor != nullptr && editorIsJsfx)
+    {
+        // A JSFX script: its sliders above, its display below.
+        viewport.setBounds (r.removeFromTop (juce::jmin (jsfxRowsHeight(), r.getHeight() / 2)));
+        editorViewport.setBounds (r);
+    }
+    else
+    {
+        editorViewport.setBounds (r);
+        viewport.setBounds (r);
+    }
     const int w = viewport.getWidth() - viewport.getScrollBarThickness();
     content.setSize (w, (int) rows.size() * 26);
     int y = 0;

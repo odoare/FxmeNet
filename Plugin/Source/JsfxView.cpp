@@ -189,8 +189,8 @@ void JsfxView::subscribeNewBlocks()
 
 void JsfxView::timerCallback()
 {
-    if (inFrame || (sx == nullptr && ! error.isEmpty()))
-        return;   // a menu of the script is open: its modal loop runs the timers
+    if (inFrame || menuOpen || (sx == nullptr && ! error.isEmpty()))
+        return;   // a menu of the script is open: the display waits for the choice
     const juce::ScopedValueSetter<bool> busy (inFrame, true);
 
     bool overflowed = false;
@@ -220,6 +220,8 @@ void JsfxView::timerCallback()
         sendChanges();
         subscribeNewBlocks();
     }
+    if (menuRequest.isNotEmpty())
+        openMenu();
 }
 
 //==============================================================================
@@ -339,7 +341,8 @@ void JsfxView::drawFrame()
     const unsigned int* pixels = nullptr;
     int span = 0;
     bool flipped = false;
-    const int r = jsfx_embed_gfx_frame (sx, w, h, mx, my, buttons | modifiers, juce::roundToInt (k * 256.0f), &pixels, &span, &flipped);
+    const int cap = capOverride >= 0 ? capOverride : (buttons | modifiers);
+    const int r = jsfx_embed_gfx_frame (sx, w, h, mx, my, cap, juce::roundToInt (k * 256.0f), &pixels, &span, &flipped);
     if (r < 0 || pixels == nullptr)
         return;
 
@@ -552,23 +555,82 @@ namespace
     }
 }
 
+// gfx_showmenu() must return the choice from within @gfx, but a modal menu
+// in a plugin freezes the host (REAPER on Linux: its own event loop stops).
+// So the first call returns 0 and asks for the menu; the display then waits
+// for the choice, puts the script back as it was before that frame (the
+// snapshot taken while the user acts on it), and runs the frame again, the
+// same click and position, gfx_showmenu() returning the choice this time.
+
 int JsfxView::showMenuHook (void* ctx, const char* text, int x, int y)
 {
     auto& view = *static_cast<JsfxView*> (ctx);
-    auto items = juce::StringArray::fromTokens (juce::String::fromUTF8 (text), "|", "");
+    const auto menu = juce::String::fromUTF8 (text);
+    if (view.menuResult >= 0 && menu == view.menuText)
+        return std::exchange (view.menuResult, -1);   // the frame played again
+    if (! view.menuOpen && view.menuRequest.isEmpty())
+    {
+        view.menuRequest = menu;
+        view.menuAt = { x, y };
+    }
+    return 0;
+}
+
+void JsfxView::openMenu()
+{
+    menuText = std::exchange (menuRequest, {});
+    replayBefore = before;
+    replayBlocks = beforeBlocks;
+    replayStrings = beforeStrings;
+    replayMouse = mouse;
+    replayCap = buttons | modifiers;
+
+    auto items = juce::StringArray::fromTokens (menuText, "|", "");
     juce::PopupMenu menu;
     int at = 0, id = 1;
     fillMenu (menu, items, at, id);
 
     // Where the script asks (gfx_x, gfx_y: its frame's pixels).
-    const float k = view.retina ? juce::jmax (1.0f, (float) juce::Component::getApproximateScaleFactorForComponent (&view)) : 1.0f;
-    const auto at2 = view.localPointToGlobal (juce::Point<int> (juce::roundToInt ((float) x / k), juce::roundToInt ((float) y / k)));
-    const int chosen = menu.showMenu (juce::PopupMenu::Options().withTargetScreenArea ({ at2.x, at2.y, 1, 1 }));
+    const float k = retina ? juce::jmax (1.0f, (float) juce::Component::getApproximateScaleFactorForComponent (this)) : 1.0f;
+    const auto p = localPointToGlobal (juce::Point<int> (juce::roundToInt ((float) menuAt.x / k), juce::roundToInt ((float) menuAt.y / k)));
+    menuOpen = true;
+    menu.showMenuAsync (juce::PopupMenu::Options().withTargetScreenArea ({ p.x, p.y, 1, 1 }),
+                        [safe = juce::Component::SafePointer<JsfxView> (this)] (int chosen)
+                        {
+                            if (safe != nullptr)
+                                safe->menuChosen (chosen);
+                        });
+}
 
-    // The click that opened it went to the menu: no button is held now.
-    view.buttons = 0;
-    view.touched();
-    return juce::jmax (0, chosen);
+void JsfxView::menuChosen (int chosen)
+{
+    menuOpen = false;
+    buttons = 0;   // the click that opened it went to the menu
+    touched();
+    if (chosen <= 0 || sx == nullptr || replayBefore.empty())
+        return;    // nothing chosen, or nothing to play again from
+
+    // The script as it was before the frame that asked.
+    for (std::size_t i = 0; i < vars.size() && i < replayBefore.size(); ++i)
+        if (writable[i])
+            *vars[i] = replayBefore[i];
+    for (auto& [b, copy] : replayBlocks)
+        if (auto* block = memoryBlock (b, false))
+            std::copy (copy.begin(), copy.end(), block);
+    for (auto& [key, text] : replayStrings)
+        jsfx_embed_set_string (sx, key.c_str(), text.data(), (int) text.size());
+
+    // That frame again, with the choice.
+    const juce::ScopedValueSetter<bool> busy (inFrame, true);
+    menuResult = chosen;
+    mouse = replayMouse;
+    capOverride = replayCap;
+    snapshot();
+    drawFrame();
+    sendChanges();
+    capOverride = -1;
+    menuResult = -1;
+    menuRequest = {};   // a menu asked again in the replay is the same one
 }
 
 void JsfxView::setCursorHook (void* ctx, int id, const char*)

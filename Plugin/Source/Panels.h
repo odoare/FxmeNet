@@ -65,6 +65,8 @@ private:
     class Row;
 
     void showGeneric (const client::SlotModel* slot);
+    /** The height of the sliders above a JSFX script's display, 0 otherwise. */
+    int jsfxRowsHeight() const;
     void componentMovedOrResized (juce::Component&, bool, bool wasResized) override;
 
     /** The menu of the last touched control: map, unmap, learn. */
