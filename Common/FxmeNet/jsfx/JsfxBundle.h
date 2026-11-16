@@ -35,8 +35,8 @@ constexpr std::uint32_t jsfxUid = 0x4A534658;   ///< 'JSFX': every script, told 
 inline constexpr const char* jsfxVendor = "JSFX";
 
 /** Limits a server accepts. */
-constexpr std::size_t maxFiles = 256;
-constexpr std::size_t maxBundleBytes = 32u << 20;
+constexpr std::size_t maxFiles = 1024;
+constexpr std::size_t maxBundleBytes = 56u << 20;   ///< under the control frame's 64 MiB, with room for the rest
 
 struct File
 {

@@ -133,6 +133,10 @@ class BundleBuilder
 public:
     explicit BundleBuilder (juce::File effects) : effectsFolder (std::move (effects)), dataFolder (getDataFolder (effectsFolder)) {}
 
+    /** Optional: turns a data file the engine cannot read into a .wav it
+        can (true, the bytes in the block). JsfxAudio.h has one. */
+    std::function<bool (const juce::File&, juce::MemoryBlock&)> convertAudio;
+
     bool build (const juce::String& scriptPath, Bundle& bundle, juce::String& error, juce::StringArray* notes = nullptr)
     {
         out = &bundle;
@@ -160,7 +164,7 @@ public:
     }
 
 private:
-    static constexpr std::int64_t maxOptionalBytes = 8 << 20;   ///< images and data files, together
+    static constexpr std::int64_t maxOptionalBytes = 48 << 20;   ///< images and data files, together (saved in the project too)
 
     void note (const juce::String& text)
     {
@@ -169,9 +173,13 @@ private:
     }
 
     /** Adds a file once. `data`: under the Data folder. */
-    bool addFile (const juce::File& file, bool data, juce::String& error)
+    bool addFile (const juce::File& file, bool data, juce::String& error,
+                  const juce::MemoryBlock* converted = nullptr, const juce::String& newExtension = {})
     {
-        const auto path = detail::relativePath (file, data ? dataFolder : effectsFolder).toStdString();
+        auto relative = detail::relativePath (file, data ? dataFolder : effectsFolder);
+        if (newExtension.isNotEmpty())
+            relative = relative.upToLastOccurrenceOf (".", false, false) + newExtension;
+        const auto path = relative.toStdString();
         const auto key = (data ? "D:" : "E:") + path;
         if (std::find (added.begin(), added.end(), key) != added.end())
             return true;
@@ -181,17 +189,19 @@ private:
             return false;
         }
         juce::MemoryBlock block;
-        if (! file.loadFileAsData (block))
+        if (converted != nullptr)
+            block = *converted;
+        else if (! file.loadFileAsData (block))
         {
             error = "cannot read " + file.getFullPathName();
             return false;
         }
-        total += (std::int64_t) block.getSize();
-        if (out->files.size() >= maxFiles || (std::size_t) total > maxBundleBytes)
+        if (out->files.size() >= maxFiles || (std::size_t) (total + (std::int64_t) block.getSize()) > maxBundleBytes)
         {
             error = "the script and its files are too large to send";
             return false;
         }
+        total += (std::int64_t) block.getSize();
         File f;
         f.path = path;
         f.data = data;
@@ -265,18 +275,26 @@ private:
     /** Images and data: left out, not an error, past the optional budget. */
     bool addOptional (const juce::File& file, bool data)
     {
-        if (optional + file.getSize() > maxOptionalBytes)
+        // Audio the engine cannot read: as a .wav it can (larger, for a
+        // compressed file).
+        juce::MemoryBlock converted;
+        const bool isConverted = data && convertAudio && convertAudio (file, converted);
+        const auto size = isConverted ? (std::int64_t) converted.getSize() : file.getSize();
+
+        if (optional + size > maxOptionalBytes)
         {
             note ("left out (too large): " + file.getFileName());
             return false;
         }
         juce::String problem;
-        if (! addFile (file, data, problem))
+        if (! addFile (file, data, problem, isConverted ? &converted : nullptr, isConverted ? ".wav" : ""))
         {
             note (problem);
             return false;
         }
-        optional += file.getSize();
+        if (isConverted && ! file.hasFileExtension ("wav;wave"))
+            note ("converted to .wav: " + file.getFileName());
+        optional += size;
         return true;
     }
 

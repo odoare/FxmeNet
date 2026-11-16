@@ -32,6 +32,7 @@
 #include <FxmeNet/client/ClientEngine.h>
 
 #include "JsfxLibrary.h"
+#include <FxmeNet/jsfx/JsfxAudio.h>
 #include "LocalCatalog.h"
 #include "ParameterPool.h"
 #include "Shadow.h"

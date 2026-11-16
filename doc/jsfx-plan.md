@@ -326,8 +326,17 @@ Known limit: `@gfx` code that computes from memory it never read before
      read. A file slider is a list of its files' names in the generic
      controls. Checked with `guitar/amp-model` (12 models, chosen by name,
      the sound changes).
-   - Not done: presets (`.rpl`), a script editor in the plugin, other media
-     formats for file sliders, data folders over 8 MB, the manual.
+   - Other formats (2026-11-16): the client converts the data files the
+     engine cannot read (FLAC, AIFF, Ogg, MP3, floating-point or 32-bit
+     .wav; mono or stereo) to 24-bit .wav while packing the script
+     (`Common/FxmeNet/jsfx/JsfxAudio.h`, JUCE's readers); the slider shows
+     the same names. Images and data files may now take 48 MB together
+     (the whole script 56 MB, under the control frame's 64 MB); they are
+     saved in the DAW project with each instance of the script.
+   - Hidden sliders (2026-11-16): a slider named `-name` is a parameter
+     (automatable) left out of the generic controls; `slider_show()` at run
+     time is not followed.
+   - Not done: presets (`.rpl`), a script editor in the plugin, the manual.
 
 Each phase ends usable. Phases 1 and 2 carry little risk (the throwaway
 build covered the main unknown). The open risks are in 3 and 4: SWELL's

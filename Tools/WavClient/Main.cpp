@@ -52,6 +52,7 @@
 #include <FxmeNet/client/ClientEngine.h>
 #include <FxmeNet/control/ControlConnection.h>
 #include <FxmeNet/control/Discovery.h>
+#include <FxmeNet/jsfx/JsfxAudio.h>
 #include <FxmeNet/jsfx/JsfxScripts.h>
 #include <FxmeNet/transport/UdpTransport.h>
 
@@ -822,7 +823,9 @@ int run (const Options& o)
         jsfx::Bundle bundle;
         juce::String error;
         juce::StringArray notes;
-        if (! jsfx::BundleBuilder (juce::File (o.jsfxFolders[i])).build (o.jsfxPaths[i], bundle, error, &notes))
+        jsfx::BundleBuilder builder (juce::File (o.jsfxFolders[i]));
+        builder.convertAudio = jsfx::convertAudioForJsfx;
+        if (! builder.build (o.jsfxPaths[i], bundle, error, &notes))
         {
             fail (error);
             return 1;

@@ -439,7 +439,9 @@ void FxmeNetAudioProcessor::addPlugin (const fxmenet::control::PluginEntry& entr
 bool FxmeNetAudioProcessor::addScript (const fxmenet::jsfx::Script& script, juce::String& error, juce::StringArray* notes)
 {
     fxmenet::jsfx::Bundle bundle;
-    if (! fxmenet::jsfx::BundleBuilder (script.effectsFolder).build (script.path, bundle, error, notes))
+    fxmenet::jsfx::BundleBuilder builder (script.effectsFolder);
+    builder.convertAudio = fxmenet::jsfx::convertAudioForJsfx;
+    if (! builder.build (script.path, bundle, error, notes))
         return false;
     engine.addSlot (fxmenet::jsfx::jsfxUid, script.path, fxmenet::jsfx::jsfxVendor,
                     (int) engine.getSlots().size(), fxmenet::jsfx::makeSlotState (std::move (bundle)));
