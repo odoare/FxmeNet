@@ -498,14 +498,17 @@ std::vector<control::ParamInfo> describeParameters (juce::AudioPluginInstance& i
         i.isBypass = p == bypass;
        #if FXMENET_JSFX
         if (auto* ranged = dynamic_cast<RangedParameter*> (p))
+        {
             i.hasRange = ranged->getRange (i.rangeMin, i.rangeMax, i.rangeStep);
+            i.choices = ranged->isChoice();
+        }
        #endif
 
         const int steps = p->getNumSteps();
         const bool stepped = (p->isDiscrete() || p->isBoolean()) && steps > 1
                              && steps != juce::AudioProcessor::getDefaultNumParameterSteps();
         i.numSteps = stepped ? steps : 0;
-        if (stepped && steps <= 32)
+        if (stepped && (steps <= 32 || (i.choices && steps <= 1024)))   // a list: every name
             for (int k = 0; k < steps; ++k)
                 i.stepTexts.add (p->getText ((float) k / (float) (steps - 1), 64));
 

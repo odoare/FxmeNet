@@ -580,6 +580,16 @@ int main()
         unknown.vars.push_back ({ 99, 1.0 });
         CHECK (! source.applyWrite (unknown, [] (std::uint32_t) -> double* { return nullptr; }));
 
+        // Strings: whole, when they changed.
+        jsfx::Strings strs { { "u0", "hello" }, { "ntitle", "Gain" } };
+        CHECK (source.collect (5, memory, 1 << 20, f, &strs) && f.strings.size() == 2);
+        jsfx::encode (f, wire);
+        jsfx::SyncFrame back;
+        CHECK (jsfx::decode (wire.data(), wire.size(), back) && back.strings.size() == 2 && back.strings[1].second == "Gain");
+        CHECK (! source.collect (5, memory, 1 << 20, f, &strs));
+        strs[0].second = "world";
+        CHECK (source.collect (5, memory, 1 << 20, f, &strs) && f.strings.size() == 1 && f.strings[0].first == "u0");
+
         std::uint32_t slot = 0;
         std::vector<std::uint32_t> list;
         CHECK (jsfx::decodeSubscribe (jsfx::encodeSubscribe (4, { 1, 2, 2047 }), slot, list) && slot == 4 && list.size() == 3);

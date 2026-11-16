@@ -52,8 +52,17 @@ namespace fxmenet::jsfx
 constexpr std::uint32_t blockItems = 65536;      ///< a block of the script's memory (EEL2)
 constexpr std::uint32_t chunkItems = 256;        ///< the unit compared and sent
 constexpr std::uint32_t maxBlocks = 2048;        ///< EEL2's limit: 128 Mi items
+constexpr std::uint32_t gmemBlockBase = 4096;    ///< gmem[]'s blocks are numbered from here
+constexpr std::uint32_t maxGmemBlocks = 512;     ///< EEL2's limit for a named gmem
 constexpr std::size_t maxSubscribedBlocks = 64;  ///< 32 MiB of copies on the server, per slot
+
+/** A block of the script's memory (0..maxBlocks) or of gmem[] (from gmemBlockBase). */
+inline bool isValidBlock (std::uint32_t b) noexcept
+{
+    return b < maxBlocks || (b >= gmemBlockBase && b < gmemBlockBase + maxGmemBlocks);
+}
 constexpr std::size_t defaultFrameBudget = 64 * 1024;
+constexpr std::size_t maxStringBytes = 65536;   ///< a longer string is not mirrored
 
 /** One JSFX_SYNC. Values travel as the bits of their doubles. */
 struct SyncFrame
@@ -76,7 +85,12 @@ struct SyncFrame
         std::vector<double> values;     ///< never across a block's end
     };
     std::vector<Range> ranges;
+
+    /** Strings that changed: the engine's key ("u3", "nname", "a0"), the text. */
+    std::vector<std::pair<std::string, std::string>> strings;
 };
+
+using Strings = std::vector<std::pair<std::string, std::string>>;
 
 namespace detail
 {
@@ -117,6 +131,15 @@ inline void encode (const SyncFrame& f, std::vector<std::uint8_t>& out)
         w.u32 ((std::uint32_t) r.values.size());
         for (auto v : r.values)
             w.u64 (detail::bits (v));
+    }
+    w.u32 ((std::uint32_t) f.strings.size());
+    for (auto& [key, text] : f.strings)
+    {
+        const auto k = std::min<std::size_t> (key.size(), 255);
+        w.u8 ((std::uint8_t) k);
+        w.bytes (key.data(), k);
+        w.u32 ((std::uint32_t) text.size());
+        w.bytes (text.data(), text.size());
     }
 }
 
@@ -162,13 +185,30 @@ inline bool decode (const std::uint8_t* data, std::size_t size, SyncFrame& f)
         range.offset = r.u32();
         const auto n = r.u32();
         if (! r.ok() || n == 0 || n > blockItems
-            || range.offset / blockItems >= maxBlocks
+            || ! isValidBlock (range.offset / blockItems)
             || range.offset % blockItems + n > blockItems
             || (std::size_t) n * 8 > size)
             return false;
         range.values.resize (n);
         for (auto& v : range.values)
             v = detail::fromBits (r.u64());
+    }
+    const auto numStrings = r.u32();
+    if (! r.ok() || (std::size_t) numStrings * 5 > size)
+        return false;
+    f.strings.resize (numStrings);
+    for (auto& [key, text] : f.strings)
+    {
+        const auto k = r.u8();
+        const auto* kp = r.take (k);
+        const auto n = r.u32();
+        if (! r.ok() || k == 0 || kp == nullptr || n > maxStringBytes)
+            return false;
+        const auto* tp = r.take (n);
+        if (tp == nullptr && n > 0)
+            return false;
+        key.assign ((const char*) kp, k);
+        text.assign ((const char*) tp, n);
     }
     return r.ok();
 }
@@ -190,7 +230,7 @@ inline bool decodeSubscribe (const std::vector<std::uint8_t>& in, std::uint32_t&
     fxme::net::ByteReader r (in.data(), in.size());
     slotId = r.u32();
     const auto n = r.u32();
-    if (! r.ok() || n > maxBlocks)
+    if (! r.ok() || n > maxBlocks + maxGmemBlocks)
         return false;
     blocks.resize (n);
     for (auto& b : blocks)
@@ -214,6 +254,7 @@ public:
         varSent.assign (varValues.size(), 0);
         varKnown.assign (varValues.size(), false);
         blocks.clear();
+        stringsSent.clear();
         needsReset = true;
         frame = 0;
     }
@@ -222,7 +263,7 @@ public:
     void subscribe (const std::vector<std::uint32_t>& list)
     {
         for (auto b : list)
-            if (b < maxBlocks && blocks.size() < maxSubscribedBlocks && blocks.find (b) == blocks.end())
+            if (isValidBlock (b) && blocks.size() < maxSubscribedBlocks && blocks.find (b) == blocks.end())
                 blocks[b].assign (blockItems, 0.0);   // the client's copy starts at zero
     }
 
@@ -255,6 +296,8 @@ public:
             if (copy != blocks.end())
                 std::copy (r.values.begin(), r.values.end(), copy->second.begin() + item);
         }
+        for (auto& s : w.strings)
+            stringsSent[s.first] = s.second;   // the caller writes them into the script
         return ok;
     }
 
@@ -262,7 +305,7 @@ public:
         table always go). `memory (block)`: the live block, or nullptr when
         the script has not allocated it (zeros). False: nothing to send. */
     bool collect (std::uint32_t slotId, const std::function<const double* (std::uint32_t)>& memory,
-                  std::size_t budget, SyncFrame& out)
+                  std::size_t budget, SyncFrame& out, const Strings* strings = nullptr)
     {
         out = {};
         out.slotId = slotId;
@@ -322,7 +365,21 @@ public:
             }
         }
 
-        const bool any = needsReset || ! out.vars.empty() || ! out.ranges.empty();
+        // Strings, whole, when they changed (they are few, and short).
+        if (strings != nullptr)
+            for (auto& [key, text] : *strings)
+            {
+                if (text.size() > maxStringBytes)
+                    continue;
+                auto it = stringsSent.find (key);
+                if (it == stringsSent.end() || it->second != text)
+                {
+                    out.strings.emplace_back (key, text);
+                    stringsSent[key] = text;
+                }
+            }
+
+        const bool any = needsReset || ! out.vars.empty() || ! out.ranges.empty() || ! out.strings.empty();
         needsReset = false;
         if (any)
             ++frame;
@@ -335,6 +392,7 @@ private:
     std::vector<std::uint64_t> varSent;
     std::vector<bool> varKnown;
     std::map<std::uint32_t, std::vector<double>> blocks;   ///< the client's copy of each subscribed block
+    std::map<std::string, std::string> stringsSent;
     std::uint32_t lastBlock = 0;
     std::uint32_t frame = 0;
     bool needsReset = true;

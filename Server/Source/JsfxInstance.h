@@ -41,6 +41,9 @@ public:
     virtual ~RangedParameter() = default;
     /** False when there is no linear range to show. */
     virtual bool getRange (double& minimum, double& maximum, double& step) const = 0;
+    /** A list of named values (a JSFX slider with {a,b,c}, or a file slider):
+        a combobox, as REAPER shows it. */
+    virtual bool isChoice() const = 0;
 };
 
 class JsfxInstance : public juce::AudioPluginInstance,
@@ -101,6 +104,8 @@ private:
     JsfxInstance (jsfx::Bundle, juce::File folder, SX_Instance*, int channels);
 
     void timerCallback() override;
+    /** A block of the script's memory, or of gmem[] from jsfx::gmemBlockBase. */
+    double* memoryBlock (std::uint32_t block, bool allocate);
     static double midiHook (void* context, int action, double* time, double* message1, double* message23, double* bus);
 
     jsfx::Bundle bundle;
@@ -114,6 +119,7 @@ private:
     int workFrames = 0;
     std::unique_ptr<Midi> midi;
     jsfx::SyncSource sync;
+    jsfx::Strings strings;   ///< the script's strings, read at each sync
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JsfxInstance)
 };

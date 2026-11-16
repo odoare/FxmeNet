@@ -34,6 +34,9 @@ JsfxView::JsfxView (FxmeNetAudioProcessor& p, std::uint32_t id) : processor (p),
         error = "the script is not in the slot's state";
         return;
     }
+    for (auto& f : bundle.files)
+        if (! f.data && std::search (f.bytes.begin(), f.bytes.end(), "gmem", "gmem" + 4) != f.bytes.end())
+            usesGmem = true;
     if (processor.getSampleRate() > 0.0)
         sampleRate = processor.getSampleRate();
 
@@ -142,18 +145,40 @@ void JsfxView::apply (const jsfx::SyncFrame& f)
             *vars[v.index] = v.value;
 
     for (auto& r : f.ranges)
-        if (auto* block = jsfx_embed_mem_block (sx, (int) (r.offset / jsfx::blockItems), true))
+        if (auto* block = memoryBlock (r.offset / jsfx::blockItems, true))
             std::copy (r.values.begin(), r.values.end(), block + r.offset % jsfx::blockItems);
+
+    for (auto& [key, text] : f.strings)
+        jsfx_embed_set_string (sx, key.c_str(), text.data(), (int) text.size());
+}
+
+double* JsfxView::memoryBlock (std::uint32_t block, bool allocate)
+{
+    return block >= jsfx::gmemBlockBase ? jsfx_embed_gmem_block (sx, (int) (block - jsfx::gmemBlockBase), allocate)
+                                        : jsfx_embed_mem_block (sx, (int) block, allocate);
 }
 
 void JsfxView::subscribeNewBlocks()
 {
     std::array<int, 256> used {};
-    const int n = jsfx_embed_mem_blocks_used (sx, used.data(), (int) used.size());
     std::vector<std::uint32_t> fresh;
+    const int n = jsfx_embed_mem_blocks_used (sx, used.data(), (int) used.size());
     for (int i = 0; i < juce::jmin (n, (int) used.size()); ++i)
         if (subscribed.insert ((std::uint32_t) used[(std::size_t) i]).second)
             fresh.push_back ((std::uint32_t) used[(std::size_t) i]);
+
+    // gmem[]: shared by every script of the process, so "allocated" does not
+    // mean "this script read it": only for a script that names it.
+    if (usesGmem)
+    {
+        const int g = jsfx_embed_gmem_blocks_used (sx, used.data(), (int) used.size());
+        for (int i = 0; i < juce::jmin (g, (int) used.size()); ++i)
+        {
+            const auto id = jsfx::gmemBlockBase + (std::uint32_t) used[(std::size_t) i];
+            if (subscribed.insert (id).second)
+                fresh.push_back (id);
+        }
+    }
     processor.getEngine().subscribeJsfx (slotId, fresh);
 }
 
@@ -200,9 +225,11 @@ void JsfxView::snapshot()
 
     beforeBlocks.clear();
     before.clear();
+    beforeStrings.clear();
     if (juce::Time::getMillisecondCounter() - lastInteraction > interactionHoldMs && buttons == 0)
         return;   // nobody is acting on the display: what @gfx changes is its own
 
+    beforeStrings = readStrings();
     before.resize (vars.size());
     for (std::size_t i = 0; i < vars.size(); ++i)
         before[i] = writable[i] ? *vars[i] : 0.0;
@@ -210,9 +237,19 @@ void JsfxView::snapshot()
     {
         if (beforeBlocks.size() >= maxSnapshotBlocks)
             break;
-        if (const auto* block = jsfx_embed_mem_block (sx, (int) b, false))
+        if (const auto* block = memoryBlock (b, false))
             beforeBlocks[b].assign (block, block + jsfx::blockItems);
     }
+}
+
+jsfx::Strings JsfxView::readStrings() const
+{
+    jsfx::Strings out;
+    jsfx_embed_enum_strings (sx, [] (void* context, const char* key, const char* value, int length)
+    {
+        static_cast<jsfx::Strings*> (context)->emplace_back (key, std::string (value, (std::size_t) juce::jmax (0, length)));
+    }, &out);
+    return out;
 }
 
 void JsfxView::sendChanges()
@@ -249,7 +286,7 @@ void JsfxView::sendChanges()
 
     for (auto& [b, copy] : beforeBlocks)
     {
-        const auto* now = jsfx_embed_mem_block (sx, (int) b, false);
+        const auto* now = memoryBlock (b, false);
         if (now == nullptr)
             continue;
         jsfx::SyncFrame::Range* open = nullptr;
@@ -269,7 +306,13 @@ void JsfxView::sendChanges()
         }
     }
 
-    if (writeFrame.vars.empty() && writeFrame.ranges.empty())
+    const auto after = readStrings();
+    for (auto& entry : after)
+        if (std::find (beforeStrings.begin(), beforeStrings.end(), entry) == beforeStrings.end()
+            && entry.second.size() <= jsfx::maxStringBytes)
+            writeFrame.strings.push_back (entry);
+
+    if (writeFrame.vars.empty() && writeFrame.ranges.empty() && writeFrame.strings.empty())
         return;
     jsfx::encode (writeFrame, writePayload);
     processor.getEngine().writeJsfx (writePayload);

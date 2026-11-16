@@ -222,4 +222,11 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
       the server's side; the client's is in its stats line).
     Before the next release: commit and push the fork, then update its pin
     in `cmake/Dependencies.cmake`; build `fxjsfx` on macOS and Windows.
-    Next: phase 5 (strings, gmem, presets, a script editor, the manual).
+    Phase 4 was tried by the user: it works (2026-11-12). Phase 5's
+    essentials are written (2026-11-13). To check in a DAW:
+    - a script whose display shows text built in `@init` or `@block`
+      (`#name` strings, `sprintf`): the text shows;
+    - a script using `gmem[]` with a display that reads it;
+    - `guitar/amp-model`: "Model" is a list of the models, each changes the
+      sound; saving and reopening the project keeps the model.
+    Not done: presets, a script editor, the manual.

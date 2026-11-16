@@ -60,7 +60,7 @@ public:
         char text[256] = {};
         sx_getParmName (sx, index, text, (int) sizeof (text));
         name = juce::String::fromUTF8 (text);
-        isEnum = sx_parmIsEnum (sx, index) > 0;
+        isEnum = sx_parmIsEnum (sx, index) > 0 || jsfx_embed_slider_is_file (sx, index);   // a file slider: its files
         const double v = sx_getParmVal (sx, index, &minimum, &maximum, &step);
         defaultValue = normalise (v);
         lastSeen = defaultValue;
@@ -102,6 +102,8 @@ public:
             return normalise (v);
         return normalise (text.getDoubleValue());
     }
+
+    bool isChoice() const override   { return isEnum; }
 
     bool getRange (double& lo, double& hi, double& stepOut) const override
     {
@@ -459,21 +461,36 @@ void JsfxInstance::syncReset()
     sync.reset (std::move (table.names), std::move (table.values));
 }
 
+double* JsfxInstance::memoryBlock (std::uint32_t block, bool allocate)
+{
+    return block >= jsfx::gmemBlockBase ? jsfx_embed_gmem_block (sx, (int) (block - jsfx::gmemBlockBase), allocate)
+                                        : jsfx_embed_mem_block (sx, (int) block, allocate);
+}
+
 void JsfxInstance::syncWrite (const jsfx::SyncFrame& w)
 {
     jsfx_embed_lock (sx);
-    sync.applyWrite (w, [this] (std::uint32_t block) { return jsfx_embed_mem_block (sx, (int) block, true); });
+    sync.applyWrite (w, [this] (std::uint32_t block) { return memoryBlock (block, true); });
     jsfx_embed_unlock (sx);
+    for (auto& [key, text] : w.strings)
+        jsfx_embed_set_string (sx, key.c_str(), text.data(), (int) text.size());
 }
 
 bool JsfxInstance::syncCollect (std::uint32_t slotId, std::size_t budget, jsfx::SyncFrame& out)
 {
+    // The strings, under their own lock (taken inside).
+    strings.clear();
+    jsfx_embed_enum_strings (sx, [] (void* context, const char* key, const char* value, int length)
+    {
+        static_cast<jsfx::Strings*> (context)->emplace_back (key, std::string (value, (std::size_t) juce::jmax (0, length)));
+    }, &strings);
+
     // The engine's lock: the audio thread takes it to free or clear memory.
     jsfx_embed_lock (sx);
     const bool any = sync.collect (slotId, [this] (std::uint32_t block) -> const double*
     {
-        return jsfx_embed_mem_block (sx, (int) block, false);
-    }, budget, out);
+        return memoryBlock (block, false);
+    }, budget, out, &strings);
     jsfx_embed_unlock (sx);
     return any;
 }

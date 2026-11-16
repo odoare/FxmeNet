@@ -77,12 +77,15 @@ private:
     void destroyInstance();
     void apply (const jsfx::SyncFrame&);
     void subscribeNewBlocks();
+    /** A block of the script's memory, or of gmem[] from jsfx::gmemBlockBase. */
+    double* memoryBlock (std::uint32_t block, bool allocate);
     void drawFrame();
 
     /** Before @gfx runs: what it may change (while the user acts on it). */
     void snapshot();
     /** After: sliders it moved as parameters, the rest as JSFX_WRITE. */
     void sendChanges();
+    jsfx::Strings readStrings() const;
     void touched();   ///< the user acted on the display
     int mouseCap (const juce::ModifierKeys&) const;
 
@@ -98,6 +101,7 @@ private:
     std::set<std::uint32_t> subscribed;
     bool haveReset = false;       ///< the server's reset arrived: its frames apply
     bool shown = false;           ///< the slot's telemetry was turned on here
+    bool usesGmem = false;        ///< the script's code names gmem
 
     juce::Image frame;
     bool retina = false;          ///< the script draws at the screen's pixel density
@@ -113,6 +117,7 @@ private:
     std::vector<bool> writable;          ///< by variable index: may go to the server
     std::vector<double> before;          ///< the variables before @gfx ran
     std::map<std::uint32_t, std::vector<double>> beforeBlocks;
+    jsfx::Strings beforeStrings;
     std::vector<double*> sliderVars;     ///< by parameter index
     std::vector<double> sliderBefore;
     std::set<int> gestures;              ///< parameters in a gesture (a button held)

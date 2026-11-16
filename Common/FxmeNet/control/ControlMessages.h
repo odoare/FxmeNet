@@ -324,6 +324,7 @@ struct ParamInfo
     /** The values in the plugin's own units, linear over the normalised
         range (a JSFX slider). hasRange false: only the normalised value. */
     bool hasRange = false;
+    bool choices = false;   ///< named values to choose from (stepTexts): a combobox
     double rangeMin = 0.0, rangeMax = 1.0, rangeStep = 0.0;
 
     juce::var toVar() const
@@ -341,6 +342,8 @@ struct ParamInfo
         o->setProperty ("bypass", isBypass);
         if (! stepTexts.isEmpty())
             o->setProperty ("stepTexts", json::stringArray (stepTexts));
+        if (choices)
+            o->setProperty ("choices", true);
         if (hasRange)
         {
             o->setProperty ("rangeMin", rangeMin);
@@ -364,6 +367,7 @@ struct ParamInfo
         p.automatable = (bool) json::get (v, "automatable", true);
         p.isBypass = (bool) json::get (v, "bypass", false);
         p.stepTexts = json::toStringArray (v["stepTexts"]);
+        p.choices = (bool) json::get (v, "choices", false);
         p.hasRange = ! v["rangeMin"].isVoid() && ! v["rangeMax"].isVoid();
         if (p.hasRange)
         {

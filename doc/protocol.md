@@ -184,8 +184,12 @@ the script's state, for the client to run `@gfx` there
 | Type | Name | From | Payload |
 |---:|---|---|---|
 | 41 | `JSFX_SUBSCRIBE` | client | binary: u32 slotId, u32 count, count x u32 memory block (65536 items each). No answer |
-| 42 | `JSFX_SYNC` | server | binary: u32 slotId, u32 frame, u8 flags (1: reset), [reset: u32 count, count x (u16 length, name)], u32 count, count x (u32 variable index, f64), u32 count, count x (u32 first item, u32 n, n x f64) |
+| 42 | `JSFX_SYNC` | server | binary: u32 slotId, u32 frame, u8 flags (1: reset), [reset: u32 count, count x (u16 length, name)], u32 count, count x (u32 variable index, f64), u32 count, count x (u32 first item, u32 n, n x f64), u32 count, count x (u8 length, key, u32 length, text) |
 | 43 | `JSFX_WRITE` | client | binary: as `JSFX_SYNC`, never a reset: what the display's `@gfx` changed while the user acted on it. No answer |
+
+Memory blocks 0 to 2047 are the script's memory, 4096 to 4607 its `gmem[]`.
+Strings are keyed `u<n>` (numbered, 0..1023), `n<name>` (`#name`), `a<n>`
+(anonymous `#`), sent whole when they change, 64 kB at most.
 
 `TELEMETRY_ACTIVE` on (also when already on) makes the next `JSFX_SYNC` a
 reset: every variable, by name, then by index; nothing subscribed, the

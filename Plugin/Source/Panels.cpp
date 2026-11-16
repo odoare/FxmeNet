@@ -78,7 +78,29 @@ public:
             processor.setSlotParameter (target, (float) slider.getValue());
             value.setText (valueText (info, (float) slider.getValue()), juce::dontSendNotification);
         };
-        addAndMakeVisible (slider);
+
+        // Named values (a JSFX list or file slider): a combobox, as REAPER shows them.
+        isChoice = info.choices && info.stepTexts.size() > 1;
+        if (isChoice)
+        {
+            for (int k = 0; k < info.stepTexts.size(); ++k)
+                choice.addItem (info.stepTexts[k].isNotEmpty() ? info.stepTexts[k] : juce::String ("(none)"), k + 1);
+            choice.setTooltip (tips::paramSlider);
+            choice.onChange = [this]
+            {
+                const int k = choice.getSelectedItemIndex();
+                if (k < 0)
+                    return;
+                const float v = (float) k / (float) (info.stepTexts.size() - 1);
+                processor.cancelLearn();
+                processor.beginSlotParameterGesture (target);
+                processor.setSlotParameter (target, v);
+                processor.endSlotParameterGesture (target);
+            };
+            addAndMakeVisible (choice);
+        }
+        else
+            addAndMakeVisible (slider);
 
         for (auto* l : { &name, &value, &pool })
         {
@@ -127,7 +149,12 @@ public:
     /** The current value and mapping, unless the user is dragging. */
     void update (float v)
     {
-        if (! slider.isMouseButtonDown())
+        if (isChoice)
+        {
+            if (! choice.isPopupActive())
+                choice.setSelectedItemIndex ((int) std::lround (v * (float) (info.stepTexts.size() - 1)), juce::dontSendNotification);
+        }
+        else if (! slider.isMouseButtonDown())
         {
             slider.setValue (v, juce::dontSendNotification);
             value.setText (valueText (info, v), juce::dontSendNotification);
@@ -147,6 +174,11 @@ public:
         learn.setBounds (r.removeFromRight (56));
         r.removeFromRight (4);
         pool.setBounds (r.removeFromRight (44));
+        if (isChoice)
+        {
+            choice.setBounds (r.reduced (0, 1));   // the name of the value is its own read-out
+            return;
+        }
         value.setBounds (r.removeFromRight (90));
         r.removeFromRight (6);
         slider.setBounds (r);
@@ -160,6 +192,8 @@ private:
     const control::ParamInfo info;
     juce::Label name, value, pool;
     juce::Slider slider;
+    juce::ComboBox choice;
+    bool isChoice = false;
     juce::TextButton learn { "Learn" }, map { "Map" };
 };
 

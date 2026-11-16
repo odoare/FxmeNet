@@ -7,8 +7,8 @@ LGPL 2.1) and of FxmeNet as released (0.1.0). This is Phase 7 of
 now, scripts come from the client only, `nasm` is a build dependency.
 
 State: phases 1 to 3 are written and were tried in a DAW (2026-11-12).
-Phase 4 (the display interactive) is written; to be tried in a DAW.
-Phase 5 is not started.
+Phase 4 (the display interactive) was tried in a DAW. Phase 5's
+essentials (strings, gmem, file sliders) are written; to be tried in a DAW.
 
 ## Goal
 
@@ -309,9 +309,25 @@ Known limit: `@gfx` code that computes from memory it never read before
    - Not done: `gfx_loadimg` of a file not in the bundle; the cursor
      (`gfx_setcursor`), `gfx_showmenu` (no window to open a menu from);
      drag and drop of files.
-5. **The rest.** Strings, `gmem[]`, file sliders, presets (`.rpl`), a
-   script editor in the plugin (edit, resend, see the compile error),
-   measurements, the manual.
+5. **The rest (essentials written 2026-11-13).**
+   - Strings: numbered (0..1023), named (`#name`) and anonymous (`#`)
+     strings travel whole when they change, in `JSFX_SYNC` and `JSFX_WRITE`
+     (`jsfx_embed_enum_strings` / `jsfx_embed_set_string`, in
+     `effectproc.cpp` under `JSFX_EMBED`). Text that `@init` builds in
+     strings now reaches the display.
+   - `gmem[]`: its blocks are mirrored as blocks numbered from 4096
+     (`jsfx_embed_gmem_block`), for a script whose code names `gmem` (the
+     buffer is shared by every script of the process, so "allocated" does
+     not mean "read by this one"). On the server, the scripts of every
+     session share it, as REAPER's do in a project.
+   - File sliders: `JSFX_SUPPORT_WAV_DECODING` for `fxjsfx` (REAPER reads
+     media with its own API; the fork's own `.wav` reader needed a one-line
+     fix in `miscfunc.cpp`): `.wav`, `.txt` and `.raw` files are listed and
+     read. A file slider is a list of its files' names in the generic
+     controls. Checked with `guitar/amp-model` (12 models, chosen by name,
+     the sound changes).
+   - Not done: presets (`.rpl`), a script editor in the plugin, other media
+     formats for file sliders, data folders over 8 MB, the manual.
 
 Each phase ends usable. Phases 1 and 2 carry little risk (the throwaway
 build covered the main unknown). The open risks are in 3 and 4: SWELL's
