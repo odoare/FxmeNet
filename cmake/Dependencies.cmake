@@ -10,14 +10,14 @@ include(${CMAKE_CURRENT_LIST_DIR}/FxmeDeps.cmake)
 
 fxme_dependency(JUCE https://github.com/juce-framework/JUCE 9.0.4 SHALLOW)
 fxme_dependency(FxmeTools https://github.com/odoare/FxmeTools
-    94e4e4d9147bf9ba51db0c88814eea60104d13a2)
+    b017307dabed9f7ef9da0662e3bd4ed4c4dd2a34)
 
 # The JSFX engine (Cockos' sources as a library, doc/jsfx-plan.md): the
 # fork's branch fxmenet-branch. Locally the clone is ~/src/jsfx.
 option(FXMENET_JSFX "JSFX scripts as plugins of the chain (needs nasm on x86-64 Linux)" ON)
 if(FXMENET_JSFX)
     fxme_dependency(jsfx https://github.com/odoare/jsfx
-        bc2c5ae9d98480014be8b01fadb15ab45047fa99 SIBLING jsfx)
+        0d9ac58bb4059813a92da9673d1b3cb05243b16a SIBLING jsfx)
 endif()
 
 if(NOT COMMAND juce_add_plugin)
