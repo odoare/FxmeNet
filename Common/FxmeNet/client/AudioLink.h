@@ -41,6 +41,7 @@
 #include <FxmeNet/client/ReplyRing.h>
 #include <FxmeNet/control/ControlMessages.h>
 #include <FxmeNet/transport/UdpTransport.h>
+#include <FxmeNet/transport/SocketBuffers.h>
 #include <FxmeTools/net/TelemetryRegistry.h>
 
 #include <atomic>
@@ -160,6 +161,9 @@ public:
     {
         if (! socket.bindToPort (0))
             return false;
+        // Replies of every block, telemetry and JSFX frames arrive here in
+        // bursts: more room than the default (SocketBuffers.h).
+        transport::growSocketBuffers (socket, 256 * 1024, 1024 * 1024);
 
         UdpTransport::Settings t;
         t.sessionId = settings.sessionId;

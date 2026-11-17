@@ -130,7 +130,17 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     or non-automatable parameters when auto-mapping (SLOT_READY's
     `automatable` already travels; a `readOnly` flag may be needed), and
     show them as read-outs in the generic view.
-21. Network buffers (seen in the stress tests of 2026-11-07, see
+21. (written 2026-11-17) Network buffers. `transport/SocketBuffers.h`
+    (`growSocketBuffers`): the server asks for 4 MB send and receive
+    buffers on its shared UDP socket (forced past the system's cap when
+    it may: root or CAP_NET_ADMIN), logs the sizes it got ("UDP buffers:
+    send ..., receive ...") and, on Linux, when a size is below 4 MB,
+    the sysctl to raise and the file to keep it in; the client's audio
+    socket asks for 256 KB send, 1 MB receive (not logged). macOS: the
+    size is halved until accepted (kern.ipc.maxsockbuf). To check: the
+    server's log at start (with the default 208 KB limits it shows both
+    hints); a 28-track run with the limits raised gives no send errors.
+    Original note: network buffers (seen in the stress tests of 2026-11-07, see
     `doc/Tests/stress-tests.md`). The server sends every session's replies
     from one UDP socket with the system's default send buffer (about
     208 KB). Under load the buffer fills and the kernel drops replies:

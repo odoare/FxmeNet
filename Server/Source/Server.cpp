@@ -8,6 +8,7 @@
 */
 
 #include "Server.h"
+#include <FxmeNet/transport/SocketBuffers.h>
 
 namespace fxmenet::server
 {
@@ -151,6 +152,24 @@ bool Server::start()
     {
         log ("error: cannot bind UDP port " + juce::String (config.udpPort));
         return false;
+    }
+    {
+        // One socket carries every session's audio: room for bursts
+        // (SocketBuffers.h). Linux grants at most its wmem_max / rmem_max.
+        constexpr int wanted = 4 * 1024 * 1024;
+        const auto got = transport::growSocketBuffers (udp, wanted, wanted);
+        const auto kb = [] (int bytes) { return juce::String (bytes / 1024) + " KB"; };
+        log ("UDP buffers: send " + kb (got.send) + ", receive " + kb (got.receive));
+       #if JUCE_LINUX
+        if (got.send > 0 && got.send < wanted)
+            log ("  the send buffer is below " + kb (wanted) + ": under load replies may be dropped. Raise the "
+                 "system's limit: sudo sysctl -w net.core.wmem_max=" + juce::String (wanted)
+                 + " (to keep it, put net.core.wmem_max=" + juce::String (wanted) + " in /etc/sysctl.d/90-fxmenet.conf)");
+        if (got.receive > 0 && got.receive < wanted)
+            log ("  the receive buffer is below " + kb (wanted) + ": raise the system's limit: sudo sysctl -w "
+                 "net.core.rmem_max=" + juce::String (wanted) + " (to keep it, put net.core.rmem_max="
+                 + juce::String (wanted) + " in /etc/sysctl.d/90-fxmenet.conf)");
+       #endif
     }
 
     acceptThread = std::make_unique<AcceptThread> (*this);

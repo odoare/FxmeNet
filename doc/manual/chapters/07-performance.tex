@@ -115,7 +115,11 @@ ps -eLo tid,cls,rtprio,pcpu,comm | grep -i fxme
   \item \textbf{Bigger socket buffers.} Under heavy load the kernel can drop
     replies when the send buffer is full (the server's log counts them as
     \emph{send errors}; \cmd{nstat -az UdpSndbufErrors} shows the
-    system-wide count). Raise the limits, then restart the server:
+    system-wide count). The server asks for 4~MB buffers on its audio
+    socket and logs the sizes it got at start (\emph{UDP buffers: send
+    \ldots, receive \ldots}). Linux grants no more than its limits, 208~KB
+    by default; the server's log then gives the command to raise them.
+    Raise the limits, then restart the server:
 \begin{lstlisting}
 sudo sysctl -w net.core.rmem_default=4194304 net.core.rmem_max=8388608
 sudo sysctl -w net.core.wmem_default=4194304 net.core.wmem_max=8388608
