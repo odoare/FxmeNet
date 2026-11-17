@@ -17,7 +17,7 @@ fxme_dependency(FxmeTools https://github.com/odoare/FxmeTools
 option(FXMENET_JSFX "JSFX scripts as plugins of the chain (needs nasm on x86-64 Linux)" ON)
 if(FXMENET_JSFX)
     fxme_dependency(jsfx https://github.com/odoare/jsfx
-        0d9ac58bb4059813a92da9673d1b3cb05243b16a SIBLING jsfx)
+        66faf49948b7c4954345344359eb01a676c5577e SIBLING jsfx)
 endif()
 
 if(NOT COMMAND juce_add_plugin)
