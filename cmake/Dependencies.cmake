@@ -13,11 +13,11 @@ fxme_dependency(FxmeTools https://github.com/odoare/FxmeTools
     94e4e4d9147bf9ba51db0c88814eea60104d13a2)
 
 # The JSFX engine (Cockos' sources as a library, doc/jsfx-plan.md): the
-# fork's branch fxmenet-branch. Locally the clone is ~/src/JesuNet/jsfx.
+# fork's branch fxmenet-branch. Locally the clone is ~/src/jsfx.
 option(FXMENET_JSFX "JSFX scripts as plugins of the chain (needs nasm on x86-64 Linux)" ON)
 if(FXMENET_JSFX)
     fxme_dependency(jsfx https://github.com/odoare/jsfx
-        3b8191d145864cdd21e64465d9630d03c0c64a03 SIBLING JesuNet/jsfx)
+        bc2c5ae9d98480014be8b01fadb15ab45047fa99 SIBLING jsfx)
 endif()
 
 if(NOT COMMAND juce_add_plugin)
