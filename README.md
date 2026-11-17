@@ -42,6 +42,9 @@ Made by [FX-Mechanics](https://fx-mechanics.com).
 - **Latency against reliability.** Audio travels in blocks of N samples (32 to
   1024) over UDP, and each reply has D blocks (1 to 8) to come back. A late block
   is concealed with a short fade. The added latency is about N × D samples.
+- **JSFX scripts.** REAPER's JSFX effects, from this computer's REAPER folder or
+  your own, run in the server's chain like plugins, with their sliders and their
+  own display. REAPER is not needed.
 - **Monitoring.** `fxmenet-top` is a terminal program that shows sessions, CPU,
   network and the server log, and manages the server's plugin folders (Linux,
   macOS and Windows).

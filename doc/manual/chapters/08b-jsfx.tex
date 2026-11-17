@@ -1,0 +1,86 @@
+\chapter{JSFX scripts}
+\label{ch:jsfx}
+
+\fxme\ can run JSFX scripts, the effects written in REAPER's EEL2 language,
+in the server's chain, next to VST3 plugins. The scripts live on the computer
+that runs the DAW: when you add one, the plugin packs it with what it needs
+and sends it to the server, which runs it with its own copy of the JSFX
+engine. Nothing has to be installed on the server, and REAPER is not needed
+on either computer.
+
+\section{Where scripts come from}
+
+The plugin looks for scripts in REAPER's \file{Effects} folder on this
+computer, and in the folders you add. The \ui{JSFX SCRIPTS} part of the
+\ui{Settings} tab shows how many it found and where it searched.
+\ui{Folders\ldots} adds or removes a folder; \ui{Rescan} looks again after you
+have installed or changed scripts.
+
+An added folder is laid out as REAPER's: scripts in subfolders of an
+\file{Effects} folder, their data files (samples, impulse responses, amp
+models) in a \file{Data} folder next to it.
+
+\section{Adding a script}
+
+Scripts appear in \ui{SERVER PLUGINS} after the server's plugins, tagged
+\ui{JS}. The filter also matches their description. Add one as you would a
+plugin: it then behaves as any slot of the chain (order, bypass, routing,
+latency compensation, automation, saved with the project).
+
+When you add a script, the plugin sends with it:
+
+\begin{itemize}
+  \item the script and the files it imports;
+  \item the data files of its file sliders and the files it names in its
+    code, such as images;
+  \item audio data files the engine cannot read itself (FLAC, AIFF, Ogg,
+    MP3, 32-bit or floating-point WAV), converted to 24-bit WAV on the way.
+\end{itemize}
+
+Data and images may take up to 48~MB, the whole script 56~MB. Everything
+sent is saved in the DAW project with each instance of the script, so the
+project opens again even if the script has changed or gone from this
+computer. To take a newer version of a script, remove it from the chain and
+add it again.
+
+\section{Controls}
+
+A script's sliders are its parameters. In the generic controls they show in
+the script's own units; a slider with named values, or one that chooses a
+file, is a list. Sliders whose name starts with a minus sign are hidden, as
+in REAPER: they can still be automated and mapped, but have no row.
+
+A script that reports a delay (\texttt{pdc\_delay}, in lookahead effects) has
+it compensated like a plugin's latency.
+
+\section{The script's display}
+
+A script with its own display (\texttt{@gfx}) shows it in the
+\ui{Parameters} tab, under its sliders, as REAPER's effect window does.
+\ui{Generic controls} switches to the sliders alone.
+
+The display is drawn on this computer from a copy of the server's script,
+kept in step with it: what the audio code computes (spectra, meters, curves)
+comes from the server, at the telemetry rate. The mouse, the wheel and the
+keys work as in REAPER, and so do the script's menus and mouse cursors.
+What you change on the display, a slider or the script's own data, goes to
+the server.
+
+You can drop files on a display that accepts them. The script receives the
+path on \emph{this} computer, so a script that opens the dropped file on the
+server will not find it.
+
+\section{Limits}
+
+\begin{itemize}
+  \item No presets (\file{.rpl} files) and no script editor: edit scripts
+    in REAPER or a text editor, then remove and add the script again.
+  \item The scripts of all sessions on a server share one \texttt{gmem[]},
+    as the scripts of one REAPER project do.
+  \item A script's display may differ from REAPER's in small ways: it may
+    keep redrawing while no audio flows, and a menu that a script opens by
+    itself (without a click or a key) cannot be answered.
+  \item Some display variables may lag when the script's audio code sets
+    them only from within functions. Tell us which script if you see one
+    whose display stays still.
+\end{itemize}

@@ -1,14 +1,15 @@
 # JSFX in the FxmeNet chain: design and plan (draft)
 
 Written 2026-11-12, from a reading of the JSFX sources (the clone of
-github.com/odoare/jsfx in `~/src/JesuNet/jsfx`, branch `fxmenet-branch`,
+github.com/odoare/jsfx, now in `~/src/jsfx`, branch `fxmenet-branch`,
 LGPL 2.1) and of FxmeNet as released (0.1.0). This is Phase 7 of
 `doc/todo.md`. Agreed with the user on 2026-11-12: no commercial build for
 now, scripts come from the client only, `nasm` is a build dependency.
 
-State: phases 1 to 3 are written and were tried in a DAW (2026-11-12).
-Phase 4 (the display interactive) was tried in a DAW. Phase 5's
-essentials (strings, gmem, file sliders) are written; to be tried in a DAW.
+State (2026-11-17): phases 1 to 5 are written and were tried in a DAW,
+on Linux and Windows (server and client on either side). macOS is built
+by the release workflow but not tried. What is left is listed at the end
+of phase 5.
 
 ## Goal
 
@@ -191,9 +192,7 @@ reports parameter changes.
 **Conflicts.** A cell written on both sides in the same frame: the last
 writer wins, as between REAPER's two threads.
 
-Left for later, with the same mechanism: `gmem[]` (shared between
-instances), strings written by the audio code and drawn by `@gfx`
-(`sprintf (#s, ...)` in `@block`), file sliders with large data files.
+`gmem[]` and strings came later with the same mechanism (phase 5).
 
 Known limit: `@gfx` code that computes from memory it never read before
 (a new region each frame) is always one frame late on that region.
@@ -202,7 +201,8 @@ Known limit: `@gfx` code that computes from memory it never read before
 
 - **no `@gfx`:** generic controls, as for tier 0.
 - **`@gfx`:** a `JsfxView` component: the visible sliders as generic
-  controls on top (as REAPER shows them), the `@gfx` area below. A timer
+  controls on top (as REAPER shows them; hidden ones left out, at most ten
+  rows, then they scroll), the `@gfx` area below. A timer
   at the script's rate (30 Hz by default, `gfx_hz` honoured up to 60)
   applies the last `JSFX_SYNC`, runs `@gfx` in the display instance, blits
   the LICE frame buffer to a `juce::Image`, and sends what changed. Mouse,
@@ -222,8 +222,10 @@ Known limit: `@gfx` code that computes from memory it never read before
    frame to a PPM file. Checked: `utility/volume` at -6 dB halves the level,
    `delay/delay` runs, `analysis/gfxanalyzer` draws the sine's peak with its
    labels (so LICE, the headless SWELL and freetype text work without a
-   window). Not done: the macOS and Windows parts of the CMake file are
-   written but never built; a comparison with REAPER's render of the same
+   window). The Windows part of the CMake file was built and tried later
+   (2026-11-17); the macOS part is built by the release workflow only.
+   WDL's zlib needs `HAVE_UNISTD_H` outside Windows (GCC 14 and later
+   refuse its undeclared `read`/`close`). Not done: a comparison with REAPER's render of the same
    script; the display role and the state access for the mirror (they come
    with phase 3).
 2. **Server and generic controls (written 2026-11-12).** No new message:
@@ -248,10 +250,9 @@ Known limit: `@gfx` code that computes from memory it never read before
      `utility/volume`, `delay/delay` (echoes build up), `analysis/gfxanalyzer`
      (reported with `@gfx`); a script with a syntax error is refused with
      "@sample:4: syntax error"; the temporary folders are removed.
-   - Not done: the plugin in a DAW (list, add, sliders, automation, state
-     in the project, reconnection); hidden sliders (names starting with
-     `-`) are shown; scripts outside the searched folders; macOS and
-     Windows builds of `fxjsfx`.
+   - Tried later in a DAW (list, add, sliders, automation, state in the
+     project), on Linux and Windows. Hidden sliders came in phase 5. Not
+     done: scripts outside the searched folders.
 3. **Display, read only (written 2026-11-12).**
    - Fork: `jsfx_embed_set_display` (an instance where no audio code runs),
      `jsfx_embed_enum_vars`, `jsfx_embed_var`, `jsfx_embed_mem_block`,
@@ -276,9 +277,8 @@ Known limit: `@gfx` code that computes from memory it never read before
      switches), sized as the script's `@gfx w h` line asks, at its gfx_hz.
      Scripts with `gfx_ext_retina` draw at the screen's density. The mouse
      position reaches `@gfx` (hover); clicks do not.
-   - Limits: `@init` does not run in the display, so what it leaves only in
-     strings (`#name = "..."`) is missing; `gmem[]` is not mirrored; a
-     block first touched draws zeros for one frame.
+   - Limits: a block first touched draws zeros for one frame. (Strings
+     left by `@init` and `gmem[]` were missing here; phase 5 brought them.)
 4. **Display, interactive (written 2026-11-12).**
    - Fork: `jsfx_embed_gfx_frame` takes `mouse_cap` (buttons and modifiers
      from the host), `jsfx_embed_gfx_wheel`, `jsfx_embed_gfx_key` (the queue
@@ -306,9 +306,8 @@ Known limit: `@gfx` code that computes from memory it never read before
      last writer, as between REAPER's two threads. Loop counters shared by
      `@gfx` and the audio code travel during an interaction, as they race in
      REAPER.
-   - Not done: `gfx_loadimg` of a file not in the bundle; the cursor
-     (`gfx_setcursor`), `gfx_showmenu` (no window to open a menu from);
-     drag and drop of files.
+   - Left at the time, all done in phase 5: images named in the code, the
+     cursor, `gfx_showmenu`, files dropped on the display.
 5. **The rest (essentials written 2026-11-13).**
    - Strings: numbered (0..1023), named (`#name`) and anonymous (`#`)
      strings travel whole when they change, in `JSFX_SYNC` and `JSFX_WRITE`
@@ -336,15 +335,43 @@ Known limit: `@gfx` code that computes from memory it never read before
    - Hidden sliders (2026-11-16): a slider named `-name` is a parameter
      (automatable) left out of the generic controls; `slider_show()` at run
      time is not followed.
-   - Display features without a window (2026-11-16): `gfx_showmenu` (a
-     JUCE menu, modal: the script gets the choice from within `@gfx`, so
-     the plugin is built with `JUCE_MODAL_LOOPS_PERMITTED`), `gfx_setcursor`
+   - Display features without a window (2026-11-16): `gfx_showmenu`,
+     `gfx_setcursor`
      (Windows cursor ids to JUCE cursors), `gfx_getdropfile` (files dropped
      on the display; their paths are this machine's), images named in the
      code (`gfx_loadimg (0, "knob.png")`: quoted .png/.jpg names found beside
      the script or in Data are sent). Hooks in `eel_lice.h` under
      `EEL_LICE_EMBED_NOWINDOW`; `jsfx_embed_set_gfx_host`, `jsfx_embed_gfx_drop`.
-   - Not done: presets (`.rpl`), a script editor in the plugin, the manual.
+   - Menus without blocking (2026-11-16). A modal menu (JUCE's own loop
+     inside the plugin) froze REAPER on Linux, so the menu is replayed
+     instead. The first time `@gfx` calls `gfx_showmenu`, it gets 0 and
+     the request is kept; after the frame the display opens the menu
+     asynchronously and pauses. On a choice, the script is put back as it
+     was before that frame (variables, the memory blocks of the snapshot,
+     strings) and the frame runs again with the same mouse state, this
+     time `gfx_showmenu` returning the choice; what that frame changes
+     goes to the server as usual. Nothing chosen: the menu just closes.
+     Limit: the replay needs the interaction snapshot, which a click or a
+     key provides; a menu opened without input (from a timer in the
+     script) is shown but its choice is ignored.
+   - Sliders and display together (2026-11-16): as in REAPER's FX
+     window, a script with `@gfx` shows its visible sliders above the
+     display, in the same pane (`ParameterPanel::jsfxRowsHeight`, at most
+     ten rows or half the height, then they scroll); "Generic controls"
+     still shows the sliders alone.
+   - Variables the audio code keeps setting (2026-11-17). A script such as
+     `analysis/gfxanalyzer` sets `update = 1` in `@sample` and clears it
+     in `@gfx` after drawing. On the server `@gfx` never runs, so the value
+     stays 1, never changes, and is never sent again: once the display had
+     cleared it, the spectrum stopped. The display now reads the script's
+     `@sample` and `@block` sections (a lexical scan: `name =`, `name +=`,
+     ..., not memory) and, before each frame, puts those variables back to
+     the server's last value, as the audio code would in REAPER. A value
+     the display writes to the server counts as the server's last value.
+     Limit: variables assigned only inside functions called from there are
+     missed (todo: only when a script needs it). While no audio flows the
+     display keeps redrawing its last data (REAPER would stand still).
+   - Not done: presets (`.rpl`), a script editor in the plugin.
 
 Each phase ends usable. Phases 1 and 2 carry little risk (the throwaway
 build covered the main unknown). The open risks are in 3 and 4: SWELL's

@@ -16,7 +16,7 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
 
 6. Phase 2, remaining: 6g, the wavclient runs between two machines (offline
    and `--realtime`, also `--engine`); needs a second machine.
-14. Later, optional (user request 2026-11-03): local fallback. When no
+14. Later, low priority, optional (user request 2026-11-03): local fallback. When no
     server answers (or on demand, an option per instance), process the chain
     locally with the client's own copies of the plugins. Builds on Phase 4,
     which already scans the client's plugins and loads local copies (as
@@ -50,7 +50,7 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     still open, within a fifth of a second); save, reload the project: the
     pattern is there. Turning a knob in a tier 1 editor while it plays
     stays smooth (a state reload per move would be heard as resets).
-17. ModalDish as a tier 2 plugin (seen 2026-11-05: in FxmeNet the editor
+17. Priority among the later items (user, 2026-11-17). ModalDish as a tier 2 plugin (seen 2026-11-05: in FxmeNet the editor
     works, a plate can be drawn and computed, but nothing sounds, neither
     clicks, MIDI nor input audio). Causes: the shape, the boundaries and the
     computed modes are state, built in the client's mirror and never sent,
@@ -91,7 +91,7 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     build and run FxmeNetProtocolTests; in Reaper on PulseAudio with a large buffer, the
     Equalizer's spectrum in FxmeNet now moves as with JACK, and "UDP
     dropped" stays at or near 0 (it also counts genuinely lost datagrams).
-19. A slot's plugin editor in its own window, as DAWs do (user request
+19. Low priority. A slot's plugin editor in its own window, as DAWs do (user request
     2026-11-05). Today `ParameterPanel::refresh` (Panels.cpp) puts the
     shadow's editor in a viewport. Plan:
     - a. Basic (about half a day): a "Window" button beside "Generic
@@ -112,7 +112,11 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     - c. Later, optional: windows that outlive FxmeNet's editor (owned by
       the processor, as Reaper's floating FX windows), with the lifetime
       cases that brings (slot removed, session lost, processor deleted).
-20. Later, low priority (seen 2026-11-06 with the Zam plugins): plugins
+20. Mostly settled (2026-11-17): the automatic mapping already skips
+    non-automatable parameters (PluginProcessor.cpp), and the user saw
+    no ZAM meter among the mapped or shown parameters. Left to check: how
+    the generic controls show a read-only parameter, if one shows at all.
+    Original note, later, low priority (seen 2026-11-06 with the Zam plugins): plugins
     whose meters are output parameters. DPF plugins (Zam, and others built
     on DPF) declare meters as `kParameterIsOutput` (ZamComp: "Gain
     Reduction", "Output Level"), read-only in VST3 and reported from
@@ -179,6 +183,13 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     conditions of use, installation and packaging, the server as a
     service, and checking each statement against the running software.
     Keep it in step when the plugin or the server change.
+26. Only when a script needs it (user, 2026-11-17): JSFX variables that
+    the audio code assigns inside functions. `JsfxView` puts back, before
+    each frame, the server's value of the variables assigned in `@sample`
+    and `@block` (jsfx-plan.md, phase 5), found by a lexical scan that
+    misses assignments inside functions called from there. Extend the scan
+    to the bodies of the functions those sections call (and what they
+    call), if a script's display stays still because of it.
 13. Later, optional: mDNS publishing (`_fxmenet._tcp`) for system browsers.
 8. Phase 4: shadow editors and telemetry; port Compressor and Equalizer.
    - 8c (written): telemetry into the shadows. Build the plugin; in Reaper
