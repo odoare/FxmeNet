@@ -101,18 +101,44 @@ cmake --build build --target FxmeNetPlugin_VST3 -j2
 cmake --build build --target FxmeNetTop -j2
 ```
 
-## Plugins made for FxmeNet
+## Tested plugins
 
-- [FxmeFX](https://github.com/odoare/FxmeFX): A series of 19 plugins (compressor, equalizer, tube,
-  transient shaper, delay, reverbs, cabinet, limiter, gate, de-esser, neural amp modeller, and more)
-- [Stairwell to Heaven](https://github.com/odoare/StairwellToHeaven): A versatile reverberation, with fancy shimmer features (not not publicly released yet, comming soon).
-- [AmbiRR2](https://github.com/odoare/AmbiRR2): A virtual room simulator with up to 16 virtual sources in space, for physically and sonnically correct scenes.
+From the most to the least compatible. A plugin installed on the client too
+shows its own editor there, kept in step with the server's copy (tier 1). A
+plugin made for FxmeNet also shows its real meters and analysers (tier 2).
 
-Some plugins, even if not made with FxmeNet compatibility in mind, might just work well, for two reasons:
-- They don't draw any monitoring information such as vu-meters, oscilloscopes and spectrum display
-- They use standard plugin parameters to transmit these data
+### Fully compatible, made for FxmeNet (tier 2)
 
-Any feedback on this is welcome. To make your own plugin compatible, see the developer chapter of the manual.
+- [FxmeFX](https://github.com/odoare/FxmeFX): a series of 19 plugins (compressor, equalizer, tube,
+  transient shaper, delay, reverbs, cabinet, limiter, gate, de-esser, neural amp modeller, and more).
+- [Stairwell to Heaven](https://github.com/odoare/StairwellToHeaven): a versatile reverberation, with
+  fancy shimmer features (not publicly released yet, coming soon).
+- [AmbiRR2](https://github.com/odoare/AmbiRR2): a virtual room simulator with up to 16 virtual sources
+  in space, for physically and sonically correct scenes.
+
+More to come.
+
+### Fully compatible, monitoring through parameters (tier 1)
+
+These plugins send their meters as plugin parameters, so their editors show them as on the server.
+
+- [ZAM plugins](https://zamaudio.com/).
+
+### Working, without monitoring animations (tier 1)
+
+Sound and controls work, but meters, oscilloscopes and spectrum displays stay still, since they are
+drawn from audio the client's copy never processes.
+
+### Not compatible
+
+- **plugdata**: a message sent in the patch (a number into the inlet of `[*~ 1]`, for example) never
+  reaches the server, since it is neither a parameter nor part of the saved patch. Each edit of the
+  patch also reloads it whole on the server.
+- **Native Instruments FM8 and Reaktor 6** (Windows): they fail to load on the server
+  (`cannot resolve resource: application_ENG`), and Reaktor makes the server crash.
+
+Any feedback on other plugins is welcome. To make your own plugin compatible, see the developer
+chapter of the manual.
 
 ## Documentation
 
