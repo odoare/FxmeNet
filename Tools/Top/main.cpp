@@ -26,6 +26,7 @@
 
 #include <juce_core/juce_core.h>
 
+#include <FxmeNet/Version.h>
 #include <FxmeNet/control/ControlConnection.h>
 #include <FxmeNet/control/ControlMessages.h>
 #include <FxmeNet/control/Discovery.h>

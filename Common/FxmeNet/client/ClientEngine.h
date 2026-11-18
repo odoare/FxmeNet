@@ -53,6 +53,7 @@
 
 #include <juce_core/juce_core.h>
 
+#include <FxmeNet/Version.h>
 #include <FxmeNet/jsfx/JsfxSync.h>
 #include <FxmeNet/client/AudioLink.h>
 #include <FxmeNet/client/BlockStream.h>
@@ -101,7 +102,7 @@ struct SlotModel
 class ClientEngine : private juce::Thread
 {
 public:
-    static constexpr const char* version = "0.1.0";
+    static constexpr const char* version = FXMENET_VERSION;   // FxmeNet/Version.h (cmake/Version.cmake)
     static constexpr int reconnectMs = 2000;
     static constexpr int pingMs = 1000;
 

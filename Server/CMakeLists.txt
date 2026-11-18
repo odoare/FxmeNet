@@ -25,7 +25,6 @@ target_compile_definitions(FxmeNetServer
         JUCE_USE_CURL=0
         JUCE_WEB_BROWSER=0
         JUCE_STRICT_REFCOUNTEDPOINTER=1
-        FXMENET_VERSION="${PROJECT_VERSION}"
 )
 
 # JSFX scripts in the chain (doc/jsfx-plan.md).

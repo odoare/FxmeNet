@@ -21,6 +21,7 @@
 
 #include <JuceHeader.h>
 
+#include <FxmeNet/Version.h>
 #include <FxmeNet/control/Discovery.h>
 
 #include "PluginProcessor.h"
@@ -93,7 +94,7 @@ private:
     fxme::FxmeLookAndFeel laf;
 
     fxme::TopBar topBar { fxmenet::plugin::theme::displayName, "Plugins processed on a server on the network",
-                          JucePlugin_VersionString, assetImage ("logo686_png") };
+                          FXMENET_VERSION, assetImage ("logo686_png") };
     fxme::AccentToggle tooltipsButton;
     fxme::InfoButton infoButton;
 

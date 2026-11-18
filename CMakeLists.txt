@@ -9,7 +9,9 @@ if(APPLE)
     set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Target architectures")
 endif()
 
-project(FxmeNet VERSION 0.1.0 LANGUAGES C CXX)
+# The version: the latest git tag vX.Y.Z (cmake/Version.cmake).
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Version.cmake)
+project(FxmeNet VERSION ${FXMENET_VERSION_NUMERIC} LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

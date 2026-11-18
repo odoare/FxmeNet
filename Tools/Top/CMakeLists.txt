@@ -12,7 +12,6 @@ target_compile_definitions(FxmeNetTop
         JUCE_USE_CURL=0
         JUCE_WEB_BROWSER=0
         JUCE_STRICT_REFCOUNTEDPOINTER=1
-        FXMENET_VERSION="${PROJECT_VERSION}"
 )
 
 target_link_libraries(FxmeNetTop

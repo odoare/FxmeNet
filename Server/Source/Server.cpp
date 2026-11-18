@@ -9,6 +9,7 @@
 
 #include "Server.h"
 #include <FxmeNet/transport/SocketBuffers.h>
+#include <FxmeNet/Version.h>
 
 namespace fxmenet::server
 {

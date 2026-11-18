@@ -54,7 +54,7 @@ jobs:
           path: manual
 
       - name: Configure
-        run: cmake -B FxmeNet/build -S FxmeNet -DCMAKE_BUILD_TYPE=Release -DFXME_USE_SIBLINGS=OFF -DFXMENET_BUILD_SPIKES=OFF
+        run: cmake -B FxmeNet/build -S FxmeNet -DCMAKE_BUILD_TYPE=Release -DFXME_USE_SIBLINGS=OFF -DFXMENET_BUILD_SPIKES=OFF -DFXMENET_VERSION="${VERSION#v}"
 
       - name: Build (one target at a time, to bound memory)
         run: |
@@ -99,7 +99,7 @@ jobs:
       - name: Configure
         # Static C runtime: nothing to install for the user.
         shell: pwsh
-        run: cmake -B FxmeNet/build -S FxmeNet -G "Visual Studio 17 2022" -DFXME_USE_SIBLINGS=OFF -DFXMENET_BUILD_SPIKES=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded
+        run: cmake -B FxmeNet/build -S FxmeNet -G "Visual Studio 17 2022" -DFXME_USE_SIBLINGS=OFF -DFXMENET_BUILD_SPIKES=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DFXMENET_VERSION="$($env:VERSION -replace '^v','')"
 
       - name: Build (one target at a time)
         shell: pwsh
@@ -161,6 +161,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=Release
           -DFXME_USE_SIBLINGS=OFF
           -DFXMENET_BUILD_SPIKES=OFF
+          -DFXMENET_VERSION="${VERSION#v}"
           -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
           -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13
 
