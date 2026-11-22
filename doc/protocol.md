@@ -123,7 +123,8 @@ two blocks; a slot's processing never stops for another slot's edit.
 ```json
 { "uid": "1668ba35", "name": "FxmeCompressor", "vendor": "FX-Mechanics",
   "version": "0.5.0", "category": "Fx|Dynamics", "sha256": "...",
-  "inputs": 2, "outputs": 2, "fxmenetAbi": 1, "platforms": ["x86_64-linux"] }
+  "inputs": 2, "outputs": 2, "fxmenetAbi": 1, "instrument": false,
+  "platforms": ["x86_64-linux"] }
 ```
 
 `platforms` uses the folder names of a VST3 bundle (`x86_64-linux`,
@@ -136,7 +137,9 @@ normalised so it is the same on every OS (amended 2026-11-02: JUCE's hosting
 API does not expose the 16-byte class id itself). Never JUCE's identifier
 string, which also hashes the file path. `version` and `sha256` decide tier 2
 compatibility (section 2.4 of the plan). `fxmenetAbi` is null for a plugin
-that does not answer `INetPlugin`.
+that does not answer `INetPlugin`. `instrument` (added 2026-11-23): the
+plugin is a synthesizer or sampler (JUCE's `isInstrument`); FxmeNet
+Instrument lists these first, FxmeNet hides them.
 
 ### 4.4 Parameters (in `SLOT_READY`)
 

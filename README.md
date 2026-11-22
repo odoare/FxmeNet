@@ -4,11 +4,12 @@
 
 # FxmeNet
 
-FxmeNet lets your DAW run its effects on another computer. In the DAW you
-insert one plugin, **FxmeNet** (VST3, AU on macOS). Behind it, a chain of VST3
-effects runs on a **server** (`fxmenet-server`) on the same local network. The
-audio goes to the server and comes back; the DAW sees one ordinary plugin and
-compensates the latency it reports.
+FxmeNet lets your DAW run its effects and instruments on another computer. In
+the DAW you insert one plugin, **FxmeNet** on an audio track or **FxmeNet
+Instrument** on an instrument track (VST3, AU on macOS). Behind it, a chain of
+VST3 plugins runs on a **server** (`fxmenet-server`) on the same local network.
+The audio and MIDI go to the server and the audio comes back; the DAW sees one
+ordinary plugin and compensates the latency it reports.
 
 Use it when a session with many heavy plugins exhausts the CPU of the computer
 that runs the DAW. In our tests, 24 tracks with 17 plugins each used 75 % of the
@@ -42,6 +43,8 @@ Made by [FX-Mechanics](https://fx-mechanics.com).
 - **Latency against reliability.** Audio travels in blocks of N samples (32 to
   1024) over UDP, and each reply has D blocks (1 to 8) to come back. A late block
   is concealed with a short fade. The added latency is about N × D samples.
+- **Instruments.** FxmeNet Instrument plays the server's synthesizers and
+  samplers from the track's MIDI, followed by effects in the same chain.
 - **JSFX scripts.** REAPER's JSFX effects, from this computer's REAPER folder or
   your own, run in the server's chain like plugins, with their sliders and their
   own display. REAPER is not needed.
@@ -56,7 +59,9 @@ Please note:
   It is however perfect for mixing and production.
 - This is for a local network you control. The traffic is not encrypted and there is no
   password...
-- For now the server hosts VST3 effects, not instruments. But this might change in future versions.
+- Instruments are played with the chain's latency: fine for MIDI tracks played back (the DAW
+  compensates it), late when playing live. Synthesizers' own on-screen keyboards do not sound
+  (use a MIDI track or controller), and samplers need their sample libraries on the server.
 
 ## Requirements
 
@@ -84,11 +89,11 @@ is installed with the programs.
 
 ## Quick start
 
-1. Install the server on the effects computer, and the plugin on the DAW
+1. Install the server on the processing computer, and the plugins on the DAW
    computer (they can be the same machine).
-2. Install the VST3 effects you want on the server.
+2. Install the VST3 effects and instruments you want on the server.
 3. Start the server: `fxmenet-server`
-4. In the DAW, add **FxmeNet** to a track, click **Find**, choose the server,
+4. In the DAW, add **FxmeNet** to a track (or **FxmeNet Instrument** to an instrument track), click **Find**, choose the server,
    click **Connect**, then add plugins from the server's list.
 
 ## Build from source

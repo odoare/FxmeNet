@@ -67,17 +67,19 @@ folder:
 cmake -S . -B build
 cmake --build build --target FxmeNetServer -j2
 cmake --build build --target FxmeNetPlugin_VST3 -j2
+cmake --build build --target FxmeNetInstrument_VST3 -j2
 cmake --build build --target FxmeNetTop -j2
 \end{lstlisting}
 
-This gives three programs, inside the \file{build} folder: the server
-(\cmd{fxmenet-server}), the plugin (\file{FxmeNet.vst3}) and the monitoring
+This gives, inside the \file{build} folder: the server
+(\cmd{fxmenet-server}), the two plugins (\file{FxmeNet.vst3} and
+\file{FxmeNet Instrument.vst3}) and the monitoring
 tool (\cmd{fxmenet-top}, chapter~\ref{ch:top}). Copy them where the
 installers would put them.
 
 \section{Install the plugins on the server}
 
-The server offers the VST3 effects it finds in its plugin folders: the
+The server offers the VST3 effects and instruments it finds in its plugin folders: the
 standard VST3 folders of the machine (on Linux, typically
 \file{~/.vst3}, \file{/usr/lib/vst3} and
 \file{/usr/local/lib/vst3}), plus any you add (section~\ref{sec:folders}).
