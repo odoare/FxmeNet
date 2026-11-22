@@ -2,7 +2,7 @@
 #
 #   make            build and install the server and the VST3 plugin
 #   make server     build fxmenet-server, install it in $(BINDIR)
-#   make plugin     build FxmeNet.vst3, install it in $(VST3DIR)
+#   make plugin     build FxmeNet.vst3 and FxmeNet Instrument.vst3, install them in $(VST3DIR)
 #   make top        build fxmenet-top, install it in $(BINDIR)
 #   make tests      build and run the protocol tests
 #
@@ -31,9 +31,11 @@ server: configure
 
 plugin: configure
 	$(CMAKE_BUILD) FxmeNetPlugin_VST3
+	$(CMAKE_BUILD) FxmeNetInstrument_VST3
 	mkdir -p $(VST3DIR)
-	rm -rf $(VST3DIR)/FxmeNet.vst3
+	rm -rf "$(VST3DIR)/FxmeNet.vst3" "$(VST3DIR)/FxmeNet Instrument.vst3"
 	cp -R $(BUILD)/Plugin/FxmeNetPlugin_artefacts/VST3/FxmeNet.vst3 $(VST3DIR)/
+	cp -R "$(BUILD)/Plugin/FxmeNetInstrument_artefacts/VST3/FxmeNet Instrument.vst3" $(VST3DIR)/
 
 top: configure
 	$(CMAKE_BUILD) FxmeNetTop

@@ -416,13 +416,11 @@ PluginCatalog::Outcome PluginCatalog::scanFiles (const juce::FileSearchPath& pat
             record->addChildElement (xml.release());
 
             const auto& d = entry.description;
-            if (d.isInstrument)
-                continue;   // FxmeNet hosts effects
             if (isKnown (d))
                 continue;   // the same plugin in two folders: the first wins
             log ("  " + d.name + " " + d.version + " (" + d.manufacturerName + "), uid "
                  + juce::String::toHexString (d.uniqueId).paddedLeft ('0', 8)
-                 + (entry.fxmenetAbi > 0 ? ", FxmeNet-aware" : ""));
+                 + (entry.fxmenetAbi > 0 ? ", FxmeNet-aware" : "") + (d.isInstrument ? ", instrument" : ""));
             found.add (entry);
         }
     }
@@ -463,6 +461,7 @@ std::vector<control::PluginEntry> PluginCatalog::getEntries() const
         e.inputs = d.numInputChannels;
         e.outputs = d.numOutputChannels;
         e.fxmenetAbi = entry.fxmenetAbi;
+        e.isInstrument = d.isInstrument;
         e.platforms.add (bundlePlatformFolder());
         out.push_back (e);
     }

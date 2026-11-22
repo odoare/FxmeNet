@@ -32,7 +32,7 @@ namespace
     bool isOwn (const juce::PluginDescription& d)
     {
         return d.manufacturerName == "FX-Mechanics"
-            && (d.name == "FxmeNet" || d.name == "FxmeNetSpikeNested");   // not FxmeNetGainPan
+            && (d.name == "FxmeNet" || d.name == "FxmeNet Instrument" || d.name == "FxmeNetSpikeNested");   // not FxmeNetGainPan
     }
 
     struct Hash
@@ -153,7 +153,7 @@ void LocalCatalog::scan (bool full)
     {
         const auto binary = catalog::pluginBinary (juce::File (t.fileOrIdentifier));
         const auto it = hashes.find (t.fileOrIdentifier);
-        if (it != hashes.end()   // none for the plugins not offered (instruments, FxmeNet's own)
+        if (it != hashes.end()   // none for the plugins not offered (FxmeNet's own)
             && (it->second.size != binary.getSize()
                 || it->second.modified != binary.getLastModificationTime().toMilliseconds()))
             list.removeType (t);
@@ -195,8 +195,8 @@ void LocalCatalog::scan (bool full)
     {
         if (threadShouldExit())
             break;
-        if (t.isInstrument || isOwn (t))
-            continue;   // FxmeNet hosts effects
+        if (isOwn (t))
+            continue;
 
         const auto binary = catalog::pluginBinary (juce::File (t.fileOrIdentifier));
         Hash h { binary.getSize(), binary.getLastModificationTime().toMilliseconds(), {} };

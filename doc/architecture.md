@@ -415,7 +415,8 @@ The DAW glue around `ClientEngine`; product name "FxmeNet", VST3 and AU
   (every word typed must be in the name); while typing, the first match is
   selected and Return adds it; the selection follows its plugin when the
   list changes. FxmeNet and its spikes are never listed;
-  instruments are left out (FxmeNet hosts effects). The plugin is built
+  instruments are listed only in FxmeNet Instrument, first
+  (doc/instrument-plan.md). The plugin is built
   with `JUCE_PLUGINHOST_VST3`.
 - Shadows (`Shadow.h`, Phase 4 step 8b): a slot's local copy, created the
   first time its editor is asked for (a slot that is loaded and tier 1 or

@@ -234,10 +234,16 @@ void FxmeNetAudioProcessorEditor::refreshCatalog()
     std::vector<fxmenet::plugin::LocalMatch> matches;
     matches.reserve (catalog.size());
     shown.clear();
+    int offered = 0;   // what this variant lists, before the filter
     for (std::size_t i = 0; i < catalog.size(); ++i)
     {
         const bool script = (int) i >= numServerEntries;
         matches.push_back (script ? fxmenet::plugin::LocalMatch {} : processor.matchLocal (catalog[i]));
+       #if ! FXMENET_INSTRUMENT
+        if (! script && catalog[i].isInstrument)
+            continue;   // the effect variant has no use for instruments (doc/instrument-plan.md)
+       #endif
+        ++offered;
         bool keep = true;
         for (auto& w : words)   // a script: its path or its description
             keep = keep && (catalog[i].name.containsIgnoreCase (w)
@@ -247,12 +253,18 @@ void FxmeNetAudioProcessorEditor::refreshCatalog()
     }
 
     // T2, T1, T0 (and "T?" while the local scan runs), then the JSFX scripts; by name.
+    // The instrument variant: its instruments first, in the same order.
     const auto rank = [&] (int i)
     {
         if (i >= numServerEntries)
             return -2;
         const auto& m = matches[(std::size_t) i];
-        return m.kind == fxmenet::plugin::LocalMatch::Kind::unknown ? -1 : m.tier;
+        const int tier = m.kind == fxmenet::plugin::LocalMatch::Kind::unknown ? -1 : m.tier;
+       #if FXMENET_INSTRUMENT
+        if (catalog[(std::size_t) i].isInstrument)
+            return tier + 10;
+       #endif
+        return tier;
     };
     std::stable_sort (shown.begin(), shown.end(), [&] (int a, int b)
     {
@@ -283,7 +295,7 @@ void FxmeNetAudioProcessorEditor::refreshCatalog()
         }
         catalogRows.rows.push_back ({ e.name,
                                       e.vendor + "  " + juce::String (e.inputs) + "/" + juce::String (e.outputs)
-                                          + "  " + tierTag (m),
+                                          + (e.isInstrument ? "  INST" : "") + "  " + tierTag (m),
                                       tierColour (m),
                                       m.text });
     }
@@ -291,8 +303,8 @@ void FxmeNetAudioProcessorEditor::refreshCatalog()
     if (reselect < 0 && filterChanged && filter.isNotEmpty() && ! shown.empty())
         reselect = 0;
 
-    catalogCount = filter.isEmpty() ? juce::String ((int) catalog.size())
-                                    : juce::String ((int) shown.size()) + " / " + juce::String ((int) catalog.size());
+    catalogCount = filter.isEmpty() ? juce::String (offered)
+                                    : juce::String ((int) shown.size()) + " / " + juce::String (offered);
     catalogList.updateContent();
     if (reselect >= 0)
         catalogList.selectRow (reselect);
