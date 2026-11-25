@@ -47,7 +47,8 @@ Server/Source/          fxmenet-server: Main (options, signals, message loop),
                         JSFX script as a plugin of the chain, on the fxjsfx
                         library), Monitor (fxmenet-top's connections),
                         SystemLoad, UdpPeer, Log
-Plugin/                 FxmeNetPlugin ("FxmeNet", VST3 and AU): the client in the DAW,
+Plugin/                 FxmeNetPlugin ("FxmeNet", VST3 and AU) and FxmeNetInstrument
+                        ("FxmeNet Instrument", same sources, FXMENET_INSTRUMENT=1): the client in the DAW,
                         processor, 256-parameter pool, editor and its panels
 Examples/GainPan/       FxmeNetGainPan: gain, balance, stereo in/out meters, the
                         full FX-Mechanics shell; the FxmeNet-aware howto plugin
@@ -415,7 +416,8 @@ The DAW glue around `ClientEngine`; product name "FxmeNet", VST3 and AU
   (every word typed must be in the name); while typing, the first match is
   selected and Return adds it; the selection follows its plugin when the
   list changes. FxmeNet and its spikes are never listed;
-  instruments are left out (FxmeNet hosts effects). The plugin is built
+  instruments are listed only in FxmeNet Instrument, first
+  (doc/instrument-plan.md). The plugin is built
   with `JUCE_PLUGINHOST_VST3`.
 - Shadows (`Shadow.h`, Phase 4 step 8b): a slot's local copy, created the
   first time its editor is asked for (a slot that is loaded and tier 1 or

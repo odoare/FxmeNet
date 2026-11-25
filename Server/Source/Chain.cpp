@@ -74,7 +74,11 @@ Chain::Slot::~Slot()
         instance->releaseResources();
 }
 
-Chain::Chain() = default;
+Chain::Chain()
+{
+    merged.ensureSize ((std::size_t) (8 * (int) wire::maxMidiBytes + MidiGuard::releaseSize()));
+    releases.ensureSize ((std::size_t) MidiGuard::releaseSize());
+}
 
 Chain::~Chain()
 {
@@ -373,8 +377,21 @@ bool Chain::publish()
 }
 
 //==============================================================================
-void Chain::process (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi, bool offline, bool reset)
+void Chain::process (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi, bool offline, bool reset,
+                     bool releaseNotes)
 {
+    // A break: the notes held are released before this block's events.
+    if (releaseNotes && guard.isHolding())
+    {
+        merged.clear();
+        guard.addReleases (merged, 0);
+        merged.addEvents (midi, 0, -1, 0);
+        midi.clear();
+        midi.addEvents (merged, 0, -1, 0);
+        guard.clear();
+    }
+    guard.track (midi);
+
     // Hazard pointer: announce the snapshot, then check it is still current,
     // so publish() cannot free it between the two.
     Snapshot* s = nullptr;
@@ -400,11 +417,7 @@ void Chain::process (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi, b
                 instance.reset();   // a VST3: deactivated and activated again, so not free, but rare
             const int n = juce::jmin (slot->numChannels, buffer.getNumChannels());
             juce::AudioBuffer<float> view (buffer.getArrayOfWritePointers(), n, buffer.getNumSamples());
-
-            if (slot->bypassed.load())
-                instance.processBlockBypassed (view, midi);
-            else
-                instance.processBlock (view, midi);
+            processSlot (*slot, view, midi);
 
             total += instance.getLatencySamples();
         }
@@ -435,10 +448,7 @@ void Chain::processRouted (Snapshot& s, juce::AudioBuffer<float>& buffer, juce::
             instance.reset();
 
         juce::AudioBuffer<float> view (channels, width, count);
-        if (slot.bypassed.load())
-            instance.processBlockBypassed (view, midi);
-        else
-            instance.processBlock (view, midi);
+        processSlot (slot, view, midi);
 
         if (instance.getLatencySamples() != plan.getSlotLatency (index))
             latencyStale.store (true);   // the session's timer rebuilds the plan
@@ -451,6 +461,29 @@ void Chain::processRouted (Snapshot& s, juce::AudioBuffer<float>& buffer, juce::
         else
             buffer.clear (c, 0, n);
     }
+}
+
+void Chain::processSlot (Slot& slot, juce::AudioBuffer<float>& view, juce::MidiBuffer& midi)
+{
+    auto& instance = *slot.instance;
+    const bool bypassed = slot.bypassed.load();
+    if (bypassed && ! slot.wasBypassed && guard.isHolding())
+    {
+        // Just bypassed while notes are held: one more block processed, with
+        // only their release, so that none sounds again when it comes back.
+        releases.clear();
+        guard.addReleases (releases, 0);
+        instance.processBlock (view, releases);
+    }
+    else if (bypassed)
+    {
+        instance.processBlockBypassed (view, midi);
+    }
+    else
+    {
+        instance.processBlock (view, midi);
+    }
+    slot.wasBypassed = bypassed;
 }
 
 //==============================================================================

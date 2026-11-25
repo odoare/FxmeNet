@@ -15,7 +15,11 @@
 
 namespace fxmenet::plugin::theme
 {
+   #if FXMENET_INSTRUMENT
+    inline const juce::String displayName = "FxmeNet Instrument";
+   #else
     inline const juce::String displayName = "FxmeNet";
+   #endif
 
     inline const juce::Colour background { 0xff17161f };
     inline const juce::Colour topBarBg   { 0xff1f1e29 };

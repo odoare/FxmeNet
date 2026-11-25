@@ -44,6 +44,8 @@ public:
     {
         std::atomic<std::uint64_t> processed { 0 };
         std::atomic<std::uint64_t> lostBlocks { 0 };     ///< gaps skipped in real time
+        std::atomic<std::uint64_t> midiRecovered { 0 };  ///< MIDI events of lost blocks, from a history
+        std::atomic<std::uint64_t> notesDropped { 0 };   ///< of those, note-ons too late to play
         std::atomic<std::uint64_t> fromCache { 0 };      ///< duplicates and retries answered from the cache
         std::atomic<std::uint64_t> stale { 0 };          ///< too old for the cache, dropped
         std::atomic<std::uint64_t> queueFull { 0 };
@@ -149,7 +151,19 @@ private:
 
     void run() override;
     void handle (const Entry&);
-    void processBlock (const wire::BlockView&, std::uint16_t flags, std::int64_t arrived);
+    /** `releaseNotes`: a break before this block (Chain::process).
+        `missing`: blocks lost just before it, whose MIDI its history holds. */
+    void processBlock (const wire::BlockView&, std::uint16_t flags, std::int64_t arrived, bool releaseNotes = false,
+                       std::uint64_t missing = 0);
+
+    /** True when `v`'s MIDI history has an entry for each of the `missing`
+        blocks before it. */
+    static bool historyCovers (const wire::BlockView& v, std::uint64_t missing);
+
+    /** The events of the `missing` blocks before `v`, from its history, into
+        `midi` at offset 0, the oldest first. A note-on more than one block
+        late is left out (a note starting that late sounds wrong). */
+    void recoverMidi (const wire::BlockView& v, std::uint64_t missing);
     void send (const std::vector<std::uint8_t>& body);
     void drainHeld();
     void releaseStaleHeld();
@@ -174,6 +188,11 @@ private:
     std::array<Held, holdSize> held;
     std::array<Cached, cacheSize> cache;
     bool started = false;
+    bool releasePending = false;   ///< the first block after start(): the chain may hold notes from before
+
+    /** A gap at least this long (in real time) is a break: the notes held
+        are released (MidiGuard). Shorter ones are ordinary losses. */
+    static constexpr double releaseGapSeconds = 0.1;
     std::uint64_t expected = 0;
     bool haveParity = false, lastParity = false;   ///< reset parity of the last block processed
 

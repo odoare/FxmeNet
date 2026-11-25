@@ -257,6 +257,7 @@ struct PluginEntry
     juce::String name, vendor, version, category, sha256;
     int inputs = 2, outputs = 2;
     int fxmenetAbi = 0;   ///< 0: not FxmeNet-aware (null in the JSON)
+    bool isInstrument = false;   ///< a synthesizer or sampler (doc/instrument-plan.md)
     juce::StringArray platforms;
 
     juce::var toVar() const
@@ -271,6 +272,7 @@ struct PluginEntry
         o->setProperty ("inputs", inputs);
         o->setProperty ("outputs", outputs);
         o->setProperty ("fxmenetAbi", fxmenetAbi > 0 ? juce::var (fxmenetAbi) : juce::var());
+        o->setProperty ("instrument", isInstrument);
         o->setProperty ("platforms", json::stringArray (platforms));
         return o;
     }
@@ -287,6 +289,7 @@ struct PluginEntry
         p.inputs = json::get (v, "inputs", p.inputs);
         p.outputs = json::get (v, "outputs", p.outputs);
         p.fxmenetAbi = v["fxmenetAbi"].isVoid() ? 0 : (int) v["fxmenetAbi"];
+        p.isInstrument = (bool) v["instrument"];
         p.platforms = json::toStringArray (v["platforms"]);
         return p;
     }

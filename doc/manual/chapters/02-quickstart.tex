@@ -16,7 +16,8 @@ same computer). The installers let you choose.
 
 \begin{description}
   \item[Windows] Run \file{FxmeNet-X.Y.Z-Windows-Setup.exe} and
-    choose \ui{Plugin only}, \ui{Server only} or both. The plugin goes to
+    choose \ui{Plugin only}, \ui{Server only} or both. The two plugins,
+    \ui{FxmeNet} and \ui{FxmeNet Instrument}, go to
     \file{C:\Program Files\Common Files\VST3}, and the server and
     \cmd{fxmenet-top} to \file{C:\Program Files\FxmeNet}, with a Start menu
     entry for this manual. Two options are offered: adding the folder to the
@@ -27,8 +28,8 @@ same computer). The installers let you choose.
     \file{FxmeNet-X.Y.Z-Windows-x86_64.zip} and copy the files
     yourself.
   \item[macOS] Open \file{FxmeNet-X.Y.Z-macOS.pkg} and choose the
-    parts to install: the VST3 plugin (in
-    \file{/Library/Audio/Plug-Ins/VST3}), the Audio Unit (in
+    parts to install: the two VST3 plugins (in
+    \file{/Library/Audio/Plug-Ins/VST3}), their Audio Units (in
     \file{.../Components}), and the server with \cmd{fxmenet-top} (in
     \file{/usr/local/bin}). The programs are universal (Apple silicon and
     Intel). The package is not signed or notarized, so macOS may refuse to
@@ -38,7 +39,7 @@ same computer). The installers let you choose.
   \item[Linux] On Debian and Ubuntu, install
     \file{fxmenet_X.Y.Z_amd64.deb} with
     \cmd{sudo apt install ./fxmenet_*_amd64.deb}. It puts the programs in
-    \file{/usr/bin}, the plugin in \file{/usr/lib/vst3}, and an example
+    \file{/usr/bin}, the two plugins in \file{/usr/lib/vst3}, and an example
     \cmd{systemd} unit in \file{/usr/share/doc/fxmenet}. On other
     distributions, unpack
     \file{FxmeNet-X.Y.Z-Linux-x86_64.tar.gz} and run
@@ -67,17 +68,19 @@ folder:
 cmake -S . -B build
 cmake --build build --target FxmeNetServer -j2
 cmake --build build --target FxmeNetPlugin_VST3 -j2
+cmake --build build --target FxmeNetInstrument_VST3 -j2
 cmake --build build --target FxmeNetTop -j2
 \end{lstlisting}
 
-This gives three programs, inside the \file{build} folder: the server
-(\cmd{fxmenet-server}), the plugin (\file{FxmeNet.vst3}) and the monitoring
+This gives, inside the \file{build} folder: the server
+(\cmd{fxmenet-server}), the two plugins (\file{FxmeNet.vst3} and
+\file{FxmeNet Instrument.vst3}) and the monitoring
 tool (\cmd{fxmenet-top}, chapter~\ref{ch:top}). Copy them where the
 installers would put them.
 
 \section{Install the plugins on the server}
 
-The server offers the VST3 effects it finds in its plugin folders: the
+The server offers the VST3 effects and instruments it finds in its plugin folders: the
 standard VST3 folders of the machine (on Linux, typically
 \file{~/.vst3}, \file{/usr/lib/vst3} and
 \file{/usr/local/lib/vst3}), plus any you add (section~\ref{sec:folders}).

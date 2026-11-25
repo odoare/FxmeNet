@@ -893,9 +893,12 @@ private:
             link->setInputsUsed (e.routedInputs.load (std::memory_order_relaxed));
             const auto* midi = e.stream.getBlockMidi();
             const auto midiBytes = e.stream.getBlockMidiBytes();
+            // Real time: the previous blocks' MIDI too, against a lost request.
+            const auto* history = offline ? nullptr : e.stream.getBlockHistory();
+            const auto historyBytes = offline ? 0 : e.stream.getBlockHistoryBytes();
             if (transport == nullptr)
             {
-                link->send (k, block, nullptr, offline, resetParity, midi, midiBytes);
+                link->send (k, block, nullptr, offline, resetParity, midi, midiBytes, history, historyBytes);
                 return;
             }
 
@@ -905,7 +908,7 @@ private:
             t.timeInSamples += start;
             if (e.audioSampleRate > 0.0)
                 t.ppqPosition += start / e.audioSampleRate * t.bpm / 60.0;
-            link->send (k, block, &t, offline, resetParity, midi, midiBytes);
+            link->send (k, block, &t, offline, resetParity, midi, midiBytes, history, historyBytes);
         }
 
         bool fetchBlock (std::uint64_t k, float* const* dest)

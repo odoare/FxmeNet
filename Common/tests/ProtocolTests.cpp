@@ -208,6 +208,53 @@ int main()
     }
 
     //--------------------------------------------------------------------------
+    std::printf ("Audio request with a MIDI history\n");
+    {
+        constexpr int samples = 64;
+        auto audio = makeAudio (1, samples);
+        auto ptrs = pointers (audio);
+        BlockInfo info;
+        info.block = 10;
+        info.samples = samples;
+        info.mask = 1;
+        info.hasMidiHistory = true;
+
+        const std::uint8_t noteOff[] = { 0x80, 60, 0 };
+        Bytes previous, history;
+        MidiWriter (previous).add (12, noteOff, 3);
+        MidiHistoryWriter hw (history);
+        CHECK (hw.add (1, nullptr, 0));                          // block 9: no events
+        CHECK (hw.add (2, previous.data(), previous.size()));   // block 8: a note-off
+        CHECK (! hw.add (0, nullptr, 0));
+
+        Bytes body;
+        ByteWriter w (body);
+        writeBlock (w, false, info, nullptr, 0, ptrs.data(), history.data(), history.size());
+        CHECK (body.size() == 8 + 2 + 8 + 2 + 2 + history.size() + samples * 4);
+
+        BlockView v;
+        CHECK (readBlock (body.data(), body.size(), false, requestFlags::midiHistory, v));
+        CHECK (v.info.hasMidiHistory && v.historyBytes == history.size() && v.midiBytes == 0);
+        MidiHistoryReader hr (v.history, v.historyBytes);
+        int back = 0;
+        const std::uint8_t* events = nullptr;
+        std::size_t bytes = 0;
+        CHECK (hr.next (back, events, bytes) && back == 1 && bytes == 0);
+        CHECK (hr.next (back, events, bytes) && back == 2 && bytes == previous.size());
+        MidiReader mr (events, bytes);
+        MidiEvent e;
+        CHECK (mr.next (e) && e.sampleOffset == 12 && e.data[0] == 0x80);
+        CHECK (! hr.next (back, events, bytes));
+        std::vector<float> out (samples);
+        v.copyChannel (0, out.data());
+        CHECK (out == audio[0]);
+
+        // The history is capped.
+        Bytes big (maxMidiHistoryBytes, 0), capped;
+        CHECK (! MidiHistoryWriter (capped).add (1, big.data(), big.size()));
+    }
+
+    //--------------------------------------------------------------------------
     std::printf ("Audio reply\n");
     {
         auto audio = makeAudio (2, 64);

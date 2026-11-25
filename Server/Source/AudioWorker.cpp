@@ -35,7 +35,7 @@ AudioWorker::~AudioWorker()
 
 std::size_t AudioWorker::maxRequestSize (const control::Configure& c)
 {
-    return 64 + wire::transportSize + maxMidiBytes
+    return 64 + wire::transportSize + maxMidiBytes + 2 + wire::maxMidiHistoryBytes
          + (std::size_t) juce::jmax (c.numInputs, c.numOutputs) * (std::size_t) c.blockSize * 4;
 }
 
@@ -76,12 +76,13 @@ void AudioWorker::start (const control::Configure& c, std::uint32_t session, std
     }
 
     work.setSize (wire::maxChannels, config.blockSize);
-    midi.ensureSize (maxMidiBytes);
+    midi.ensureSize (8 * maxMidiBytes + (std::size_t) MidiGuard::releaseSize());   // the block's, a history's, a release   // room for a release (Chain::process)
     midiOut.reserve (maxMidiBytes);
     outputs.resize (wire::maxChannels);
     fragmenter = wire::Fragmenter ((std::size_t) config.datagramBudget);
 
     started = false;
+    releasePending = true;
     expected = 0;
     haveParity = false;   // the first block sets it: a stream starts with a fresh chain
 
@@ -201,10 +202,24 @@ void AudioWorker::handle (const Entry& e)
         return;
     }
 
+    // Lost blocks: their MIDI comes from this request's history. A gap it
+    // does not cover, or a long one (the client bypassed, the network gone
+    // a while): the note-offs sent meanwhile are lost, so the notes held are
+    // released.
+    bool release = std::exchange (releasePending, false);
+    std::uint64_t missing = 0;
     if (block > expected)
-        stats.lostBlocks.fetch_add (block - expected);
+    {
+        missing = block - expected;
+        stats.lostBlocks.fetch_add (missing);
+        const bool covered = historyCovers (v, missing);
+        release = release || ! covered
+               || (missing >= 2 && (double) missing * blockSeconds >= releaseGapSeconds);
+        if (! covered)
+            missing = 0;
+    }
 
-    processBlock (v, e.flags, e.arrived);
+    processBlock (v, e.flags, e.arrived, release, missing);
     expected = block + 1;
     drainHeld();
 }
@@ -283,7 +298,53 @@ void AudioWorker::releaseStaleHeld()
 }
 
 //==============================================================================
-void AudioWorker::processBlock (const wire::BlockView& v, std::uint16_t flags, std::int64_t arrived)
+bool AudioWorker::historyCovers (const wire::BlockView& v, std::uint64_t missing)
+{
+    if (! v.info.hasMidiHistory)
+        return false;
+    wire::MidiHistoryReader reader (v.history, v.historyBytes);
+    int back = 0;
+    const std::uint8_t* events = nullptr;
+    std::size_t bytes = 0;
+    std::uint64_t reach = 0;
+    while (reader.next (back, events, bytes) && (std::uint64_t) back == reach + 1)
+        reach = (std::uint64_t) back;
+    return reach >= missing;
+}
+
+void AudioWorker::recoverMidi (const wire::BlockView& v, std::uint64_t missing)
+{
+    // The entries come nearest first; the events go oldest first.
+    for (auto wanted = (int) missing; wanted >= 1; --wanted)
+    {
+        wire::MidiHistoryReader reader (v.history, v.historyBytes);
+        int back = 0;
+        const std::uint8_t* events = nullptr;
+        std::size_t bytes = 0;
+        while (reader.next (back, events, bytes))
+        {
+            if (back != wanted)
+                continue;
+            wire::MidiReader r (events, bytes);
+            wire::MidiEvent e;
+            while (r.next (e))
+            {
+                const bool noteOn = e.size >= 3 && (e.data[0] & 0xf0) == 0x90 && e.data[2] > 0;
+                if (noteOn && back > 1)
+                {
+                    stats.notesDropped.fetch_add (1);
+                    continue;
+                }
+                midi.addEvent (e.data, e.size, 0);
+                stats.midiRecovered.fetch_add (1);
+            }
+            break;
+        }
+    }
+}
+
+void AudioWorker::processBlock (const wire::BlockView& v, std::uint16_t flags, std::int64_t arrived, bool releaseNotes,
+                                std::uint64_t missing)
 {
     const auto t0 = juce::Time::getHighResolutionTicks();
     const int n = config.blockSize;
@@ -300,6 +361,8 @@ void AudioWorker::processBlock (const wire::BlockView& v, std::uint16_t flags, s
             v.copyChannel (ordinal++, work.getWritePointer (c));
 
     midi.clear();
+    if (missing > 0)
+        recoverMidi (v, missing);   // first: they came before this block's events
     wire::MidiReader reader (v.midi, v.midiBytes);
     wire::MidiEvent event;
     while (reader.next (event))
@@ -317,7 +380,7 @@ void AudioWorker::processBlock (const wire::BlockView& v, std::uint16_t flags, s
     if (reset)
         stats.resets.fetch_add (1);
 
-    chain.process (work, midi, (flags & wire::requestFlags::offline) != 0, reset);
+    chain.process (work, midi, (flags & wire::requestFlags::offline) != 0, reset, reset || releaseNotes);
 
     // Reply, written straight into its cache slot.
     auto& k = cache[(std::size_t) (v.info.block % cacheSize)];

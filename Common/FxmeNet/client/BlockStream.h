@@ -36,8 +36,17 @@
     the audio. A block filled over several callbacks gathers their events
     in order. Inside blockReady the block's events are getBlockMidi() /
     getBlockMidiBytes(), packed as on the wire (wire::MidiWriter). Events
-    over 255 bytes (long SysEx), and any beyond wire::maxMidiBytes in one
-    block, are dropped and counted.
+    beyond wire::maxMidiBytes in one block are not lost: they wait, in
+    order, and go at the start (offset 0) of the next blocks, one late block
+    being better than a lost note-off (doc/instrument-plan.md, phase 2).
+    Events over 255 bytes (long SysEx), and what does not fit in the waiting
+    room either (another block's worth), are dropped and counted.
+
+    Each block also comes with a MIDI history (getBlockHistory, packed by
+    wire::MidiHistoryWriter): the events of the previous R blocks, R = D
+    between 2 and wire::maxMidiHistoryBlocks, an entry per block even when
+    empty. A request lost on the network loses no note-off: the next one
+    carries it (doc/instrument-plan.md, phase 3).
 
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: LGPL-3.0-or-later
@@ -49,6 +58,7 @@
 #include <FxmeNet/protocol/Wire.h>
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <climits>
 #include <cstdint>
@@ -96,6 +106,18 @@ public:
         lastSample.assign ((std::size_t) nOut, 0.0f);
         midi.clear();
         midi.reserve (wire::maxMidiBytes);   // the audio thread only fills what is reserved
+        carry.clear();
+        carry.reserve (wire::maxMidiBytes);
+        carrySpare.clear();
+        carrySpare.reserve (wire::maxMidiBytes);
+        history.clear();
+        history.reserve (wire::maxMidiHistoryBytes);
+        for (auto& p : past)
+        {
+            p.clear();
+            p.reserve (wire::maxMidiBytes);
+        }
+        historyBlocks = std::clamp (budget, 2, wire::maxMidiHistoryBlocks);
 
         inPointers.clear();
         for (int c = 0; c < nIn; ++c)
@@ -131,6 +153,8 @@ public:
         std::fill (lastSample.begin(), lastSample.end(), 0.0f);
         fadeInPending = false;
         midi.clear();   // the partial block's events go with it
+        carry.clear();
+        pastBlock.fill (0);   // the numbering starts again
     }
 
     //==============================================================================
@@ -176,6 +200,10 @@ public:
     const std::uint8_t* getBlockMidi() const noexcept       { return midi.data(); }
     std::size_t getBlockMidiBytes() const noexcept          { return midi.size(); }
 
+    /** Inside blockReady: the previous blocks' MIDI (wire::MidiHistoryWriter). */
+    const std::uint8_t* getBlockHistory() const noexcept    { return history.data(); }
+    std::size_t getBlockHistoryBytes() const noexcept       { return history.size(); }
+
     /** MIDI events dropped (too long, or a block's share full). Any thread. */
     std::uint64_t getMidiDropped() const noexcept   { return midiDropped.load (std::memory_order_relaxed); }
 
@@ -212,8 +240,11 @@ private:
             if (fill == n)
             {
                 takeMidi (offset + pos, offset + pos - n);
-                network.blockReady (nextBlock++, inPointers.data(), offset + pos);
+                makeHistory (nextBlock);
+                network.blockReady (nextBlock, inPointers.data(), offset + pos);
+                keepPast (nextBlock++);
                 midi.clear();
+                takeCarry();
                 fill = 0;
             }
         }
@@ -291,15 +322,64 @@ private:
         for (; nextEvent < numEvents && events[nextEvent].position < end; ++nextEvent)
         {
             const auto& e = events[nextEvent];
-            if (e.data == nullptr || e.size <= 0 || e.size > 255
-                || midi.size() + 3 + (std::size_t) e.size > wire::maxMidiBytes)
+            if (e.data == nullptr || e.size <= 0 || e.size > 255)
             {
                 midiDropped.fetch_add (1, std::memory_order_relaxed);
+                continue;
+            }
+            // Behind events still waiting, or past the block's room: waits.
+            if (! carry.empty() || midi.size() + 3 + (std::size_t) e.size > wire::maxMidiBytes)
+            {
+                if (carry.size() + 3 + (std::size_t) e.size > wire::maxMidiBytes)
+                    midiDropped.fetch_add (1, std::memory_order_relaxed);
+                else
+                    wire::MidiWriter (carry).add (0, e.data, e.size);
                 continue;
             }
             const int at = std::clamp (e.position - blockStart, 0, n - 1);
             wire::MidiWriter (midi).add (at, e.data, e.size);
         }
+    }
+
+    /** Block k's history: an entry for each of the previous blocks kept,
+        the nearest first, as many as fit. */
+    void makeHistory (std::uint64_t k) noexcept
+    {
+        history.clear();
+        wire::MidiHistoryWriter writer (history);
+        for (int back = 1; back <= historyBlocks && (std::uint64_t) back <= k; ++back)
+        {
+            const auto j = k - (std::uint64_t) back;
+            const auto& p = past[(std::size_t) (j % past.size())];
+            if (pastBlock[(std::size_t) (j % past.size())] != j + 1
+                || ! writer.add (back, p.data(), p.size()))
+                break;   // not kept (after a flush), or no more room
+        }
+    }
+
+    void keepPast (std::uint64_t k) noexcept
+    {
+        const auto i = (std::size_t) (k % past.size());
+        past[i].assign (midi.begin(), midi.end());   // within the reserved capacity
+        pastBlock[i] = k + 1;
+    }
+
+    /** A new block: the events waiting go first, at offset 0, as many as
+        fit; the rest keeps waiting. No allocation (both reserved). */
+    void takeCarry() noexcept
+    {
+        if (carry.empty())
+            return;
+        carrySpare.clear();
+        wire::MidiReader reader (carry.data(), carry.size());
+        wire::MidiEvent e;
+        bool full = false;
+        while (reader.next (e))
+        {
+            full = full || midi.size() + 3 + (std::size_t) e.size > wire::maxMidiBytes;
+            wire::MidiWriter (full ? carrySpare : midi).add (0, e.data, e.size);
+        }
+        carry.swap (carrySpare);
     }
 
     void pushSilence (int count) noexcept
@@ -325,6 +405,11 @@ private:
     std::atomic<std::uint64_t> concealed { 0 };
 
     std::vector<std::uint8_t> midi;   ///< the current block's events, packed
+    std::vector<std::uint8_t> carry, carrySpare;   ///< events waiting for a block with room
+    std::vector<std::uint8_t> history;             ///< the current block's MIDI history
+    std::array<std::vector<std::uint8_t>, wire::maxMidiHistoryBlocks> past;   ///< by block % size
+    std::array<std::uint64_t, wire::maxMidiHistoryBlocks> pastBlock {};      ///< k + 1, 0: none
+    int historyBlocks = 2;
     const MidiInput* events = nullptr;
     int numEvents = 0, nextEvent = 0;
     std::atomic<std::uint64_t> midiDropped { 0 };

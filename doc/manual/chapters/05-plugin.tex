@@ -46,7 +46,8 @@ name, its vendor, its input and output channels, and a tag \tier{2},
 (chapter~\ref{ch:tiers}). Hover over a row to see why it has its tier.
 
 The list is sorted by tier (\tier{2} first, then \tier{1}, then \tier{0}) and
-by name inside each tier. While the plugin scans this computer for the first
+by name inside each tier. In \ui{FxmeNet Instrument}, instruments come
+first (tagged \ui{INST}), then effects; \ui{FxmeNet} lists no instruments. While the plugin scans this computer for the first
 time, the order is by name only, and the tags read \tier{?}.
 
 To find a plugin quickly, type a few letters in the \ui{Filter} field above
@@ -179,6 +180,38 @@ keep up with the chosen settings (chapter~\ref{ch:performance}).
   \item \textbf{Offline rendering.} When the DAW renders faster than real
     time (a bounce or an export), the plugin waits for each reply, so
     nothing is concealed and the result is exact.
+\end{itemize}
+
+\section{\ui{FxmeNet Instrument}}
+\label{sec:instrument}
+
+\fxme\ comes as two plugins built from the same code. \ui{FxmeNet} is an
+audio effect: it goes on audio tracks and buses. \ui{FxmeNet Instrument} is
+an instrument: it goes where your DAW expects one (an instrument or MIDI
+track), has no audio input, and sends the track's MIDI to the server. Most
+DAWs only offer instruments on instrument tracks, which is why there are two.
+Everything in this chapter applies to both.
+
+In \ui{FxmeNet Instrument}, add an instrument first, then effects after it:
+the chain is processed in order, as with \ui{FxmeNet}. The MIDI reaches every
+plugin of the chain.
+
+\begin{itemize}
+  \item \textbf{Latency.} The DAW compensates the chain's latency, so a MIDI
+    track plays in time. Playing live through the instrument is late by
+    that latency: record with a local instrument, or lower N and D while
+    recording (chapter~\ref{ch:performance}).
+  \item \textbf{On-screen keyboards.} The keyboard drawn in an instrument's
+    own editor plays the local copy (chapter~\ref{ch:tiers}), which
+    makes no sound. Play from a MIDI track or a controller.
+  \item \textbf{Samplers.} The samples must be installed on the server. The
+    local copy that shows the editor may load them too, from this computer.
+  \item \textbf{Notes left sounding.} The server knows which notes it is
+    playing and ends them when the DAW stops or jumps, when \fxme\ was
+    bypassed, when the network was cut for a moment, and when you bypass a
+    plugin of the chain. Each message also repeats the MIDI of the few
+    before it, so a lost message loses no note's end: it arrives one block
+    late. A note that would start more than a block late is skipped.
 \end{itemize}
 
 \section{The same project on another computer}

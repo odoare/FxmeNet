@@ -68,6 +68,11 @@ namespace requestFlags
         a one-off flag, so a lost request delays the reset by a block
         instead of losing it. */
     constexpr std::uint16_t resetParity = 1 << 3;
+
+    /** A MIDI history follows the block's MIDI (protocol.md section 5.2):
+        the events of the previous blocks, so that the server recovers those
+        of a lost request (doc/instrument-plan.md, phase 3). */
+    constexpr std::uint16_t midiHistory = 1 << 4;
 }
 
 struct DatagramHeader
@@ -208,6 +213,7 @@ struct BlockInfo
     // Request only.
     bool      hasTransport = false;
     Transport transport;
+    bool      hasMidiHistory = false;   ///< requestFlags::midiHistory
 
     // Reply only.
     std::uint32_t chainLatency  = 0;
@@ -270,12 +276,64 @@ private:
     ByteReader r;
 };
 
+/** The most bytes of a request's MIDI history, and the most blocks it
+    reaches back. */
+constexpr std::size_t maxMidiHistoryBytes = 8192;
+constexpr int maxMidiHistoryBlocks = 8;
+
+/** A request's MIDI history: one entry per previous block, the nearest
+    first (back = 1, 2, ...), each (u8 back, u16 bytes, packed MIDI as in
+    the block). An empty block has an entry with no bytes, so that the
+    server knows which blocks the history covers. */
+class MidiHistoryWriter
+{
+public:
+    explicit MidiHistoryWriter (std::vector<std::uint8_t>& destination) : out (destination) {}
+
+    /** False (nothing added) when it would pass maxMidiHistoryBytes. */
+    bool add (int back, const std::uint8_t* midi, std::size_t bytes)
+    {
+        if (back < 1 || back > 255 || out.size() + 3 + bytes > maxMidiHistoryBytes || bytes > 0xffff)
+            return false;
+        ByteWriter w (out);
+        w.u8 ((std::uint8_t) back);
+        w.u16 ((std::uint16_t) bytes);
+        if (bytes > 0)
+            w.bytes (midi, bytes);
+        return true;
+    }
+
+private:
+    std::vector<std::uint8_t>& out;
+};
+
+class MidiHistoryReader
+{
+public:
+    MidiHistoryReader (const std::uint8_t* data, std::size_t size) : r (data, size) {}
+
+    /** The next entry: how many blocks back, and its packed MIDI. */
+    bool next (int& back, const std::uint8_t*& midi, std::size_t& bytes)
+    {
+        if (r.remaining() == 0)
+            return false;
+        back = r.u8();
+        bytes = r.u16();
+        midi = bytes > 0 ? r.take (bytes) : nullptr;
+        return r.ok() && (bytes == 0 || midi != nullptr);
+    }
+
+private:
+    ByteReader r;
+};
+
 /** Writes an audio request (isReply false) or reply body. `channels` holds
     one pointer per bit set in info.mask, lowest channel first, each with
     info.samples samples. `midi` is packed (MidiWriter), may be empty. */
 inline void writeBlock (ByteWriter& w, bool isReply, const BlockInfo& info,
                         const std::uint8_t* midi, std::size_t midiBytes,
-                        const float* const* channels)
+                        const float* const* channels,
+                        const std::uint8_t* history = nullptr, std::size_t historyBytes = 0)
 {
     w.u64 (info.block);
     w.u16 (info.samples);
@@ -290,6 +348,12 @@ inline void writeBlock (ByteWriter& w, bool isReply, const BlockInfo& info,
         writeTransport (w, info.transport);
     if (midiBytes > 0)
         w.bytes (midi, midiBytes);
+    if (! isReply && info.hasMidiHistory)
+    {
+        w.u16 ((std::uint16_t) historyBytes);
+        if (historyBytes > 0)
+            w.bytes (history, historyBytes);
+    }
 
     const int n = countChannels (info.mask);
     for (int c = 0; c < n; ++c)
@@ -304,6 +368,8 @@ struct BlockView
     BlockInfo info;
     const std::uint8_t* midi = nullptr;
     std::size_t midiBytes = 0;
+    const std::uint8_t* history = nullptr;   ///< MIDI history (MidiHistoryReader), when the flag says
+    std::size_t historyBytes = 0;
     const std::uint8_t* audio = nullptr;   ///< f32 x samples per channel in the mask
 
     int numChannels() const noexcept  { return countChannels (info.mask); }
@@ -336,6 +402,16 @@ inline bool readBlock (const std::uint8_t* body, std::size_t size, bool isReply,
     if (v.info.hasTransport)
         v.info.transport = readTransport (r);
     v.midi = v.midiBytes > 0 ? r.take (v.midiBytes) : nullptr;
+    v.info.hasMidiHistory = ! isReply && (flags & requestFlags::midiHistory) != 0;
+    v.history = nullptr;
+    v.historyBytes = 0;
+    if (v.info.hasMidiHistory)
+    {
+        v.historyBytes = r.u16();
+        v.history = v.historyBytes > 0 ? r.take (v.historyBytes) : nullptr;
+        if (v.historyBytes > maxMidiHistoryBytes)
+            return false;
+    }
 
     const std::size_t audioBytes = (std::size_t) v.numChannels() * v.info.samples * 4;
     v.audio = r.take (audioBytes);

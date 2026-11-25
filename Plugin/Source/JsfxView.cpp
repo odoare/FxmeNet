@@ -68,7 +68,7 @@ namespace
                 {
                     std::size_t e = i + 1;
                     while (e < n && text[e] != c)
-                        e += text[e] == '\\' ? 2 : 1;
+                        e += text[e] == '\\' ? 2u : 1u;
                     i = e + 1;
                     continue;
                 }

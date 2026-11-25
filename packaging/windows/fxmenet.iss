@@ -1,6 +1,6 @@
 ; Inno Setup script for the FxmeNet installer.
 ; Built by CI:  iscc /DAppVersion=0.1.0 /DStageDir=<dir> /DOutDir=<dir> fxmenet.iss
-; StageDir holds: fxmenet-server.exe, fxmenet-top.exe, FxmeNet-manual.pdf, FxmeNet.vst3\ (bundle)
+; StageDir holds: fxmenet-server.exe, fxmenet-top.exe, FxmeNet-manual.pdf, FxmeNet.vst3\ and FxmeNet Instrument.vst3\ (bundles)
 
 #ifndef AppVersion
   #define AppVersion "0.0.0"
@@ -33,13 +33,13 @@ ChangesEnvironment=yes
 UninstallDisplayName=FxmeNet
 
 [Components]
-Name: "plugin"; Description: "FxmeNet plugin (VST3), for the computer that runs the DAW"; Types: full client custom
-Name: "server"; Description: "FxmeNet server and fxmenet-top, for the computer that runs the effects"; Types: full server custom
+Name: "plugin"; Description: "FxmeNet and FxmeNet Instrument plugins (VST3), for the computer that runs the DAW"; Types: full client custom
+Name: "server"; Description: "FxmeNet server and fxmenet-top, for the computer that runs the plugins"; Types: full server custom
 
 [Types]
 Name: "full"; Description: "Plugin and server"
 Name: "client"; Description: "Plugin only (DAW computer)"
-Name: "server"; Description: "Server only (effects computer)"
+Name: "server"; Description: "Server only (processing computer)"
 Name: "custom"; Description: "Custom"; Flags: iscustom
 
 [Tasks]
@@ -50,6 +50,7 @@ Name: "firewall"; Description: "Allow the server through Windows Firewall (UDP 5
 Source: "{#StageDir}\fxmenet-server.exe"; DestDir: "{app}"; Components: server; Flags: ignoreversion
 Source: "{#StageDir}\fxmenet-top.exe"; DestDir: "{app}"; Components: server; Flags: ignoreversion
 Source: "{#StageDir}\FxmeNet.vst3\*"; DestDir: "{commoncf64}\VST3\FxmeNet.vst3"; Components: plugin; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#StageDir}\FxmeNet Instrument.vst3\*"; DestDir: "{commoncf64}\VST3\FxmeNet Instrument.vst3"; Components: plugin; Flags: ignoreversion recursesubdirs createallsubdirs
 
 Source: "{#StageDir}\FxmeNet-manual.pdf"; DestDir: "{app}"; Flags: ignoreversion
 

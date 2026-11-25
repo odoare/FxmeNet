@@ -37,9 +37,7 @@ namespace
 
 //==============================================================================
 FxmeNetAudioProcessor::FxmeNetAudioProcessor()
-    : AudioProcessor (BusesProperties()
-                          .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
-                          .withOutput ("Output", juce::AudioChannelSet::stereo(), true))
+    : AudioProcessor (FxmeNetAudioProcessor::defaultBuses())
 {
     auto group = std::make_unique<juce::AudioProcessorParameterGroup> ("pool", "Parameters", "|");
     for (int i = 0; i < poolSize; ++i)
@@ -70,10 +68,27 @@ FxmeNetAudioProcessor::~FxmeNetAudioProcessor()
 }
 
 //==============================================================================
+juce::AudioProcessor::BusesProperties FxmeNetAudioProcessor::defaultBuses()
+{
+    // The instrument has no audio input (doc/instrument-plan.md): the
+    // session then sends none, and the chain is fed silence.
+   #if FXMENET_INSTRUMENT
+    return BusesProperties().withOutput ("Output", juce::AudioChannelSet::stereo(), true);
+   #else
+    return BusesProperties().withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
+                            .withOutput ("Output", juce::AudioChannelSet::stereo(), true);
+   #endif
+}
+
 bool FxmeNetAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
     const int in = layouts.getMainInputChannels(), out = layouts.getMainOutputChannels();
-    return in >= 1 && in <= fxmenet::wire::maxChannels && out >= 1 && out <= fxmenet::wire::maxChannels;
+   #if FXMENET_INSTRUMENT
+    const int minIn = 0;
+   #else
+    const int minIn = 1;
+   #endif
+    return in >= minIn && in <= fxmenet::wire::maxChannels && out >= 1 && out <= fxmenet::wire::maxChannels;
 }
 
 void FxmeNetAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
