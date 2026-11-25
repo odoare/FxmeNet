@@ -19,8 +19,10 @@
 \section{The plugin I want is not in the list}
 
 \begin{itemize}
-  \item It must be a VST3 \emph{effect} installed on the server, in a folder
+  \item It must be a VST3 plugin installed on the server, in a folder
     the server searches (section~\ref{sec:folders}).
+  \item An instrument is listed only in \ui{FxmeNet Instrument}, not in
+    \ui{FxmeNet} (section~\ref{sec:instrument}).
   \item Look at the server's log (or the \key{3} view of
     \cmd{fxmenet-top}) for ``skipped'': a plugin that crashed or hung when
     loaded is left out until it changes.
@@ -58,6 +60,21 @@ Look at where the problem is.
 If clicks persist, enable \ui{Log transport events} in the \ui{Settings}
 tab, reproduce the problem, and keep \file{fxmenet-client-events.log} and the
 server's log together for the report.
+
+\section{An instrument stays silent, or a note keeps sounding}
+
+\begin{itemize}
+  \item Is the track's MIDI reaching \ui{FxmeNet Instrument}? Arm or
+    select the track as your DAW requires, and check the track's MIDI
+    input. Notes played on the instrument's own on-screen keyboard make no
+    sound (section~\ref{sec:instrument}).
+  \item A sampler plays nothing: its samples must be installed on the
+    server, where its state says they are.
+  \item A note keeps sounding: stop the transport, which ends every note
+    held. Then look at the server's log: ``late notes dropped'' and ``MIDI
+    recovered'' rise with network loss; if they do, the network loses
+    messages (see the section below).
+\end{itemize}
 
 \section{Silence at start, stop or jump}
 

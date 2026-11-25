@@ -276,7 +276,12 @@ private:
 
     // Last, so it is destroyed first: its connection thread calls back into
     // the members above until it stops.
-    fxmenet::client::ClientEngine engine { "FxmeNetPlugin" };
+    // The name the server logs and fxmenet-top shows: which variant opened the session.
+   #if FXMENET_INSTRUMENT
+    fxmenet::client::ClientEngine engine { "FxmeNet Instrument" };
+   #else
+    fxmenet::client::ClientEngine engine { "FxmeNet" };
+   #endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FxmeNetAudioProcessor)
 };

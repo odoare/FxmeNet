@@ -47,7 +47,8 @@ Server/Source/          fxmenet-server: Main (options, signals, message loop),
                         JSFX script as a plugin of the chain, on the fxjsfx
                         library), Monitor (fxmenet-top's connections),
                         SystemLoad, UdpPeer, Log
-Plugin/                 FxmeNetPlugin ("FxmeNet", VST3 and AU): the client in the DAW,
+Plugin/                 FxmeNetPlugin ("FxmeNet", VST3 and AU) and FxmeNetInstrument
+                        ("FxmeNet Instrument", same sources, FXMENET_INSTRUMENT=1): the client in the DAW,
                         processor, 256-parameter pool, editor and its panels
 Examples/GainPan/       FxmeNetGainPan: gain, balance, stereo in/out meters, the
                         full FX-Mechanics shell; the FxmeNet-aware howto plugin
