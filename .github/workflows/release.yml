@@ -58,7 +58,7 @@ jobs:
 
       - name: Build (one target at a time, to bound memory)
         run: |
-          for t in FxmeNetServer FxmeNetTop FxmeNetPlugin_VST3; do
+          for t in FxmeNetServer FxmeNetTop FxmeNetPlugin_VST3 FxmeNetInstrument_VST3; do
             cmake --build FxmeNet/build --config Release --target "$t" --parallel 2
           done
 
@@ -70,6 +70,7 @@ jobs:
           mkdir -p "$stage/bin" "$stage/vst3"
           cp "$(find $b -type f -name fxmenet-server | head -1)" "$(find $b -type f -name fxmenet-top | head -1)" "$stage/bin/"
           cp -R "$(find $b -type d -name FxmeNet.vst3 | head -1)" "$stage/vst3/"
+          cp -R "$(find $b -type d -name 'FxmeNet Instrument.vst3' | head -1)" "$stage/vst3/"
           cp manual/FxmeNet-manual.pdf "$stage/"
           cp FxmeNet/packaging/linux/install.sh FxmeNet/packaging/linux/fxmenet-server.service "$stage/"
           tar czf "$stage.tar.gz" "$stage"
@@ -104,7 +105,7 @@ jobs:
       - name: Build (one target at a time)
         shell: pwsh
         run: |
-          foreach ($t in 'FxmeNetServer','FxmeNetTop','FxmeNetPlugin_VST3') {
+          foreach ($t in 'FxmeNetServer','FxmeNetTop','FxmeNetPlugin_VST3','FxmeNetInstrument_VST3') {
             cmake --build FxmeNet/build --config Release --target $t --parallel 2
             if ($LASTEXITCODE -ne 0) { throw "Build of $t failed" }
           }
@@ -118,6 +119,7 @@ jobs:
           cp "$(find $b -type f -name fxmenet-server.exe | head -1)" stage/
           cp "$(find $b -type f -name fxmenet-top.exe | head -1)" stage/
           cp -R "$(find $b -type d -name FxmeNet.vst3 | head -1)" stage/
+          cp -R "$(find $b -type d -name 'FxmeNet Instrument.vst3' | head -1)" stage/
 
       - name: Installer
         shell: pwsh
@@ -167,7 +169,7 @@ jobs:
 
       - name: Build (one target at a time)
         run: |
-          for t in FxmeNetServer FxmeNetTop FxmeNetPlugin_VST3 FxmeNetPlugin_AU; do
+          for t in FxmeNetServer FxmeNetTop FxmeNetPlugin_VST3 FxmeNetPlugin_AU FxmeNetInstrument_VST3 FxmeNetInstrument_AU; do
             cmake --build FxmeNet/build --config Release --target "$t" --parallel 2
           done
 
@@ -179,8 +181,11 @@ jobs:
           cp "$(find $b -type f -name fxmenet-server | head -1)" "$(find $b -type f -name fxmenet-top | head -1)" stage/
           cp -R "$(find $b -type d -name FxmeNet.vst3 | head -1)" stage/
           cp -R "$(find $b -type d -name FxmeNet.component | head -1)" stage/
+          cp -R "$(find $b -type d -name 'FxmeNet Instrument.vst3' | head -1)" stage/
+          cp -R "$(find $b -type d -name 'FxmeNet Instrument.component' | head -1)" stage/
           fail=0
-          for f in stage/fxmenet-server stage/fxmenet-top stage/FxmeNet.vst3/Contents/MacOS/FxmeNet stage/FxmeNet.component/Contents/MacOS/FxmeNet; do
+          for f in stage/fxmenet-server stage/fxmenet-top stage/FxmeNet.vst3/Contents/MacOS/FxmeNet stage/FxmeNet.component/Contents/MacOS/FxmeNet \
+                   "stage/FxmeNet Instrument.vst3/Contents/MacOS/FxmeNet Instrument" "stage/FxmeNet Instrument.component/Contents/MacOS/FxmeNet Instrument"; do
             archs=$(lipo -archs "$f"); echo "$f: $archs"
             case " $archs " in *" arm64 "*) ;; *) echo "::error::$f: no arm64"; fail=1 ;; esac
             case " $archs " in *" x86_64 "*) ;; *) echo "::error::$f: no x86_64"; fail=1 ;; esac

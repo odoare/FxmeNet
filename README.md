@@ -83,7 +83,9 @@ Download the files for your system from the
 | macOS   | `FxmeNet-X.Y.Z-macOS.pkg`                   | `FxmeNet-X.Y.Z-macOS-universal.zip`  |
 | Linux   | `fxmenet_X.Y.Z_amd64.deb`                   | `FxmeNet-X.Y.Z-Linux-x86_64.tar.gz` (run `./install.sh`) |
 
-The installers are not signed and, on macOS, not notarized, so the system may
+Each installs both plugins, **FxmeNet** and **FxmeNet Instrument**, with the
+server and `fxmenet-top` (the Windows and macOS installers let you choose the
+parts). The installers are not signed and, on macOS, not notarized, so the system may
 warn you the first time. The Audio Unit has not been tested yet. The PDF manual
 is installed with the programs.
 
@@ -106,6 +108,7 @@ clones, unless you pass `-DFXME_USE_SIBLINGS=OFF`).
 cmake -S . -B build
 cmake --build build --target FxmeNetServer -j2
 cmake --build build --target FxmeNetPlugin_VST3 -j2
+cmake --build build --target FxmeNetInstrument_VST3 -j2
 cmake --build build --target FxmeNetTop -j2
 ```
 
@@ -136,6 +139,10 @@ These plugins send their meters as plugin parameters, so their editors show them
 
 Sound and controls work, but meters, oscilloscopes and spectrum displays stay still, since they are
 drawn from audio the client's copy never processes.
+
+### Instruments (FxmeNet Instrument)
+
+- **Neckobi**: plays from the track's MIDI, no problem found.
 
 ### Not compatible
 

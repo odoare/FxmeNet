@@ -16,7 +16,8 @@ same computer). The installers let you choose.
 
 \begin{description}
   \item[Windows] Run \file{FxmeNet-X.Y.Z-Windows-Setup.exe} and
-    choose \ui{Plugin only}, \ui{Server only} or both. The plugin goes to
+    choose \ui{Plugin only}, \ui{Server only} or both. The two plugins,
+    \ui{FxmeNet} and \ui{FxmeNet Instrument}, go to
     \file{C:\Program Files\Common Files\VST3}, and the server and
     \cmd{fxmenet-top} to \file{C:\Program Files\FxmeNet}, with a Start menu
     entry for this manual. Two options are offered: adding the folder to the
@@ -27,8 +28,8 @@ same computer). The installers let you choose.
     \file{FxmeNet-X.Y.Z-Windows-x86_64.zip} and copy the files
     yourself.
   \item[macOS] Open \file{FxmeNet-X.Y.Z-macOS.pkg} and choose the
-    parts to install: the VST3 plugin (in
-    \file{/Library/Audio/Plug-Ins/VST3}), the Audio Unit (in
+    parts to install: the two VST3 plugins (in
+    \file{/Library/Audio/Plug-Ins/VST3}), their Audio Units (in
     \file{.../Components}), and the server with \cmd{fxmenet-top} (in
     \file{/usr/local/bin}). The programs are universal (Apple silicon and
     Intel). The package is not signed or notarized, so macOS may refuse to
@@ -38,7 +39,7 @@ same computer). The installers let you choose.
   \item[Linux] On Debian and Ubuntu, install
     \file{fxmenet_X.Y.Z_amd64.deb} with
     \cmd{sudo apt install ./fxmenet_*_amd64.deb}. It puts the programs in
-    \file{/usr/bin}, the plugin in \file{/usr/lib/vst3}, and an example
+    \file{/usr/bin}, the two plugins in \file{/usr/lib/vst3}, and an example
     \cmd{systemd} unit in \file{/usr/share/doc/fxmenet}. On other
     distributions, unpack
     \file{FxmeNet-X.Y.Z-Linux-x86_64.tar.gz} and run

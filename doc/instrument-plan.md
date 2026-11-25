@@ -173,9 +173,10 @@ Each ends usable; the user tests and commits between them.
 State (2026-11-25, branch FxmeNet-inst): phases 1 to 4 written, to be tried
 in DAWs; phase 4 without the on-screen keyboard (left for later, not a
 priority). Choices made: the name "FxmeNet Instrument"; FxmeNet lists no
-instruments; R = D, between 2 and 8. Not done: the installers and the
-release workflow (`packaging/`, `release.yml`) still ship FxmeNet alone;
-the README's tested plugins list no instrument yet (none tried).
+instruments; R = D, between 2 and 8. Tried 2026-11-25 with Neckobi:
+no problem (the README lists it). The installers and the release
+workflow ship both plugins (for 0.3.0). Not tried yet: the packet loss
+test of phase 3.
 Phase 2 as written: the server, not the client, tracks the notes
 (`MidiGuard`), since it knows what reached the plugins; the client's part
 is the overflow carried to the next block.
