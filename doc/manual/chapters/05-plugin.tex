@@ -209,8 +209,9 @@ plugin of the chain.
   \item \textbf{Notes left sounding.} The server knows which notes it is
     playing and ends them when the DAW stops or jumps, when \fxme\ was
     bypassed, when the network was cut for a moment, and when you bypass a
-    plugin of the chain. A single lost message can still lose a note's end
-    until the next of these; better protection is planned.
+    plugin of the chain. Each message also repeats the MIDI of the few
+    before it, so a lost message loses no note's end: it arrives one block
+    late. A note that would start more than a block late is skipped.
 \end{itemize}
 
 \section{The same project on another computer}

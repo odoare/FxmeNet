@@ -147,6 +147,7 @@ juce::String Session::describeActivity()
     return "session " + juce::String ((int) sessionId)
          + ": " + juce::String ((juce::int64) processed) + " blocks"
          + ", lost " + count (s.lostBlocks)
+         + " (MIDI recovered " + count (s.midiRecovered) + ", late notes dropped " + count (s.notesDropped) + ")"
          + ", stale " + count (s.stale)
          + ", from cache " + count (s.fromCache)
          + ", queue full " + count (s.queueFull)

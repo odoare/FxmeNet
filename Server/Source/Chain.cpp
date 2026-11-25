@@ -76,7 +76,7 @@ Chain::Slot::~Slot()
 
 Chain::Chain()
 {
-    merged.ensureSize ((std::size_t) (4 * (int) wire::maxMidiBytes + MidiGuard::releaseSize()));
+    merged.ensureSize ((std::size_t) (8 * (int) wire::maxMidiBytes + MidiGuard::releaseSize()));
     releases.ensureSize ((std::size_t) MidiGuard::releaseSize());
 }
 

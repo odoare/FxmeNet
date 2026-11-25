@@ -590,6 +590,58 @@ namespace
             CHECK (stream.getMidiDropped() == 3001 - 2 * kept);
         }
         std::printf ("  %d configurations\n", cases);
+
+        // The history: each block carries the events of the previous
+        // R = D blocks (at least 2), an entry per block, nearest first.
+        {
+            const int n = 64, d = 3;
+            BlockStream stream;
+            stream.prepare (1, 1, n, n, d);
+            struct HistoryNetwork
+            {
+                BlockStream* stream = nullptr;
+                std::vector<std::vector<std::uint8_t>> sent, histories;
+                void blockReady (std::uint64_t, const float* const*, int)
+                {
+                    sent.emplace_back (stream->getBlockMidi(), stream->getBlockMidi() + stream->getBlockMidiBytes());
+                    histories.emplace_back (stream->getBlockHistory(), stream->getBlockHistory() + stream->getBlockHistoryBytes());
+                }
+                bool fetchBlock (std::uint64_t, float* const*)   { return false; }
+            } net;
+            net.stream = &stream;
+            std::vector<float> buf ((std::size_t) n, 0.0f);
+            const float* inPtr = buf.data();
+            float* outPtr = buf.data();
+            for (int k = 0; k < 8; ++k)
+            {
+                const std::uint8_t note[3] = { 0x90, (std::uint8_t) k, 100 };
+                fxmenet::client::MidiInput event { 1, 3, note };
+                stream.process (&inPtr, &outPtr, n, net, k % 3 == 2 ? nullptr : &event, k % 3 == 2 ? 0 : 1);
+            }
+            bool right = net.histories.size() == 8;
+            for (std::size_t k = 0; right && k < net.histories.size(); ++k)
+            {
+                wire::MidiHistoryReader r (net.histories[k].data(), net.histories[k].size());
+                int back = 0, entries = 0;
+                const std::uint8_t* events = nullptr;
+                std::size_t bytes = 0;
+                while (r.next (back, events, bytes))
+                {
+                    ++entries;
+                    const auto& was = net.sent[k - (std::size_t) back];
+                    right = right && back == entries && bytes == was.size()
+                         && (bytes == 0 || std::equal (was.begin(), was.end(), events));
+                }
+                right = right && entries == std::min ((int) k, d);
+            }
+            CHECK (right);
+
+            // After a flush the numbering starts again: no history from before.
+            stream.flush();
+            net.histories.clear();
+            stream.process (&inPtr, &outPtr, n, net, nullptr, 0);
+            CHECK (net.histories.size() == 1 && net.histories[0].empty());
+        }
     }
 }
 

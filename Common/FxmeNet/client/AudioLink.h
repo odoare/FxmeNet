@@ -141,7 +141,8 @@ public:
         slots = juce::jmax (4, settings.maxInFlight);
 
         const int channelsSent = wire::countChannels (inputMask);
-        const std::size_t bodySize = 64 + wire::transportSize + wire::maxMidiBytes + (std::size_t) (channelsSent * n * 4);
+        const std::size_t bodySize = 64 + wire::transportSize + wire::maxMidiBytes + 2 + wire::maxMidiHistoryBytes
+                                   + (std::size_t) (channelsSent * n * 4);
         requests = std::make_unique<Request[]> ((std::size_t) slots);
         for (int i = 0; i < slots; ++i)
             requests[(std::size_t) i].body.reserve (bodySize);
@@ -193,12 +194,16 @@ public:
         `transportInfo` may be null. `resetParity`: the parity of the
         client's reset count (wire::requestFlags::resetParity). `midi`: the
         block's events, packed (wire::MidiWriter), at most
-        wire::maxMidiBytes. */
+        wire::maxMidiBytes. `history`: the previous blocks' MIDI
+        (wire::MidiHistoryWriter), null for none (offline: nothing is lost). */
     void send (std::uint64_t streamBlock, const float* const* block, const wire::Transport* transportInfo, bool offline,
-               bool resetParity = false, const std::uint8_t* midi = nullptr, std::size_t midiBytes = 0)
+               bool resetParity = false, const std::uint8_t* midi = nullptr, std::size_t midiBytes = 0,
+               const std::uint8_t* history = nullptr, std::size_t historyBytes = 0)
     {
         if (midi == nullptr || midiBytes > wire::maxMidiBytes)
             midiBytes = 0;
+        if (historyBytes > wire::maxMidiHistoryBytes)
+            history = nullptr;
 
         const auto k = base + streamBlock;
         nextWire = juce::jmax (nextWire, k + 1);
@@ -218,13 +223,15 @@ public:
         info.hasTransport = transportInfo != nullptr;
         if (transportInfo != nullptr)
             info.transport = *transportInfo;
+        info.hasMidiHistory = history != nullptr;
 
         r.body.clear();
         wire::ByteWriter w (r.body);
-        wire::writeBlock (w, false, info, midi, midiBytes, sendPointers.data());
+        wire::writeBlock (w, false, info, midi, midiBytes, sendPointers.data(), history, historyBytes);
         r.flags = (std::uint16_t) ((offline ? wire::requestFlags::offline : 0)
                                    | (transportInfo != nullptr ? wire::requestFlags::transport : 0)
-                                   | (resetParity ? wire::requestFlags::resetParity : 0));
+                                   | (resetParity ? wire::requestFlags::resetParity : 0)
+                                   | (history != nullptr ? wire::requestFlags::midiHistory : 0));
         r.block.store (k + 1, std::memory_order_relaxed);
         r.sentTicks.store (juce::Time::getHighResolutionTicks(), std::memory_order_release);
 

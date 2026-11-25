@@ -328,7 +328,8 @@ The server has no clock: it processes a block when its request arrives.
 
 Flags: bit 0 `offline` (no deadline: the client waits), bit 1 `retry` (a
 re-send of the same block), bit 2 `transport` present, bit 3 `resetParity`
-(added 2026-11-04, see 5.4).
+(added 2026-11-04, see 5.4), bit 4 `midiHistory` (added 2026-11-25, see
+5.4).
 
 ```
 u64 block        block index k since the session started (0, 1, 2, ...)
@@ -340,8 +341,15 @@ u16 midiBytes
     f64 loopStartPpq  u16 timeSigNumerator  u16 timeSigDenominator
     u8  bits (playing 0, recording 1, looping 2)  u8 pad[3]
 [MIDI, midiBytes]: events of (u16 sampleOffset, u8 size, bytes)
+[MIDI history, when flag 4]: u16 historyBytes, then entries of
+    (u8 back, u16 bytes, [MIDI as above]), back = 1, 2, ... the nearest first
 [audio]: f32 x N for each channel set in inputMask, lowest channel first
 ```
+
+The MIDI history repeats the MIDI of the previous blocks (k - back), an
+entry per block even when it had none, so the server knows which blocks it
+covers: R = D blocks, between 2 and 8, at most 8192 bytes (as many entries
+as fit). The client sends it in real time only.
 
 A disabled input (mask bit clear) is fed to the chain as silence.
 
@@ -367,7 +375,13 @@ u16 midiBytes
   events) on a reset (5.1), on the first block after a CONFIGURE, and when
   real-time blocks resume after a gap of at least 2 blocks and 100 ms (the
   client bypassed, or the network gone a while): the note-offs sent
-  meanwhile never arrived. A slot bypassed while notes are held gets one
+  meanwhile never arrived. **Lost blocks' MIDI (added 2026-11-25):** when
+  real-time blocks are missing and the arriving request's history has an
+  entry for each, their events are played at offset 0 of that block, the
+  oldest first, before its own; a note-on more than one block late is left
+  out (counted as "late notes dropped"), its note-off being harmless. A
+  gap the history does not cover releases the notes, as above. A slot
+  bypassed while notes are held gets one
   more processed block holding only their release. The client never drops
   MIDI for lack of room: what exceeds `maxMidiBytes` in a block goes at
   offset 0 of the next ones, in order (one block's worth at most waits).
