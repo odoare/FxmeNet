@@ -206,8 +206,11 @@ plugin of the chain.
     makes no sound. Play from a MIDI track or a controller.
   \item \textbf{Samplers.} The samples must be installed on the server. The
     local copy that shows the editor may load them too, from this computer.
-  \item \textbf{Network loss.} A lost message can lose a note's end, leaving
-    it sounding until the next stop or reset. Better protection is planned.
+  \item \textbf{Notes left sounding.} The server knows which notes it is
+    playing and ends them when the DAW stops or jumps, when \fxme\ was
+    bypassed, when the network was cut for a moment, and when you bypass a
+    plugin of the chain. A single lost message can still lose a note's end
+    until the next of these; better protection is planned.
 \end{itemize}
 
 \section{The same project on another computer}

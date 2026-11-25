@@ -149,7 +149,8 @@ private:
 
     void run() override;
     void handle (const Entry&);
-    void processBlock (const wire::BlockView&, std::uint16_t flags, std::int64_t arrived);
+    /** `releaseNotes`: a break before this block (Chain::process). */
+    void processBlock (const wire::BlockView&, std::uint16_t flags, std::int64_t arrived, bool releaseNotes = false);
     void send (const std::vector<std::uint8_t>& body);
     void drainHeld();
     void releaseStaleHeld();
@@ -174,6 +175,11 @@ private:
     std::array<Held, holdSize> held;
     std::array<Cached, cacheSize> cache;
     bool started = false;
+    bool releasePending = false;   ///< the first block after start(): the chain may hold notes from before
+
+    /** A gap at least this long (in real time) is a break: the notes held
+        are released (MidiGuard). Shorter ones are ordinary losses. */
+    static constexpr double releaseGapSeconds = 0.1;
     std::uint64_t expected = 0;
     bool haveParity = false, lastParity = false;   ///< reset parity of the last block processed
 

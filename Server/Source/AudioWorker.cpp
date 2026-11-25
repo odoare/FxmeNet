@@ -76,12 +76,13 @@ void AudioWorker::start (const control::Configure& c, std::uint32_t session, std
     }
 
     work.setSize (wire::maxChannels, config.blockSize);
-    midi.ensureSize (maxMidiBytes);
+    midi.ensureSize (4 * maxMidiBytes + (std::size_t) MidiGuard::releaseSize());   // room for a release (Chain::process)
     midiOut.reserve (maxMidiBytes);
     outputs.resize (wire::maxChannels);
     fragmenter = wire::Fragmenter ((std::size_t) config.datagramBudget);
 
     started = false;
+    releasePending = true;
     expected = 0;
     haveParity = false;   // the first block sets it: a stream starts with a fresh chain
 
@@ -201,10 +202,17 @@ void AudioWorker::handle (const Entry& e)
         return;
     }
 
+    // A long gap (the client bypassed, or the network gone for a while):
+    // the note-offs sent meanwhile are lost, so the notes held are released.
+    bool release = std::exchange (releasePending, false);
     if (block > expected)
+    {
         stats.lostBlocks.fetch_add (block - expected);
+        const auto missing = (double) (block - expected);
+        release = release || (missing >= 2.0 && missing * blockSeconds >= releaseGapSeconds);
+    }
 
-    processBlock (v, e.flags, e.arrived);
+    processBlock (v, e.flags, e.arrived, release);
     expected = block + 1;
     drainHeld();
 }
@@ -283,7 +291,7 @@ void AudioWorker::releaseStaleHeld()
 }
 
 //==============================================================================
-void AudioWorker::processBlock (const wire::BlockView& v, std::uint16_t flags, std::int64_t arrived)
+void AudioWorker::processBlock (const wire::BlockView& v, std::uint16_t flags, std::int64_t arrived, bool releaseNotes)
 {
     const auto t0 = juce::Time::getHighResolutionTicks();
     const int n = config.blockSize;
@@ -317,7 +325,7 @@ void AudioWorker::processBlock (const wire::BlockView& v, std::uint16_t flags, s
     if (reset)
         stats.resets.fetch_add (1);
 
-    chain.process (work, midi, (flags & wire::requestFlags::offline) != 0, reset);
+    chain.process (work, midi, (flags & wire::requestFlags::offline) != 0, reset, reset || releaseNotes);
 
     // Reply, written straight into its cache slot.
     auto& k = cache[(std::size_t) (v.info.block % cacheSize)];

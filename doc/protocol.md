@@ -361,6 +361,16 @@ u16 midiBytes
 
 - The server processes each block at most once, in increasing order, and
   keeps its last 32 replies.
+- **MIDI at breaks (added 2026-11-25).** The server follows the notes and
+  the sustain pedal it gives to the chain (`MidiGuard`) and releases them
+  (note-offs, CC 64 = 0, CC 123, at offset 0, before the block's own
+  events) on a reset (5.1), on the first block after a CONFIGURE, and when
+  real-time blocks resume after a gap of at least 2 blocks and 100 ms (the
+  client bypassed, or the network gone a while): the note-offs sent
+  meanwhile never arrived. A slot bypassed while notes are held gets one
+  more processed block holding only their release. The client never drops
+  MIDI for lack of room: what exceeds `maxMidiBytes` in a block goes at
+  offset 0 of the next ones, in order (one block's worth at most waits).
 - **Real time (offline flag clear):** a request older than the last block
   processed is answered from the cache, or dropped if not cached. A gap (block
   k+1 arrives, k never did) is not waited for: k+1 is processed, k is lost.

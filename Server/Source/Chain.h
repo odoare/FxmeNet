@@ -33,6 +33,7 @@
 
 #pragma once
 
+#include "MidiGuard.h"
 #include <juce_audio_processors_headless/juce_audio_processors_headless.h>
 
 #include <FxmeTools/net/NetAbi.h>
@@ -91,6 +92,7 @@ public:
         std::unique_ptr<juce::AudioPluginInstance> instance;
         fxme::net::INetPlugin* net = nullptr;   ///< nullptr: not FxmeNet-aware
         std::atomic<bool> bypassed { false };
+        bool wasBypassed = false;                ///< audio thread: as of the last block
         int numChannels = 2;                     ///< max of the instance's inputs and outputs
 
         // Routing, message thread.
@@ -163,8 +165,14 @@ public:
         request's offline flag, passed on to the plugins (setNonRealtime: the
         VST3 host turns it into the process mode of this very call).
         `reset`: every slot is reset first (the client's plugin was, at
-        this point of the stream: protocol.md section 5.1). */
-    void process (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi, bool offline, bool reset = false);
+        this point of the stream: protocol.md section 5.1).
+        `releaseNotes`: a break (a reset, the stream resuming after a gap):
+        the notes held are released first (MidiGuard). A slot bypassed
+        while notes are held gets their release in its last processed
+        block. `midi` must have room for MidiGuard::releaseSize() more
+        bytes. */
+    void process (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi, bool offline, bool reset = false,
+                  bool releaseNotes = false);
 
     /** The chain's current latency: summed over the slots, or the routing
         graph's (any thread). */
@@ -199,6 +207,10 @@ private:
 
     std::vector<chain::Box> boxes() const;
     void processRouted (Snapshot&, juce::AudioBuffer<float>&, juce::MidiBuffer&, bool offline, bool reset);
+
+    /** One slot's block: bypassed or not, and the notes' release when it
+        has just been bypassed (audio thread). */
+    void processSlot (Slot&, juce::AudioBuffer<float>& view, juce::MidiBuffer& midi);
     int indexOf (std::uint32_t slotId) const;
 
     std::vector<SlotPtr> slots;            // the message thread's view
@@ -212,6 +224,11 @@ private:
     bool routed = false;
     std::vector<chain::Connection> routing;
     std::atomic<bool> latencyStale { false };   ///< set by the audio thread
+
+    // Audio thread: the notes the chain holds (MidiGuard.h), and room to
+    // write their release without allocating.
+    MidiGuard guard;
+    juce::MidiBuffer merged, releases;
     std::atomic<int> latency { 0 };
     std::atomic<std::uint64_t> outputsFed { ~std::uint64_t (0) };
     std::atomic<int> requiredChannels { 2 };

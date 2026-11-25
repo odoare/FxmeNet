@@ -17,7 +17,8 @@
         its offset in that block, in order, whatever the callback sizes
         (blocks spanning callbacks, callbacks cut at the largest host
         block); a block's share is capped at wire::maxMidiBytes, the rest
-        counted as dropped.
+        waits for the next blocks (at offset 0, in order), and what does not
+        fit in the waiting room either is counted as dropped.
 
     SPDX-License-Identifier: LGPL-3.0-or-later
   ------------------------------------------------------------------------------
@@ -550,8 +551,9 @@ namespace
                                  (int) net.received.size(), (int) expected);
             }
 
-        // Too much for one block: the first wire::maxMidiBytes go, the rest
-        // are counted; the next block starts empty again.
+        // Too much for one block: the first wire::maxMidiBytes go, the next
+        // block's worth waits and goes at the start of the next block (and
+        // the events after it wait behind it), the rest is counted.
         {
             const int n = 128;
             BlockStream stream;
@@ -569,12 +571,23 @@ namespace
             stream.process (&inPtr, &outPtr, n, net, events.data(), (int) events.size());
             const std::size_t kept = wire::maxMidiBytes / 6;
             CHECK (net.received.size() == kept);
-            CHECK (stream.getMidiDropped() == 3001 - kept);
+            CHECK (stream.getMidiDropped() == 3001 - 2 * kept);
+
+            // The waiting events fill the next block, at its start; the new
+            // event, behind them, waits one more block.
+            net.received.clear();
+            const std::uint8_t off[3] = { 0x80, 60, 0 };
+            events.assign (1, { 0, 3, off });
+            stream.process (&inPtr, &outPtr, n, net, events.data(), 1);
+            bool atStart = net.received.size() == kept;
+            for (auto& r : net.received)
+                atStart = atStart && r.first == n && r.second[0] == 0x90;
+            CHECK (atStart);
 
             net.received.clear();
-            events.assign (1, { 0, 3, note });
-            stream.process (&inPtr, &outPtr, n, net, events.data(), 1);
-            CHECK (net.received.size() == 1 && net.received[0].first == n);
+            stream.process (&inPtr, &outPtr, n, net, nullptr, 0);
+            CHECK (net.received.size() == 1 && net.received[0].first == 2 * n && net.received[0].second[0] == 0x80);
+            CHECK (stream.getMidiDropped() == 3001 - 2 * kept);
         }
         std::printf ("  %d configurations\n", cases);
     }
