@@ -76,7 +76,7 @@ void AudioWorker::start (const control::Configure& c, std::uint32_t session, std
     }
 
     work.setSize (wire::maxChannels, config.blockSize);
-    midi.ensureSize (8 * maxMidiBytes + (std::size_t) MidiGuard::releaseSize());   // the block's, a history's, a release   // room for a release (Chain::process)
+    midi.ensureSize (8 * maxMidiBytes + (std::size_t) chain::MidiGuard::releaseSize());   // the block's, a history's, a release (Chain::process)
     midiOut.reserve (maxMidiBytes);
     outputs.resize (wire::maxChannels);
     fragmenter = wire::Fragmenter ((std::size_t) config.datagramBudget);

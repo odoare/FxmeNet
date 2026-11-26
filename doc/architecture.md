@@ -26,6 +26,11 @@ Common/                 shared by server and client, header-only:
                         binary's sha256 (server catalog and client matching);
                         Buses.h: the buses a hosted plugin gets everywhere (its
                         default layout, main buses on; never enableAllBuses)
+  FxmeNet/chain/        Routing.h and RoutingEngine.h (the routing between a chain's
+                        plugins, JUCE-free); ChainProcessor.h (a chain's audio-thread
+                        core: published snapshots, serial and routed processing,
+                        bypass, latency) and MidiGuard.h (held notes released at a
+                        break), JUCE
   FxmeNet/jsfx/         JSFX scripts (doc/jsfx-plan.md): JsfxBundle.h (a script
                         with its files and a JSFX slot's state on the wire;
                         JUCE-free), JsfxScripts.h (finding scripts on disk,
@@ -251,7 +256,10 @@ Threads:
   Nothing allocates, locks or logs there; counters in atomics are logged
   every 10 s by the message thread.
 
-Chain edits never stop the audio: the message thread publishes an immutable
+Chain edits never stop the audio (the audio-thread side is
+`chain::ChainProcessor`, Common/FxmeNet/chain/ChainProcessor.h, shared with
+the plugin's local play to come, doc/fallback-plan.md; `Chain` keeps the
+slots, buses and routing plan): the message thread publishes an immutable
 snapshot of the slot list through an atomic pointer; the audio thread
 announces the snapshot it uses in a second atomic (a hazard pointer) and
 re-checks it is still current; a replaced snapshot is freed once the audio

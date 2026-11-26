@@ -7,14 +7,11 @@
     section 5, Common/FxmeNet/chain/RoutingEngine.h).
 
     Edits (add, remove, move, bypass, clear, prepare) happen on the message
-    thread and are published as an immutable Snapshot through an atomic
-    pointer; the audio thread processes whatever snapshot is current and
-    never waits for an edit. The audio thread announces the snapshot it uses
-    in a second atomic (a hazard pointer), and the message thread frees a
-    replaced snapshot only once the audio thread has let go of it. Slots are
-    shared between snapshots, so a removed plugin instance is destroyed when
-    the last snapshot holding it goes: on the message thread, as VST3 hosting
-    requires.
+    thread and are published to the audio thread by a ChainProcessor
+    (Common/FxmeNet/chain/ChainProcessor.h), which also does the processing:
+    the audio thread never waits for an edit, and a removed plugin instance
+    is destroyed on the message thread, as VST3 hosting requires. This class
+    is the message-thread side: the slots, their buses, the routing plan.
 
     Routed, each snapshot also carries a RoutingPlan built from the slots,
     their bus layouts and latencies, and the connections that fit the chain
@@ -33,10 +30,10 @@
 
 #pragma once
 
-#include "MidiGuard.h"
 #include <juce_audio_processors_headless/juce_audio_processors_headless.h>
 
 #include <FxmeTools/net/NetAbi.h>
+#include <FxmeNet/chain/ChainProcessor.h>
 #include <FxmeNet/chain/RoutingEngine.h>
 #include <FxmeNet/control/ControlMessages.h>
 #include <FxmeNet/protocol/Wire.h>
@@ -86,14 +83,13 @@ private:
 class Chain
 {
 public:
-    struct Slot
+    /** A slot: what the audio thread needs (chain::ProcessorSlot: the
+        instance as `processor`, bypassed, numChannels), and the rest. */
+    struct Slot : chain::ProcessorSlot
     {
         std::uint32_t slotId = 0;
-        std::unique_ptr<juce::AudioPluginInstance> instance;
+        std::unique_ptr<juce::AudioPluginInstance> instance;   ///< owned; `processor` points to it
         fxme::net::INetPlugin* net = nullptr;   ///< nullptr: not FxmeNet-aware
-        std::atomic<bool> bypassed { false };
-        bool wasBypassed = false;                ///< audio thread: as of the last block
-        int numChannels = 2;                     ///< max of the instance's inputs and outputs
 
         // Routing, message thread.
         chain::Box box;                          ///< its buses at full width (SLOT_READY's)
@@ -105,7 +101,7 @@ public:
         bool telemetryActive = false;            ///< the client's editor for it is open
         std::uint32_t telemetryFrame = 0;
 
-        ~Slot();
+        ~Slot() override;
     };
 
     Chain();
@@ -172,27 +168,24 @@ public:
         block. `midi` must have room for MidiGuard::releaseSize() more
         bytes. */
     void process (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi, bool offline, bool reset = false,
-                  bool releaseNotes = false);
+                  bool releaseNotes = false)
+    {
+        core.process (buffer, midi, offline, reset, releaseNotes);
+    }
 
     /** The chain's current latency: summed over the slots, or the routing
         graph's (any thread). */
-    int getLatency() const noexcept             { return latency.load(); }
+    int getLatency() const noexcept             { return core.getLatency(); }
 
     /** The outputs the chain feeds (bit c: output c): all in series, those
         the routing connects when routed (any thread). */
-    std::uint64_t getOutputsFed() const noexcept   { return outputsFed.load(); }
+    std::uint64_t getOutputsFed() const noexcept   { return core.getOutputsFed(); }
 
     /** The widest slot's channel count, as of the last publish. */
-    int getRequiredChannels() const noexcept    { return requiredChannels.load(); }
+    int getRequiredChannels() const noexcept    { return core.getRequiredChannels(); }
 
 private:
     using SlotPtr = std::shared_ptr<Slot>;
-
-    struct Snapshot
-    {
-        std::vector<SlotPtr> slots;
-        std::unique_ptr<chain::RoutingPlan> plan;   ///< null: in series
-    };
 
     /** Publishes the slots (and the plan, routed). False when the audio
         thread still held the old snapshot after 2 s (it was leaked). */
@@ -206,16 +199,9 @@ private:
     void applyBuses (Slot&, const std::vector<bool>& in, const std::vector<bool>& out);
 
     std::vector<chain::Box> boxes() const;
-    void processRouted (Snapshot&, juce::AudioBuffer<float>&, juce::MidiBuffer&, bool offline, bool reset);
-
-    /** One slot's block: bypassed or not, and the notes' release when it
-        has just been bypassed (audio thread). */
-    void processSlot (Slot&, juce::AudioBuffer<float>& view, juce::MidiBuffer& midi);
     int indexOf (std::uint32_t slotId) const;
 
     std::vector<SlotPtr> slots;            // the message thread's view
-    std::atomic<Snapshot*> current { nullptr };
-    std::atomic<Snapshot*> inUse { nullptr };
 
     SessionPlayHead playHead;
     double sampleRate = 48000.0;
@@ -223,15 +209,8 @@ private:
     int numInputs = 2, numOutputs = 2;
     bool routed = false;
     std::vector<chain::Connection> routing;
-    std::atomic<bool> latencyStale { false };   ///< set by the audio thread
 
-    // Audio thread: the notes the chain holds (MidiGuard.h), and room to
-    // write their release without allocating.
-    MidiGuard guard;
-    juce::MidiBuffer merged, releases;
-    std::atomic<int> latency { 0 };
-    std::atomic<std::uint64_t> outputsFed { ~std::uint64_t (0) };
-    std::atomic<int> requiredChannels { 2 };
+    chain::ChainProcessor core;            // the audio thread's side (published snapshots)
 
     JUCE_DECLARE_NON_COPYABLE (Chain)
 };

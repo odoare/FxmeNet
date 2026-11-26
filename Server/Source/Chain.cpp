@@ -74,16 +74,12 @@ Chain::Slot::~Slot()
         instance->releaseResources();
 }
 
-Chain::Chain()
-{
-    merged.ensureSize ((std::size_t) (8 * (int) wire::maxMidiBytes + MidiGuard::releaseSize()));
-    releases.ensureSize ((std::size_t) MidiGuard::releaseSize());
-}
+Chain::Chain() = default;
 
 Chain::~Chain()
 {
-    // The audio thread is stopped by now (the session's worker goes first).
-    delete current.exchange (nullptr);
+    // The audio thread is stopped by now (the session's worker goes first);
+    // the core frees its last snapshot.
     slots.clear();
 }
 
@@ -112,7 +108,7 @@ void Chain::setRouting (std::vector<chain::Connection> connections)
 
 void Chain::refreshLatencies()
 {
-    if (routed && latencyStale.exchange (false))
+    if (core.takeLatencyStale() && routed)
         publish();
 }
 
@@ -181,6 +177,7 @@ juce::String Chain::addSlot (std::uint32_t slotId, int position,
             (input ? slot->wantedIn : slot->wantedOut).push_back (instance->getBus (input, i)->isEnabled());
 
     slot->instance = std::move (instance);
+    slot->processor = slot->instance.get();
     slot->watcher = std::make_unique<ParamWatcher> (*slot->instance);   // after the state is loaded: no echo of it
     position = juce::jlimit (0, (int) slots.size(), position);
     slots.insert (slots.begin() + position, std::move (slot));
@@ -322,12 +319,7 @@ int Chain::indexOf (std::uint32_t slotId) const
 
 bool Chain::publish()
 {
-    int channels = 2;
-    for (auto& s : slots)
-        channels = juce::jmax (channels, s->numChannels);
-    requiredChannels = channels;
-
-    auto* next = new Snapshot { slots, nullptr };
+    std::unique_ptr<chain::RoutingPlan> plan;
     if (routed)
     {
         std::vector<chain::SlotLayout> layouts;
@@ -346,144 +338,14 @@ bool Chain::publish()
             l.muted = s->muted;
             layouts.push_back (std::move (l));
         }
-        // Only this thread replaces or frees the current snapshot: reading
-        // its plan here is safe. Its delay lines go on in the new one.
-        const auto* previous = current.load();
-        next->plan = std::make_unique<chain::RoutingPlan> (numInputs, numOutputs, layouts, routing, blockSize,
-                                                           previous != nullptr ? previous->plan.get() : nullptr);
-        latency.store (next->plan->getLatency());
-        outputsFed.store (next->plan->getOutputsFed());
+        // Its delay lines go on from the current plan's.
+        plan = std::make_unique<chain::RoutingPlan> (numInputs, numOutputs, layouts, routing, blockSize, core.getPlan());
     }
 
-    auto* old = current.exchange (next);
-    if (old == nullptr)
+    if (core.publish (std::vector<chain::ChainProcessor::SlotPtr> (slots.begin(), slots.end()), std::move (plan)))
         return true;
-
-    // Wait until the audio thread has let go of the old snapshot: at most
-    // one block. If it never does (a plugin stuck in processBlock), leak it
-    // rather than free memory in use.
-    const auto start = juce::Time::getMillisecondCounter();
-    while (inUse.load() == old)
-    {
-        if (juce::Time::getMillisecondCounter() - start > 2000)
-        {
-            log ("warning: the audio thread holds an old chain for over 2 s; leaking it");
-            return false;
-        }
-        juce::Thread::sleep (1);
-    }
-    delete old;   // the last owner of a removed slot destroys its instance here
-    return true;
-}
-
-//==============================================================================
-void Chain::process (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi, bool offline, bool reset,
-                     bool releaseNotes)
-{
-    // A break: the notes held are released before this block's events.
-    if (releaseNotes && guard.isHolding())
-    {
-        merged.clear();
-        guard.addReleases (merged, 0);
-        merged.addEvents (midi, 0, -1, 0);
-        midi.clear();
-        midi.addEvents (merged, 0, -1, 0);
-        guard.clear();
-    }
-    guard.track (midi);
-
-    // Hazard pointer: announce the snapshot, then check it is still current,
-    // so publish() cannot free it between the two.
-    Snapshot* s = nullptr;
-    for (;;)
-    {
-        s = current.load();
-        inUse.store (s);
-        if (current.load() == s)
-            break;
-    }
-
-    if (s != nullptr && s->plan != nullptr)
-        processRouted (*s, buffer, midi, offline, reset);
-    else if (s != nullptr)
-    {
-        int total = 0;
-        for (auto& slot : s->slots)
-        {
-            auto& instance = *slot->instance;
-            if (instance.isNonRealtime() != offline)
-                instance.setNonRealtime (offline);
-            if (reset)
-                instance.reset();   // a VST3: deactivated and activated again, so not free, but rare
-            const int n = juce::jmin (slot->numChannels, buffer.getNumChannels());
-            juce::AudioBuffer<float> view (buffer.getArrayOfWritePointers(), n, buffer.getNumSamples());
-            processSlot (*slot, view, midi);
-
-            total += instance.getLatencySamples();
-        }
-        latency.store (total);
-    }
-
-    inUse.store (nullptr);
-}
-
-void Chain::processRouted (Snapshot& s, juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi,
-                           bool offline, bool reset)
-{
-    auto& plan = *s.plan;
-    const int n = buffer.getNumSamples();
-    if (reset)
-        plan.clearDelays();
-
-    // The plan copies the inputs first, then runs the slots on its own
-    // buffers; the outputs are copied back into `buffer` at the end.
-    plan.process (buffer.getArrayOfReadPointers(), buffer.getNumChannels(), n,
-                  [&] (int index, float* const* channels, int width, int count)
-    {
-        auto& slot = *s.slots[(std::size_t) index];
-        auto& instance = *slot.instance;
-        if (instance.isNonRealtime() != offline)
-            instance.setNonRealtime (offline);
-        if (reset)
-            instance.reset();
-
-        juce::AudioBuffer<float> view (channels, width, count);
-        processSlot (slot, view, midi);
-
-        if (instance.getLatencySamples() != plan.getSlotLatency (index))
-            latencyStale.store (true);   // the session's timer rebuilds the plan
-    });
-
-    for (int c = 0; c < buffer.getNumChannels(); ++c)
-    {
-        if (const auto* out = plan.getOutput (c))
-            buffer.copyFrom (c, 0, out, n);
-        else
-            buffer.clear (c, 0, n);
-    }
-}
-
-void Chain::processSlot (Slot& slot, juce::AudioBuffer<float>& view, juce::MidiBuffer& midi)
-{
-    auto& instance = *slot.instance;
-    const bool bypassed = slot.bypassed.load();
-    if (bypassed && ! slot.wasBypassed && guard.isHolding())
-    {
-        // Just bypassed while notes are held: one more block processed, with
-        // only their release, so that none sounds again when it comes back.
-        releases.clear();
-        guard.addReleases (releases, 0);
-        instance.processBlock (view, releases);
-    }
-    else if (bypassed)
-    {
-        instance.processBlockBypassed (view, midi);
-    }
-    else
-    {
-        instance.processBlock (view, midi);
-    }
-    slot.wasBypassed = bypassed;
+    log ("warning: the audio thread holds an old chain for over 2 s; leaking it");
+    return false;
 }
 
 //==============================================================================

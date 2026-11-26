@@ -16,7 +16,7 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
 
 6. Phase 2, remaining: 6g, the wavclient runs between two machines (offline
    and `--realtime`, also `--engine`); needs a second machine.
-14. Later, low priority, optional (user request 2026-11-03): local fallback. When no
+14. Plan written 2026-11-25: doc/fallback-plan.md. Later, low priority, optional (user request 2026-11-03): local fallback. When no
     server answers (or on demand, an option per instance), process the chain
     locally with the client's own copies of the plugins. Builds on Phase 4,
     which already scans the client's plugins and loads local copies (as

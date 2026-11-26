@@ -14,7 +14,8 @@
     lost a stretch), a slot bypassed while it holds notes.
 
     Audio thread only; no allocation once the buffers given to it are sized
-    (releaseSize() bytes at most).
+    (releaseSize() bytes at most). Used by ChainProcessor, on the server and
+    in the plugin's local play (doc/fallback-plan.md).
 
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-FXME-Commercial
@@ -28,7 +29,7 @@
 #include <array>
 #include <bitset>
 
-namespace fxmenet::server
+namespace fxmenet::chain
 {
 
 class MidiGuard
@@ -99,4 +100,4 @@ private:
     std::bitset<16> sustain;
 };
 
-} // namespace fxmenet::server
+} // namespace fxmenet::chain
