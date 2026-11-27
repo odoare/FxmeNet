@@ -8,6 +8,7 @@
 */
 
 #include "RoutingView.h"
+#include "Widths.h"
 #include "Theme.h"
 
 namespace fxmenet::plugin
@@ -162,6 +163,10 @@ public:
         {
             if (const auto* pin = pinAt (e.position); pin != nullptr && ! pin->output)
                 pinMenu (*pin);
+            else if (pin == nullptr)
+                for (auto& b : boxes)
+                    if (! b.end && b.rect.contains (e.position))
+                        widthsMenu (b.id);
             return;
         }
 
@@ -555,6 +560,53 @@ private:
             valid.push_back (b);
         }
         return valid;
+    }
+
+    /** A plugin's main bus widths (doc/bus-width-plan.md), as in the
+        Parameters tab. */
+    void widthsMenu (std::uint32_t slotId)
+    {
+        auto& engine = processor.getEngine();
+        client::SlotModel slot;
+        bool found = false;
+        for (auto& s : engine.getSlotInfos())
+            if (s.slotId == slotId)
+            {
+                slot = s;
+                found = true;
+            }
+        if (! found || ! FxmeNetAudioProcessor::isDescribed (slot))
+            return;
+        const auto ins = usefulWidths (slot, true), outs = usefulWidths (slot, false);
+        if (ins.size() < 2 && outs.size() < 2)
+            return;
+
+        const int nowIn = currentMainWidth (slot, true), nowOut = currentMainWidth (slot, false);
+        juce::PopupMenu inputs, outputs;
+        for (std::size_t i = 0; i < ins.size(); ++i)
+            inputs.addItem (100 + (int) i, widthText (ins[i]), true, ins[i] == nowIn);
+        for (std::size_t i = 0; i < outs.size(); ++i)
+            outputs.addItem (200 + (int) i, widthText (outs[i]), true, outs[i] == nowOut);
+        juce::PopupMenu menu;
+        menu.addSectionHeader (slot.name + (slot.layoutError.isNotEmpty() ? " (refused: " + slot.layoutError + ")" : juce::String()));
+        if (ins.size() > 1)
+            menu.addSubMenu ("Input channels", inputs);
+        if (outs.size() > 1)
+            menu.addSubMenu ("Output channels", outputs);
+
+        juce::Component::SafePointer<Canvas> safe (this);
+        menu.showMenuAsync (juce::PopupMenu::Options(), [safe, slotId, ins, outs, nowIn, nowOut] (int result)
+        {
+            if (safe == nullptr || result == 0)
+                return;
+            int in = nowIn, out = nowOut;
+            if (result >= 200)
+                out = outs[(std::size_t) (result - 200)];
+            else
+                in = ins[(std::size_t) (result - 100)];
+            safe->processor.getEngine().setMainWidths (slotId, in, out);
+            safe->update();
+        });
     }
 
     void pinMenu (const PinShape& pin)

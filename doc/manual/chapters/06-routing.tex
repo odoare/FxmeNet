@@ -101,6 +101,16 @@ The channels the plugin sends to the server are the ones its connections
 need. Channels you do not connect are not sent, which saves network
 bandwidth.
 
+\section{Channel counts and ambisonics}
+
+Right-click a plugin's box to choose the channels of its main input and
+output, when it accepts several (the same choice as in the
+\ui{Parameters} tab). An ambisonic decoder at order 1 has 4 inputs; set
+it to 16 to receive third-order ambisonics: its 16 input pins appear, and
+a 16-output plugin before it (an encoder, a room simulator such as
+AmbiRR2) can feed all of them. Connections to pins that disappear when a
+plugin is narrowed are kept, and come back when it is widened again.
+
 \section{Latency and parallel paths}
 
 When two paths of different latency meet at an input, \fxme\ delays the

@@ -39,6 +39,7 @@ namespace fxmenet::plugin::tips
     inline constexpr auto processing    = "Where the chain plays. Server: on the server (silence while there is none). Local: on this computer, with the plugins installed here (no connection; plugins missing here are passed through). Auto: on the server, and on this computer while the server is lost.";
     inline constexpr auto autoReturn    = "Auto: once the server is back, play there again by itself (a short crossfade). Off: keep playing here until you press Back to the server.";
     inline constexpr auto backToServer  = "The server is back: play there again (a short crossfade).";
+    inline constexpr auto mainWidths    = "Channels of the plugin's main input and output. Ambisonic plugins (the IEM ones) set their order from it: 4 channels is order 1, 16 order 3.";
     inline constexpr auto preload       = "Auto: keep every plugin's local copy loaded while the server plays, so that losing it switches at once (memory on this computer, no processing). Off: load them only when the server is lost (silence while they load).";
     inline constexpr auto editorView    = "Switch between the plugin's own editor (a local copy, its audio still on the server) and generic controls.";
     inline constexpr auto lastTouched   = "The control last moved in the plugin's editor: map it to an automation parameter, unmap it, or learn one moved in the DAW.";

@@ -96,6 +96,8 @@ struct SlotModel
     bool onServer = false;   ///< SLOT_ADD sent and not refused
     bool loaded = false;     ///< SLOT_READY received: `info` is valid
     bool localInfo = false;  ///< `info` describes its local copy (local play, no SLOT_READY yet)
+    int mainInputs = 0, mainOutputs = 0;   ///< main bus widths chosen (0: the plugin's default; doc/bus-width-plan.md)
+    juce::String layoutError;              ///< the last width change refused, and why
     juce::String error;      ///< why it is not loaded
     control::SlotReady info;
 
@@ -338,7 +340,7 @@ public:
             auto* slot = find (slotId);
             if (slot == nullptr || slot->loaded)
                 return;
-            if (! slot->hasBox)
+            if (! slot->hasBox || slot->localInfo)   // a local description follows the copy (its widths)
             {
                 slot->box = control::toBox (info);
                 slot->hasBox = true;
@@ -346,6 +348,49 @@ public:
             slot->info = std::move (info);
             slot->localInfo = true;
             refreshRouting();
+        }
+        notify();
+    }
+
+    /** A slot's main bus widths (doc/bus-width-plan.md), 0 keeping a side
+        as the plugin has it. Kept in the model (saved, sent at a rebuild);
+        on the server at once (SLOT_LAYOUT), whose answer updates the slot's
+        description, buses and routing. A refusal is kept in `layoutError`. */
+    void setMainWidths (std::uint32_t slotId, int inputs, int outputs)
+    {
+        {
+            const std::lock_guard<std::mutex> l (lock);
+            auto* slot = find (slotId);
+            if (slot == nullptr)
+                return;
+            slot->mainInputs = juce::jlimit (0, wire::maxChannels, inputs);
+            slot->mainOutputs = juce::jlimit (0, wire::maxChannels, outputs);
+            slot->layoutError = {};
+            if (ready && slot->onServer && slot->loaded)
+            {
+                control::SlotLayout m { slotId, (std::uint16_t) slot->mainInputs, (std::uint16_t) slot->mainOutputs };
+                dirty |= ! sendAsync (control::Type::slotLayout, 0, encode (m), [this, slotId] (const control::Frame* f)
+                {
+                    {
+                        const std::lock_guard<std::mutex> later (lock);
+                        auto* s = find (slotId);
+                        if (f == nullptr)
+                            dirty = true;
+                        else if (s != nullptr && f->type == control::Type::slotReady)
+                        {
+                            s->info = control::SlotReady::fromVar (control::fromPayload (f->payload));
+                            s->box = control::toBox (s->info);
+                            s->hasBox = true;
+                            refreshRouting();
+                        }
+                        else if (s != nullptr)
+                        {
+                            s->layoutError = control::ErrorMessage::fromVar (control::fromPayload (f->payload)).text;
+                        }
+                    }
+                    notify();
+                });
+            }
         }
         notify();
     }
@@ -380,6 +425,9 @@ public:
             copy.onServer = s.onServer;
             copy.loaded = s.loaded;
             copy.localInfo = s.localInfo;
+            copy.mainInputs = s.mainInputs;
+            copy.mainOutputs = s.mainOutputs;
+            copy.layoutError = s.layoutError;
             copy.error = s.error;
             copy.info = s.info;
             copy.box = s.box;
@@ -1427,6 +1475,8 @@ private:
                 add.name = s.name.toStdString();
                 add.vendor = s.vendor.toStdString();
                 add.state = s.state;
+                add.mainInputs = (std::uint16_t) juce::jlimit (0, wire::maxChannels, s.mainInputs);
+                add.mainOutputs = (std::uint16_t) juce::jlimit (0, wire::maxChannels, s.mainOutputs);
 
                 const auto r = call (control::Type::slotAdd, 0, encode (add), control::Type::slotReady, reply, 60000);
                 if (r == CallResult::lost)
@@ -1656,6 +1706,8 @@ private:
         add.name = s.name.toStdString();
         add.vendor = s.vendor.toStdString();
         add.state = s.state;
+        add.mainInputs = (std::uint16_t) juce::jlimit (0, wire::maxChannels, s.mainInputs);
+        add.mainOutputs = (std::uint16_t) juce::jlimit (0, wire::maxChannels, s.mainOutputs);
         s.onServer = true;
 
         const auto slotId = s.slotId;

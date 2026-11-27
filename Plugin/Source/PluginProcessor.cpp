@@ -583,7 +583,8 @@ fxmenet::plugin::Shadow* FxmeNetAudioProcessor::getShadow (std::uint32_t slotId,
         rate = preparedRate > 0.0 ? preparedRate : 48000.0;
     }
     juce::String error;
-    auto shadow = fxmenet::plugin::Shadow::create (shadowFormats, m.local, rate, getStreamSettings().blockSize, error);
+    auto shadow = fxmenet::plugin::Shadow::create (shadowFormats, m.local, rate, getStreamSettings().blockSize, error,
+                                                   false, slot.mainInputs, slot.mainOutputs);
     if (shadow == nullptr)
         return fail ("cannot load the local copy: " + error);
 
@@ -711,6 +712,10 @@ void FxmeNetAudioProcessor::syncShadows()
 
         for (auto& p : slot->info.params)
             shadow->setQuietly (p.index, ClientEngine::currentValue (*slot, p));
+
+        // The slot's main widths (a mirror is never processed: at once).
+        if (shadow->wantsMainWidths (slot->mainInputs, slot->mainOutputs))
+            shadow->setMainWidths (slot->mainInputs, slot->mainOutputs);
 
         // The same buses as on the server (a sidechain connected or not).
         if (routed && slot->hasBox)
@@ -945,6 +950,10 @@ void FxmeNetAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
         e->setAttribute ("name", s.name);
         e->setAttribute ("vendor", s.vendor);
         e->setAttribute ("bypassed", s.bypassed);
+        if (s.mainInputs > 0)
+            e->setAttribute ("mainInputs", s.mainInputs);
+        if (s.mainOutputs > 0)
+            e->setAttribute ("mainOutputs", s.mainOutputs);
         e->setAttribute ("state", juce::Base64::toBase64 (s.state.data(), s.state.size()));
         for (auto& [index, v] : s.params)
         {
@@ -1025,6 +1034,8 @@ void FxmeNetAudioProcessor::setStateInformation (const void* data, int sizeInByt
         s.name = e->getStringAttribute ("name");
         s.vendor = e->getStringAttribute ("vendor");
         s.bypassed = e->getBoolAttribute ("bypassed");
+        s.mainInputs = e->getIntAttribute ("mainInputs", 0);
+        s.mainOutputs = e->getIntAttribute ("mainOutputs", 0);
         juce::MemoryOutputStream state;
         if (juce::Base64::convertFromBase64 (state, e->getStringAttribute ("state")))
             s.state.assign ((const std::uint8_t*) state.getData(), (const std::uint8_t*) state.getData() + state.getDataSize());
@@ -1390,7 +1401,8 @@ fxmenet::plugin::Shadow* FxmeNetAudioProcessor::createLocalShadow (const SlotMod
     }
 
     juce::String error;
-    shadow = fxmenet::plugin::Shadow::create (shadowFormats, m.local, rate, block, error, true);
+    shadow = fxmenet::plugin::Shadow::create (shadowFormats, m.local, rate, block, error, true,
+                                              slot.mainInputs, slot.mainOutputs);
     if (shadow == nullptr)
     {
         why = "cannot load it: " + error;
@@ -1435,6 +1447,8 @@ fxmenet::plugin::Shadow* FxmeNetAudioProcessor::createLocalShadow (const SlotMod
     // Its parameters and buses, when no server has described the slot: the
     // generic controls, the mapping and the routing work without one.
     auto info = fxmenet::chain::describeSlot (slotId, shadow->getInstance());
+    info.inputWidths = shadow->getInputWidths();
+    info.outputWidths = shadow->getOutputWidths();
    #if FXMENET_JSFX
     if (auto* js = dynamic_cast<fxmenet::jsfx::JsfxInstance*> (&shadow->getInstance()))
     {
@@ -1593,7 +1607,7 @@ void FxmeNetAudioProcessor::syncLocal()
     // Parameters, buses and states in step with the model.
     bool complete = false;
     const auto routing = engine.getLocalRouting (complete);
-    std::vector<std::uint32_t> busChanges;
+    std::vector<std::uint32_t> busChanges, widthChanges;
     for (auto& slot : slots)
     {
         auto* shadow = findShadow (slot.slotId);
@@ -1603,7 +1617,9 @@ void FxmeNetAudioProcessor::syncLocal()
         for (auto& [index, v] : slot.params)
             shadow->setQuietly ((int) index, v.value);
 
-        if (complete && slot.hasBox)
+        if (shadow->wantsMainWidths (slot.mainInputs, slot.mainOutputs))
+            widthChanges.push_back (slot.slotId);
+        else if (complete && slot.hasBox)
         {
             std::vector<bool> in, out;
             fxmenet::chain::wantedBuses (slot.box, routing, in, out);
@@ -1632,6 +1648,25 @@ void FxmeNetAudioProcessor::syncLocal()
         if (changed)
             engine.setSlotState (slot.slotId, std::vector<std::uint8_t> ((const std::uint8_t*) block.getData(),
                                                                          (const std::uint8_t*) block.getData() + block.getSize()));
+    }
+
+    // A copy whose main widths change (doc/bus-width-plan.md): out of the
+    // chain first, then laid out and prepared again; without a server, its
+    // description (pins, widths) follows.
+    for (auto id : widthChanges)
+    {
+        publishLocal (id);
+        for (auto& slot : slots)
+            if (slot.slotId == id)
+            {
+                auto* shadow = findShadow (id);
+                shadow->setMainWidths (slot.mainInputs, slot.mainOutputs);
+                auto info = fxmenet::chain::describeSlot (id, shadow->getInstance());
+                info.inputWidths = shadow->getInputWidths();
+                info.outputWidths = shadow->getOutputWidths();
+                engine.setLocalInfo (id, std::move (info));
+            }
+        localSignature = {};
     }
 
     // A copy whose buses change is prepared again: out of the chain first.

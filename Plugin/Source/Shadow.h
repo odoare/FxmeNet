@@ -64,19 +64,46 @@ public:
     static std::unique_ptr<Shadow> create (juce::AudioPluginFormatManager& formats,
                                            const juce::PluginDescription& description,
                                            double sampleRate, int blockSize, juce::String& error,
-                                           bool local = false)
+                                           bool local = false, int mainInputs = 0, int mainOutputs = 0)
     {
         auto instance = formats.createPluginInstance (description, sampleRate, blockSize, error);
         if (instance == nullptr)
             return nullptr;
-        return std::unique_ptr<Shadow> (new Shadow (std::move (instance), sampleRate, blockSize, local));
+        return std::unique_ptr<Shadow> (new Shadow (std::move (instance), sampleRate, blockSize, local,
+                                                    mainInputs, mainOutputs));
+    }
+
+    /** The main bus widths it accepts (doc/bus-width-plan.md), found before
+        it was prepared (as the server does). */
+    const std::vector<int>& getInputWidths() const noexcept    { return inputWidths; }
+    const std::vector<int>& getOutputWidths() const noexcept   { return outputWidths; }
+
+    /** True when setMainWidths (inputs, outputs) has something to try. */
+    bool wantsMainWidths (int inputs, int outputs) const noexcept
+    {
+        return inputs != askedIn || outputs != askedOut;
+    }
+
+    /** The slot's main bus widths (0: as it is), as on the server: released,
+        laid out, prepared again. Message thread, while the audio thread does
+        not process it. False when the plugin refused (it keeps its own). */
+    bool setMainWidths (int inputs, int outputs)
+    {
+        askedIn = inputs;
+        askedOut = outputs;
+        instance->releaseResources();
+        const bool ok = catalog::setMainWidths (*instance, inputs, outputs);
+        inputWidths = catalog::acceptedMainWidths (*instance, true);
+        outputWidths = catalog::acceptedMainWidths (*instance, false);
+        instance->prepareToPlay (preparedRate, preparedBlock);
+        return ok;
     }
 
     /** Wraps an instance made elsewhere (a JSFX script's, for local play). */
     static std::unique_ptr<Shadow> fromInstance (std::unique_ptr<juce::AudioPluginInstance> instance,
                                                  double sampleRate, int blockSize, bool local)
     {
-        return std::unique_ptr<Shadow> (new Shadow (std::move (instance), sampleRate, blockSize, local));
+        return std::unique_ptr<Shadow> (new Shadow (std::move (instance), sampleRate, blockSize, local, 0, 0));
     }
 
     /** Local play starts (true) or ends (false) for it, in Auto: an
@@ -249,8 +276,10 @@ public:
     }
 
 private:
-    Shadow (std::unique_ptr<juce::AudioPluginInstance> loaded, double sampleRate, int blockSize, bool isLocalCopy)
-        : instance (std::move (loaded)), local (isLocalCopy), preparedRate (sampleRate), preparedBlock (blockSize)
+    Shadow (std::unique_ptr<juce::AudioPluginInstance> loaded, double sampleRate, int blockSize, bool isLocalCopy,
+            int mainInputs, int mainOutputs)
+        : instance (std::move (loaded)), local (isLocalCopy), preparedRate (sampleRate), preparedBlock (blockSize),
+          askedIn (mainInputs), askedOut (mainOutputs)
     {
         if (auto* vst3 = instance->getVST3Client())
             net = fxme::net::queryNetPlugin (vst3->getIComponentPtr());
@@ -258,6 +287,9 @@ private:
             net->setRole ((std::int32_t) (local ? fxme::net::Role::local : fxme::net::Role::mirror));
 
         catalog::useDefaultBuses (*instance);   // as on the server (Buses.h)
+        catalog::setMainWidths (*instance, askedIn, askedOut);   // the slot's widths, before preparing
+        inputWidths = catalog::acceptedMainWidths (*instance, true);
+        outputWidths = catalog::acceptedMainWidths (*instance, false);
         instance->prepareToPlay (sampleRate, blockSize);   // editors read the rate; a mirror is never processed
         lastStateChangeCount = getStateChangeCount();
 
@@ -333,6 +365,9 @@ private:
     double preparedRate = 48000.0;
     int preparedBlock = 128;
     std::vector<bool> wantedIn, wantedOut;   ///< setWantedBuses
+
+    int askedIn = 0, askedOut = 0;       ///< the main widths last asked for
+    std::vector<int> inputWidths, outputWidths;
 
     std::size_t referenceHash = 0;       ///< takeStateReference / takeStateChange
     std::vector<float> referenceValues;

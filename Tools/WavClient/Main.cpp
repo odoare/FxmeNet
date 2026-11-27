@@ -707,6 +707,10 @@ int runEngine (const Options& o, const juce::AudioBuffer<float>& input, double s
         engine.addSlot ((std::uint32_t) descriptions[i]->uniqueId, descriptions[i]->name,
                         descriptions[i]->manufacturerName, i);
 
+    if (o.widthIn > 0 || o.widthOut > 0)   // kept in the model, sent with SLOT_ADD
+        for (auto& s : engine.getSlotInfos())
+            engine.setMainWidths (s.slotId, o.widthIn, o.widthOut);
+
     WavLocalChain localChain;
     if (o.local)
     {
@@ -767,10 +771,37 @@ int runEngine (const Options& o, const juce::AudioBuffer<float>& input, double s
             break;
         say ("  slot " + juce::String ((int) s.slotId) + ": " + s.name
              + (s.loaded ? ", " + juce::String ((int) s.info.params.size()) + " parameters, latency "
-                           + juce::String (s.info.latency)
+                           + juce::String (s.info.latency) + ", " + juce::String (s.info.numInputs) + " in / "
+                           + juce::String (s.info.numOutputs) + " out"
                          : ", not loaded: " + s.error));
         allLoaded = allLoaded && s.loaded;
     }
+
+    // --relayout through the engine (ClientEngine::setMainWidths): its answer
+    // updates the slot's description.
+    if (o.relayoutIn >= 0 && ! o.local)
+        for (auto& s : engine.getSlotInfos())
+        {
+            engine.setMainWidths (s.slotId, o.relayoutIn, o.relayoutOut);
+            const auto until = juce::Time::getMillisecondCounter() + 10000;
+            for (;;)
+            {
+                bool done = false;
+                for (auto& t : engine.getSlotInfos())
+                    if (t.slotId == s.slotId)
+                    {
+                        done = t.layoutError.isNotEmpty() || (t.info.numInputs == o.relayoutIn || o.relayoutIn == 0);
+                        if (done)
+                            say ("  slot " + juce::String ((int) t.slotId) + " relaid out: " + juce::String (t.info.numInputs)
+                                 + " in / " + juce::String (t.info.numOutputs) + " out"
+                                 + (t.layoutError.isNotEmpty() ? " (refused: " + t.layoutError + ")" : juce::String())
+                                 + ", routing box " + juce::String (t.box.numInputs()) + " inputs");
+                    }
+                if (done || juce::Time::getMillisecondCounter() > until)
+                    break;
+                juce::Thread::sleep (20);
+            }
+        }
     if (! allLoaded)
         return 1;
 

@@ -93,8 +93,22 @@ muted, which in series now leaves it out of the published chain). Checked
 with fxmenet-wavclient `--widths` / `--relayout` and the IEM
 BinauralDecoder: 4 inputs by default, 16 when asked in SLOT_ADD, 25 or 7
 after a SLOT_LAYOUT; it accepts 1 to 9, 16, 25, 36, 49 and 64; FxmeFX
-plugins accept 2 only. Open questions answered by default: the setting in
-the Parameters tab, every accepted width listed.
+plugins accept 2 only.
+
+Phase 2 written (2026-11-27), with the user's answers: the setting in
+both places (Parameters tab and the routing boxes), only the useful widths
+(2 and the ambisonic sizes, plus the current one: Plugin/Source/Widths.h).
+`SlotModel::mainInputs` / `mainOutputs` (saved with the project, sent in
+SLOT_ADD at every rebuild), `ClientEngine::setMainWidths` (SLOT_LAYOUT; the
+answer updates the description, the box and the routing; a refusal goes
+to `layoutError`). The copies (`Shadow`) get the widths before being
+prepared and find the widths they accept as the server does; a change
+reaches a mirror at once, and a local copy after leaving the local chain
+(its description follows when there is no server). Checked with
+fxmenet-wavclient `--engine --widths 16 0 --relayout 36 0` and the IEM
+BinauralDecoder: 16 inputs from the model, 36 after the change, the
+routing box with 36 inputs. Not tried yet in a DAW: the two selectors,
+AmbiRR2 into the decoder, Local.
 
 Each ends usable; the user tests and commits between them.
 

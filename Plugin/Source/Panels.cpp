@@ -8,6 +8,7 @@
 */
 
 #include "Panels.h"
+#include "Widths.h"
 #if FXMENET_JSFX
  #include "JsfxView.h"
 #endif
@@ -218,6 +219,71 @@ ParameterPanel::ParameterPanel (FxmeNetAudioProcessor& p) : processor (p)
     lastTouchedButton.onClick = [this] { lastTouchedMenu(); };
     styleButton (lastTouchedButton);
     addChildComponent (lastTouchedButton);
+
+    for (auto* box : { &widthIn, &widthOut })
+    {
+        box->setTooltip (tips::mainWidths);
+        box->onChange = [this]
+        {
+            const auto pick = [] (const juce::ComboBox& b, const std::vector<int>& widths)
+            {
+                const int i = b.getSelectedItemIndex();
+                return juce::isPositiveAndBelow (i, (int) widths.size()) ? widths[(std::size_t) i] : 0;
+            };
+            if (widthSlot != 0)
+                processor.getEngine().setMainWidths (widthSlot, pick (widthIn, inWidths), pick (widthOut, outWidths));
+        };
+        addChildComponent (*box);
+    }
+}
+
+void ParameterPanel::refreshWidths (const client::SlotModel* slot)
+{
+    const bool described = slot != nullptr && FxmeNetAudioProcessor::isDescribed (*slot);
+    const auto ins = described ? usefulWidths (*slot, true) : std::vector<int> {};
+    const auto outs = described ? usefulWidths (*slot, false) : std::vector<int> {};
+    const bool show = ins.size() > 1 || outs.size() > 1;
+
+    juce::String signature;
+    if (show)
+    {
+        signature << (int) slot->slotId << "|" << currentMainWidth (*slot, true) << "/" << currentMainWidth (*slot, false) << "|";
+        for (auto w : ins)
+            signature << w << ",";
+        signature << "|";
+        for (auto w : outs)
+            signature << w << ",";
+        signature << slot->layoutError;
+    }
+    if (signature == widthSignature)
+        return;
+    widthSignature = signature;
+    widthSlot = show ? slot->slotId : 0;
+    inWidths = ins;
+    outWidths = outs;
+
+    const auto fill = [] (juce::ComboBox& box, const std::vector<int>& widths, int now)
+    {
+        box.clear (juce::dontSendNotification);
+        for (std::size_t i = 0; i < widths.size(); ++i)
+            box.addItem (widthText (widths[i]), (int) i + 1);
+        for (std::size_t i = 0; i < widths.size(); ++i)
+            if (widths[i] == now)
+                box.setSelectedItemIndex ((int) i, juce::dontSendNotification);
+        box.setEnabled (widths.size() > 1);
+    };
+    if (show)
+    {
+        fill (widthIn, ins, currentMainWidth (*slot, true));
+        fill (widthOut, outs, currentMainWidth (*slot, false));
+        const juce::String refused = slot->layoutError.isNotEmpty() ? "\nRefused: " + slot->layoutError : juce::String();
+        widthIn.setTooltip (juce::String (tips::mainWidths) + refused);
+        widthOut.setTooltip (juce::String (tips::mainWidths) + refused);
+    }
+    widthIn.setVisible (show);
+    widthOut.setVisible (show);
+    resized();
+    repaint();
 }
 
 void ParameterPanel::lastTouchedMenu()
@@ -283,6 +349,7 @@ void ParameterPanel::refresh (const client::SlotModel* slot)
     const std::uint32_t id = slot != nullptr ? slot->slotId : 0;
     if (pluginEditor != nullptr && editorSlot != id)
         dropPluginEditor();
+    refreshWidths (slot);
 
     // The plugin's own editor, when it can have one here.
     juce::String why;
@@ -444,6 +511,11 @@ void ParameterPanel::paint (juce::Graphics& g)
     g.setFont (juce::Font (juce::FontOptions (12.5f)));
     g.setColour (theme::dimText);
     g.drawText (info, infoArea, juce::Justification::centredLeft, true);
+    if (widthIn.isVisible())
+    {
+        g.drawText ("in", widthLabelIn, juce::Justification::centredRight);
+        g.drawText ("out", widthLabelOut, juce::Justification::centredRight);
+    }
     if (message.isNotEmpty())
     {
         g.setFont (juce::Font (juce::FontOptions (13.0f)));
@@ -463,6 +535,15 @@ void ParameterPanel::resized()
     viewButton.setBounds (top.removeFromRight (130));
     top.removeFromRight (6);
     lastTouchedButton.setBounds (top.removeFromRight (juce::jmin (300, top.getWidth() / 2)));
+    if (widthIn.isVisible())
+    {
+        top.removeFromRight (8);
+        widthOut.setBounds (top.removeFromRight (110));
+        widthLabelOut = top.removeFromRight (30);
+        top.removeFromRight (4);
+        widthIn.setBounds (top.removeFromRight (110));
+        widthLabelIn = top.removeFromRight (22);
+    }
     infoArea = top;
 
     if (pluginEditor != nullptr && editorIsJsfx)
