@@ -167,15 +167,23 @@ void FxmeNetAudioProcessorEditor::timerCallback()
     statusColour = status == ClientEngine::Status::ready  ? theme::accent
                  : status == ClientEngine::Status::idle   ? theme::dimText
                                                           : theme::warning;
-    if (processor.getProcessing() == FxmeNetAudioProcessor::Processing::local)
+    const bool automatic = processor.getProcessing() == FxmeNetAudioProcessor::Processing::automatic;
+    if (processor.isPlayingLocal())
     {
         int bridged = 0;
         for (auto& s : engine.getSlotInfos())
             bridged += processor.getLocalProblem (s.slotId).isNotEmpty() ? 1 : 0;
-        statusLine = "LOCAL: the chain plays on this computer (Settings)";
+        statusLine = ! automatic                 ? "LOCAL: the chain plays on this computer (Settings)"
+                   : engine.isReturning()        ? "AUTO: back to the server..."
+                   : processor.isServerBack()    ? "AUTO: the server is back; playing here until you switch (Settings)"
+                                                 : "AUTO: server lost, the chain plays on this computer";
         if (bridged > 0)
             statusLine << ", " << bridged << (bridged == 1 ? " plugin" : " plugins") << " missing here";
         statusColour = theme::warning;
+    }
+    else if (automatic)
+    {
+        statusLine = "AUTO: " + statusLine;
     }
     connectButton.setButtonText (processor.getServer().isNotEmpty() ? "Disconnect" : "Connect");
 
@@ -209,7 +217,7 @@ void FxmeNetAudioProcessorEditor::refreshCatalog()
     const auto filter = filterBox.getText().trim();
     // Local play lists this computer's plugins in place of the server's: a
     // chain made here goes to the server when switched back (if it has them).
-    const bool local = processor.getProcessing() == FxmeNetAudioProcessor::Processing::local;
+    const bool local = processor.isPlayingLocal();
     auto latest = local ? processor.getLocalCatalog().getEntries() : processor.getEngine().getCatalog();
     juce::String signature;
     signature << (local ? "local:" : "server:") << (int) processor.getLocalCatalog().getRevision() << ":"
@@ -337,7 +345,7 @@ void FxmeNetAudioProcessorEditor::refreshChain()
     for (auto& s : slots)
         signature << (int) s.slotId << (s.loaded ? "L" : "-") << (s.bypassed ? "B" : "-") << s.error
                   << (s.localInfo ? "D" : "-") << processor.getLocalProblem (s.slotId) << ";";
-    signature << (processor.getProcessing() == FxmeNetAudioProcessor::Processing::local ? "local" : "server");
+    signature << (processor.isPlayingLocal() ? "local" : "server");
     if (signature == chainSignature)
         return;
     chainSignature = signature;
@@ -355,7 +363,7 @@ void FxmeNetAudioProcessorEditor::refreshChain()
             m.text = "A JSFX script, processed on the server. "
                      + juce::String (s.info.jsfxGfx ? "Its @gfx display is drawn here, from the server's data."
                                                     : "Generic controls (it has no @gfx section).");
-        const bool local = processor.getProcessing() == FxmeNetAudioProcessor::Processing::local;
+        const bool local = processor.isPlayingLocal();
         const auto problem = local ? processor.getLocalProblem (s.slotId) : juce::String();
         if (local && problem.isNotEmpty())
         {
@@ -504,7 +512,7 @@ void FxmeNetAudioProcessorEditor::paint (juce::Graphics& g)
     g.setFont (juce::Font (juce::FontOptions (12.0f)));
     g.setColour (theme::dimText);
     auto title = catalogTitle;
-    g.drawText (processor.getProcessing() == FxmeNetAudioProcessor::Processing::local ? "LOCAL PLUGINS" : "SERVER PLUGINS",
+    g.drawText (processor.isPlayingLocal() ? "LOCAL PLUGINS" : "SERVER PLUGINS",
                 title.removeFromLeft (110), juce::Justification::centredLeft);
     g.drawText (catalogCount, title.withTrimmedRight (filterBox.getWidth() + 8), juce::Justification::centredRight);
     g.drawText ("CHAIN", chainTitle, juce::Justification::centredLeft);

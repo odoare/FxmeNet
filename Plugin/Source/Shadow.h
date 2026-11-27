@@ -79,6 +79,22 @@ public:
         return std::unique_ptr<Shadow> (new Shadow (std::move (instance), sampleRate, blockSize, local));
     }
 
+    /** Local play starts (true) or ends (false) for it, in Auto: an
+        FxmeNet-aware plugin is told its new role, which it takes when
+        prepared again. Message thread, while the audio thread does not
+        process it. */
+    void setLocal (bool shouldBeLocal)
+    {
+        if (shouldBeLocal == local)
+            return;
+        local = shouldBeLocal;
+        if (net == nullptr)
+            return;   // an ordinary plugin: processed or not, nothing else changes
+        instance->releaseResources();
+        net->setRole ((std::int32_t) (local ? fxme::net::Role::local : fxme::net::Role::mirror));
+        instance->prepareToPlay (preparedRate, preparedBlock);
+    }
+
     /** True when it processes (local play), false for a mirror. */
     bool isLocal() const noexcept                           { return local; }
 

@@ -129,7 +129,7 @@ The \ui{Settings} tab has four parts.
 \begin{description}
   \item[Stream.] \ui{Block size N} and \ui{Network budget D}, with the latency
     they give (chapter~\ref{ch:performance}), and \ui{Processing}: where the
-    chain plays, \ui{Server} or \ui{Local} (section~\ref{sec:local}).
+    chain plays, \ui{Server}, \ui{Local} or \ui{Auto} (section~\ref{sec:local}).
   \item[Transport.] \ui{Silence in-flight audio at reset}: when the DAW restarts
     playback or jumps, drop the audio still on its way back from the server,
     so you hear silence for the length of the latency (as a local plugin
@@ -237,6 +237,22 @@ server again (the changes made meanwhile go with the chain).
   \item With \ui{Server} and no server answering, the track is silent:
     a missing server does not go unnoticed in a mix.
 \end{itemize}
+
+\ui{Auto} plays on the server, and on this computer while the server is
+lost: when the session has been down for two seconds, or the server has
+stopped answering while audio is sent. With \ui{Local copies loaded in
+advance} (the default), every plugin's local copy stays loaded while the
+server plays, so the switch is immediate. The copies take memory on this
+computer, not processing: they only process once the server is lost. Turn
+the option off to load them only then: nothing is kept meanwhile, but the
+track is silent while they load (from a moment to several seconds for
+samplers and convolution reverbs). Either way, the few blocks on their way
+to the server when it went are replaced by a short fade.
+The status line says \ui{AUTO} and which side plays. Once the server is
+back and has stayed so for three seconds, the chain plays there again with
+a crossfade of about 50~ms, by itself if \ui{Back to the server by itself}
+is on, or when you press \ui{Back to the server}. The changes made while
+playing here go to the server first. A note held across a switch is cut.
 
 \section{The same project on another computer}
 \label{sec:sessions}

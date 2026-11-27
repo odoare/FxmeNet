@@ -291,6 +291,7 @@ void FxmeNetAudioProcessor::timerCallback()
     applyServerParameterChanges();
     sendDirtyParameters();
     followChain();
+    followAuto();
     syncShadows();
     deliverTelemetry();
     handleAudioEvents();
@@ -516,7 +517,7 @@ fxmenet::plugin::Shadow* FxmeNetAudioProcessor::getShadow (std::uint32_t slotId,
     if (auto* s = findShadow (slotId))
         return s;
 
-    if (processing == Processing::local)   // local copies are made by syncLocal
+    if (playingLocal)   // local copies are made by syncLocal
     {
         if (why != nullptr)
         {
@@ -628,7 +629,7 @@ void FxmeNetAudioProcessor::removeShadow (std::uint32_t slotId)
 {
     if (findShadow (slotId) == nullptr)
         return;
-    if (processing == Processing::local)
+    if (playingLocal)
     {
         publishLocal (slotId);   // the audio thread lets go of it first
         localSignature = {};
@@ -644,11 +645,23 @@ void FxmeNetAudioProcessor::removeShadow (std::uint32_t slotId)
     shadows of removed or unloaded slots deleted. */
 void FxmeNetAudioProcessor::syncShadows()
 {
-    if (processing == Processing::local)
+    if (playingLocal)
     {
         syncLocal();
         return;
     }
+
+    // Auto: every slot's copy is ready, so that losing the server only
+    // changes their role (goLocal). Once per slot (a failure is kept).
+    if (processing == Processing::automatic && preloadCopies)
+        for (auto& s : engine.getSlotInfos())
+            if (s.loaded && ! isJsfx (s) && findShadow (s.slotId) == nullptr && localProblems.count (s.slotId) == 0)
+            {
+                juce::String why;
+                if (getShadow (s.slotId, &why) == nullptr && why.isNotEmpty())
+                    localProblems[s.slotId] = why;
+            }
+
     if (shadows.empty())
         return;
 
@@ -886,7 +899,7 @@ void FxmeNetAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     // The slots' states live on the server: bring them back first. Kept as
     // they were when the server does not answer in time. Local play: the
     // local copies' states are in the model already (syncLocal).
-    if (processing != Processing::local)
+    if (! playingLocal)
         engine.refreshStates (2000);
 
     juce::XmlElement root ("FxmeNet");
@@ -897,7 +910,10 @@ void FxmeNetAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
         root.setAttribute ("blockSize", stream.blockSize);
         root.setAttribute ("budgetBlocks", stream.budgetBlocks);
     }
-    root.setAttribute ("processing", processing == Processing::local ? "local" : "server");
+    root.setAttribute ("processing", processing == Processing::local ? "local"
+                                   : processing == Processing::automatic ? "auto" : "server");
+    root.setAttribute ("autoReturn", autoReturn);
+    root.setAttribute ("autoPreload", preloadCopies);
 
     for (auto& s : engine.getSlots())
     {
@@ -1062,7 +1078,10 @@ void FxmeNetAudioProcessor::setStateInformation (const void* data, int sizeInByt
         const std::lock_guard<std::mutex> l (settingsLock);
         server = xml->getStringAttribute ("server").trim();
     }
-    setProcessing (xml->getStringAttribute ("processing") == "local" ? Processing::local : Processing::server);
+    autoReturn = xml->getBoolAttribute ("autoReturn", true);
+    preloadCopies = xml->getBoolAttribute ("autoPreload", true);
+    const auto mode = xml->getStringAttribute ("processing");
+    setProcessing (mode == "local" ? Processing::local : mode == "auto" ? Processing::automatic : Processing::server);
     connectTo (xml->getStringAttribute ("server"));
 }
 
@@ -1077,7 +1096,7 @@ void FxmeNetAudioProcessor::setProcessing (Processing p)
     // The side leaving holds the plugins' current state (presets, files,
     // every value): into the model, which the side arriving starts from, so
     // that nothing jumps back to an older state, or to the defaults.
-    if (processing == Processing::local)
+    if (playingLocal)
     {
         for (auto& [id, shadow] : shadows)
         {
@@ -1103,7 +1122,7 @@ void FxmeNetAudioProcessor::setProcessing (Processing p)
     // first), the next ones are made as needed.
     engine.setLocalProcessor (nullptr);
     localChain.publish ({}, nullptr);
-    processing = Processing::server;   // removeShadow: no local chain to update meanwhile
+    playingLocal = false;   // removeShadow: no local chain to update meanwhile
     std::vector<std::uint32_t> ids;
     for (auto& [id, shadow] : shadows)
         ids.push_back (id);
@@ -1112,11 +1131,14 @@ void FxmeNetAudioProcessor::setProcessing (Processing p)
     localProblems.clear();
     localSignature = {};
     localDisplays.clear();   // a script's display starts again from its new source
+    serverBack = returnAsked = false;
+    lostSince = backSince = 0;
 
     processing = p;
     if (p == Processing::local)
     {
         engine.disconnect();
+        playingLocal = true;
         engine.setLocalProcessor (&localChain);
         syncLocal();
     }
@@ -1125,6 +1147,154 @@ void FxmeNetAudioProcessor::setProcessing (Processing p)
         connectTo (getServer());
     }
     setLatencySamples (engine.getLatency());
+}
+
+void FxmeNetAudioProcessor::followAuto()
+{
+    if (processing != Processing::automatic)
+        return;
+    const auto now = juce::Time::getMillisecondCounter();
+    const bool ready = engine.isSessionReady();
+
+    // Blocks sent and replies received: a session up but silent is lost too
+    // (a cable pulled: the control connection notices later).
+    const auto& st = engine.getStatistics();
+    const auto sent = st.sent.load(), received = st.received.load();
+    if (sent != requestsSeen)
+        requestsMs = now;
+    if (received != repliesSeen)
+        repliesMs = now;
+    requestsSeen = sent;
+    repliesSeen = received;
+
+    if (! playingLocal)
+    {
+        const bool silent = now - requestsMs < 200 && now - repliesMs > lostAfterMs;
+        const bool down = ! ready && engine.getStatus() != ClientEngine::Status::building;
+        if (silent || down)
+        {
+            if (lostSince == 0)
+                lostSince = now;
+            if (silent || now - lostSince >= lostAfterMs)
+                goLocal();
+        }
+        else
+        {
+            lostSince = 0;
+        }
+        return;
+    }
+
+    if (engine.isReturning())
+    {
+        if (engine.isReturnDone())
+            finishReturn();
+        return;
+    }
+
+    if (ready)
+    {
+        if (backSince == 0)
+            backSince = now;
+    }
+    else
+    {
+        backSince = 0;
+    }
+    serverBack = backSince != 0 && now - backSince >= backAfterMs;
+    if (serverBack && (autoReturn || returnAsked))
+        startReturn();
+}
+
+void FxmeNetAudioProcessor::goLocal()
+{
+    // The copies loaded already (syncShadows, or the editors') take the local
+    // role; the others are loaded now. The chain plays once all are there:
+    // silence meanwhile rather than a chain missing some of its plugins.
+    for (auto& [id, shadow] : shadows)
+        shadow->setLocal (true);
+    playingLocal = true;
+    lostSince = backSince = 0;
+    serverBack = returnAsked = false;
+    localProblems.clear();
+    localSignature = {};
+    localDisplays.clear();
+    syncLocal();   // the missing copies, and the chain published
+    engine.setLocalProcessor (&localChain);
+    setLatencySamples (engine.getLatency());
+}
+
+void FxmeNetAudioProcessor::startReturn()
+{
+    // The server gets the copies' state first (its chain was rebuilt from
+    // the model when it came back), then the crossfade, about 50 ms.
+    for (auto& [id, shadow] : shadows)
+    {
+        juce::MemoryBlock block;
+        shadow->getInstance().getStateInformation (block);
+        engine.setSlotState (id, std::vector<std::uint8_t> ((const std::uint8_t*) block.getData(),
+                                                            (const std::uint8_t*) block.getData() + block.getSize()));
+    }
+    double rate;
+    {
+        const std::lock_guard<std::mutex> l (settingsLock);
+        rate = preparedRate > 0.0 ? preparedRate : 48000.0;
+    }
+    const int n = juce::jmax (1, getStreamSettings().blockSize);
+    engine.startReturnToServer (juce::jmax (2, (int) std::ceil (0.05 * rate / n)));
+    returnAsked = false;
+}
+
+void FxmeNetAudioProcessor::finishReturn()
+{
+    engine.setLocalProcessor (nullptr);
+    localChain.publish ({}, nullptr);   // the audio thread no longer touches the copies
+    playingLocal = false;
+    std::vector<std::uint32_t> scripts;
+    for (auto& [id, shadow] : shadows)
+    {
+       #if FXMENET_JSFX
+        if (dynamic_cast<fxmenet::jsfx::JsfxInstance*> (&shadow->getInstance()) != nullptr)
+        {
+            scripts.push_back (id);
+            continue;
+        }
+       #endif
+        shadow->setLocal (false);   // a mirror again
+    }
+    for (auto id : scripts)
+        removeShadow (id);              // a script's display is the server's again
+    localProblems.clear();
+    localSignature = {};
+    localDisplays.clear();
+    serverBack = false;
+    backSince = 0;
+    for (auto& s : engine.getSlotInfos())
+        if (isJsfx (s))
+            engine.restartJsfxSync (s.slotId);
+    if (! preloadCopies)
+        dropUnshownCopies();
+    setLatencySamples (engine.getLatency());
+}
+
+void FxmeNetAudioProcessor::setPreloadCopies (bool preload)
+{
+    preloadCopies = preload;
+    if (! preload && processing == Processing::automatic && ! playingLocal)
+        dropUnshownCopies();
+    localProblems.clear();   // preloading again: try every slot
+}
+
+void FxmeNetAudioProcessor::dropUnshownCopies()
+{
+    if (playingLocal)
+        return;
+    std::vector<std::uint32_t> unshown;
+    for (auto& [id, shadow] : shadows)
+        if (shadow->getInstance().getActiveEditor() == nullptr)
+            unshown.push_back (id);
+    for (auto id : unshown)
+        removeShadow (id);
 }
 
 juce::String FxmeNetAudioProcessor::getLocalProblem (std::uint32_t slotId) const
@@ -1262,7 +1432,7 @@ fxmenet::plugin::Shadow* FxmeNetAudioProcessor::createLocalShadow (const SlotMod
 fxmenet::jsfx::JsfxInstance* FxmeNetAudioProcessor::findLocalScript (std::uint32_t slotId) const
 {
    #if FXMENET_JSFX
-    if (processing == Processing::local)
+    if (playingLocal)
         if (auto* shadow = findShadow (slotId))
             return dynamic_cast<fxmenet::jsfx::JsfxInstance*> (&shadow->getInstance());
    #else

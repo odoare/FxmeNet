@@ -123,12 +123,34 @@ public:
     //==============================================================================
     // Local play (doc/fallback-plan.md).
 
-    /** Where the chain is processed: on the server, or on this computer with
-        the slots' local copies (no connection then). Saved with the project. */
-    enum class Processing { server, local };
+    /** Where the chain is processed: on the server, on this computer with
+        the slots' local copies (no connection then), or automatic (the
+        server, and this computer while the server is lost). Saved with the
+        project. */
+    enum class Processing { server, local, automatic };
 
     Processing getProcessing() const noexcept   { return processing; }
     void setProcessing (Processing);
+
+    /** True while the chain plays here: Local, or Auto with the server lost. */
+    bool isPlayingLocal() const noexcept        { return playingLocal; }
+
+    /** Auto: back to the server by itself once it is back (true), or when
+        asked (returnToServer). Saved with the project. */
+    bool getAutoReturn() const noexcept         { return autoReturn; }
+    void setAutoReturn (bool shouldReturn)      { autoReturn = shouldReturn; }
+
+    /** Auto: every plugin's local copy loaded while the server plays, for an
+        immediate switch (true), or loaded when the server is lost, nothing
+        loaded meanwhile but silence while they load (false). Saved with the
+        project. */
+    bool getPreloadCopies() const noexcept      { return preloadCopies; }
+    void setPreloadCopies (bool preload);
+
+    /** Auto, playing here: the server is back (and has been for a while). */
+    bool isServerBack() const noexcept          { return serverBack; }
+    /** Auto: back to the server now (when it is back). */
+    void returnToServer()                       { returnAsked = true; }
 
     /** Local play: why a slot plays without its plugin (bridged), or {}. */
     juce::String getLocalProblem (std::uint32_t slotId) const;
@@ -246,6 +268,22 @@ private:
 
     // Local play, message thread.
     Processing processing = Processing::server;
+    bool playingLocal = false;    ///< the chain plays here (Local, or Auto with the server lost)
+    bool autoReturn = true, serverBack = false, returnAsked = false;
+    bool preloadCopies = true;
+    /** Auto, copies loaded when needed: the copies no editor shows go
+        (memory back), out of local play only. */
+    void dropUnshownCopies();
+    juce::uint32 lostSince = 0, backSince = 0, repliesMs = 0, requestsMs = 0;
+    std::uint64_t repliesSeen = 0, requestsSeen = 0;   ///< the engine's counts at the last tick
+    static constexpr juce::uint32 lostAfterMs = 2000;   ///< no session, or no reply while sending, this long
+    static constexpr juce::uint32 backAfterMs = 3000;   ///< the session up this long: the server is back
+
+    /** Auto: watches the server, switches sides (timer). */
+    void followAuto();
+    void goLocal();          ///< Auto: the server is lost, the copies play
+    void startReturn();      ///< Auto: back to the server, crossfading
+    void finishReturn();     ///< Auto: the crossfade is over
     fxmenet::plugin::LocalChain localChain;
     std::map<std::uint32_t, juce::String> localProblems;   ///< slots bridged, and why
     juce::String localSignature;                          ///< what localChain was last built from

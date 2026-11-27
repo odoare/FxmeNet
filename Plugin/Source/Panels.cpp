@@ -287,7 +287,7 @@ void ParameterPanel::refresh (const client::SlotModel* slot)
     // The plugin's own editor, when it can have one here.
     juce::String why;
     fxmenet::plugin::Shadow* shadow = nullptr;
-    const bool local = processor.getProcessing() == FxmeNetAudioProcessor::Processing::local;
+    const bool local = processor.isPlayingLocal();
     if (slot != nullptr && (slot->loaded || local))   // local play: its local copy, server or not
         shadow = processor.getShadow (id, &why);
    #if FXMENET_JSFX
@@ -392,7 +392,7 @@ void ParameterPanel::showGeneric (const client::SlotModel* slot)
 {
     const std::uint32_t id = slot != nullptr ? slot->slotId : 0;
     juce::String signature;
-    const bool local = processor.getProcessing() == FxmeNetAudioProcessor::Processing::local;
+    const bool local = processor.isPlayingLocal();
     const auto localProblem = slot != nullptr && local ? processor.getLocalProblem (id) : juce::String();
     if (slot != nullptr)
         signature << (int) id << (FxmeNetAudioProcessor::isDescribed (*slot) ? "L" : "-") << (int) slot->info.params.size() << localProblem;
@@ -702,13 +702,26 @@ SettingsPanel::SettingsPanel (FxmeNetAudioProcessor& p) : processor (p)
 
     processingBox.addItem ("Server", 1);
     processingBox.addItem ("Local", 2);
+    processingBox.addItem ("Auto", 3);
     processingBox.setTooltip (tips::processing);
     processingBox.onChange = [this]
     {
-        processor.setProcessing (processingBox.getSelectedId() == 2 ? FxmeNetAudioProcessor::Processing::local
-                                                                     : FxmeNetAudioProcessor::Processing::server);
+        const int choice = processingBox.getSelectedId();
+        processor.setProcessing (choice == 2 ? FxmeNetAudioProcessor::Processing::local
+                               : choice == 3 ? FxmeNetAudioProcessor::Processing::automatic
+                                             : FxmeNetAudioProcessor::Processing::server);
     };
     addAndMakeVisible (processingBox);
+
+    preloadButton.setTooltip (tips::preload);
+    preloadButton.onClick = [this] { processor.setPreloadCopies (preloadButton.getToggleState()); };
+    addChildComponent (preloadButton);
+    autoReturnButton.setTooltip (tips::autoReturn);
+    autoReturnButton.onClick = [this] { processor.setAutoReturn (autoReturnButton.getToggleState()); };
+    addChildComponent (autoReturnButton);
+    backButton.setTooltip (tips::backToServer);
+    backButton.onClick = [this] { processor.returnToServer(); };
+    addChildComponent (backButton);
 
     rescanButton.setTooltip (tips::rescan);
     fullRescanButton.setTooltip (tips::fullRescan);
@@ -737,7 +750,7 @@ SettingsPanel::SettingsPanel (FxmeNetAudioProcessor& p) : processor (p)
     jsfxFoldersButton.setTooltip (tips::jsfxFolders);
     jsfxFoldersButton.onClick = [this] { jsfxFoldersMenu(); };
 
-    for (auto* b : { &rescanButton, &fullRescanButton, &foldersButton, &jsfxRescanButton, &jsfxFoldersButton })
+    for (auto* b : { &rescanButton, &fullRescanButton, &foldersButton, &jsfxRescanButton, &jsfxFoldersButton, &backButton })
     {
         styleButton (*b);
         addAndMakeVisible (*b);
@@ -753,8 +766,16 @@ void SettingsPanel::refresh()
             blockIndex = i;
     blockBox.setSelectedItemIndex (blockIndex, juce::dontSendNotification);
     budgetBox.setSelectedId (s.budgetBlocks, juce::dontSendNotification);
-    processingBox.setSelectedId (processor.getProcessing() == FxmeNetAudioProcessor::Processing::local ? 2 : 1,
+    const auto mode = processor.getProcessing();
+    processingBox.setSelectedId (mode == FxmeNetAudioProcessor::Processing::local ? 2
+                               : mode == FxmeNetAudioProcessor::Processing::automatic ? 3 : 1,
                                  juce::dontSendNotification);
+    const bool automatic = mode == FxmeNetAudioProcessor::Processing::automatic;
+    autoReturnButton.setVisible (automatic);
+    preloadButton.setVisible (automatic);
+    preloadButton.setToggleState (processor.getPreloadCopies(), juce::dontSendNotification);
+    autoReturnButton.setToggleState (processor.getAutoReturn(), juce::dontSendNotification);
+    backButton.setVisible (automatic && processor.isServerBack() && ! processor.getAutoReturn());
 
     auto& engine = processor.getEngine();
     const double rate = processor.getSampleRate() > 0.0 ? processor.getSampleRate() : 48000.0;
@@ -935,6 +956,13 @@ void SettingsPanel::resized()
     row = r.removeFromTop (26);
     processingLabel = row.removeFromLeft (120);
     processingBox.setBounds (row.removeFromLeft (130));
+    row.removeFromLeft (12);
+    backButton.setBounds (row.removeFromLeft (150));
+    row = r.removeFromTop (24);   // Auto's options
+    row.removeFromLeft (120);
+    autoReturnButton.setBounds (row.removeFromLeft (220));
+    row.removeFromLeft (6);
+    preloadButton.setBounds (row.removeFromLeft (240));
     r.removeFromTop (6);
     latencyArea = r.removeFromTop (34);
     r.removeFromTop (18);

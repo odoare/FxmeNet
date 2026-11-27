@@ -23,6 +23,11 @@
     or paced in real time; the output, realigned by the latency the engine
     reports, is compared with local processing the same way.
 
+    --return-test (with scripts or plugins whose output does not depend on
+    when they started, e.g. --jsfx utility/volume): local play first, then
+    the server is connected a third of the way in and the engine crossfades
+    back to it (Auto mode's return); the output must have no gap.
+
     --local (with --engine): no server; the engine's local play
     (doc/fallback-plan.md) processes the chain here, through the shared
     chain core (chain::ChainProcessor) with its own copies of the plugins,
@@ -97,6 +102,7 @@ struct Options
     bool discover = false;
     bool engine = false;
     bool local = false;   ///< --local: the engine's local play, no server
+    bool returnTest = false;   ///< --return-test: local, then back to the server midway (Auto's return)
     int hostBlock = 512;
     bool randomBlocks = false;
 
@@ -132,6 +138,7 @@ struct Options
             else if (a == "--discover")              discover = true;
             else if (a == "--engine")                engine = true;
             else if (a == "--local")                 local = engine = true;
+            else if (a == "--return-test")           returnTest = local = engine = true;
             else if (a == "--host-block" && hasValue) hostBlock = args[++i].getIntValue();
             else if (a == "--random-blocks")         randomBlocks = true;
             else
@@ -702,6 +709,8 @@ int runEngine (const Options& o, const juce::AudioBuffer<float>& input, double s
                 return 1;
             }
             scripts.push_back (jsfx::makeSlotState (std::move (bundle)));
+            engine.addSlot (jsfx::jsfxUid, o.jsfxPaths[i], jsfx::jsfxVendor,
+                            descriptions.size() + i, scripts.back());   // for the server (--return-test)
         }
         if (! localChain.load (descriptions, formats, sampleRate, o.blockSize, scripts))
             return 1;
@@ -772,6 +781,7 @@ int runEngine (const Options& o, const juce::AudioBuffer<float>& input, double s
 
     const auto t0 = juce::Time::getMillisecondCounterHiRes();
     int callbacks = 0, latency = 0;
+    int returnStage = 0;   // --return-test: 0 local, 1 crossfading, 2 server
     bool latencyChanged = false;   // reported once
     for (int pos = 0; pos < total;)
     {
@@ -791,6 +801,34 @@ int runEngine (const Options& o, const juce::AudioBuffer<float>& input, double s
         {
             in[(std::size_t) c] = padded.getReadPointer (c, pos);
             out[(std::size_t) c] = output.getWritePointer (c, pos);
+        }
+        if (o.returnTest && returnStage == 0 && pos >= total / 3)
+        {
+            // The server comes back: a session, its chain loaded, then the return.
+            engine.connectTo (o.host, o.port);
+            const auto until = juce::Time::getMillisecondCounter() + 30000;
+            bool up = false;
+            while (! up && juce::Time::getMillisecondCounter() < until)
+            {
+                up = engine.isSessionReady();
+                for (auto& s : engine.getSlots())
+                    up = up && s.loaded;
+                juce::Thread::sleep (20);
+            }
+            if (! up)
+            {
+                fail ("--return-test: the server did not take the chain");
+                return 1;
+            }
+            engine.startReturnToServer (4);
+            returnStage = 1;
+            say ("  back to the server at sample " + juce::String (pos));
+        }
+        if (returnStage == 1 && engine.isReturnDone())
+        {
+            engine.setLocalProcessor (nullptr);
+            returnStage = 2;
+            say ("  on the server from sample " + juce::String (pos));
         }
         engine.process (in.data(), out.data(), size, ! o.realtime, false, nullptr);
         if (callbacks == 0)

@@ -234,7 +234,34 @@ public:
         instead of a server (null: back to the server). The caller keeps it
         alive as long as the engine, and disconnects while it is set. Any
         thread but the audio thread. */
-    void setLocalProcessor (LocalProcessor* processor) noexcept   { local.store (processor); }
+    void setLocalProcessor (LocalProcessor* processor) noexcept
+    {
+        returning.store (false);
+        returnDone.store (false);
+        local.store (processor);
+    }
+
+    /** Local play back to the server (Auto, doc/fallback-plan.md): for
+        `fadeBlocks` blocks each block is processed here and sent too, and
+        the output goes from the local result to the server's (a crossfade);
+        isReturnDone() then says the local side is no longer heard, and the
+        caller clears the local processor. Needs a session (a link). */
+    void startReturnToServer (int fadeBlocks) noexcept
+    {
+        returnBlocks.store (juce::jmax (1, fadeBlocks));
+        returnDone.store (false);
+        returning.store (true);
+    }
+
+    bool isReturning() const noexcept            { return returning.load(); }
+    bool isReturnDone() const noexcept           { return returnDone.load(); }
+
+    /** True when the session is up and its link usable by the audio thread. */
+    bool isSessionReady() const noexcept
+    {
+        return status.load() == Status::ready && published.load() != nullptr
+            && usableGeneration.load() == prepareGeneration.load();
+    }
 
     bool isLocal() const noexcept                { return local.load() != nullptr; }
     int getStreamLatency() const noexcept        { return stream.getLatency(); }
@@ -877,6 +904,16 @@ public:
         }
 
         const bool flushNow = resetCount != audioResets && flushOnReset.load();
+        if (generation != audioGeneration && ! flushNow && local.load() != nullptr)
+        {
+            // Local play goes on while the server goes or comes back: no
+            // restart of the stream (silence for the latency); the blocks
+            // sent on an old link are forgotten, a new link starts here.
+            std::fill (sentBlock.begin(), sentBlock.end(), 0);
+            if (link != nullptr)
+                link->startAt (stream.getBlocksSent());
+            audioGeneration = generation;
+        }
         if (generation != audioGeneration || flushNow)
         {
             // Back to block 0, the FIFO refilled with silence. After a host
@@ -890,6 +927,7 @@ public:
             std::fill (dryBlock.begin(), dryBlock.end(), 0);   // k starts again: no old block may match
             std::fill (sentBlock.begin(), sentBlock.end(), 0);
             std::fill (localBlock.begin(), localBlock.end(), 0);
+            returnStarted = false;   // a return under way starts again from here
             if (link != nullptr)
                 link->rebase();      // same link: its numbering goes on, older replies refused
             audioGeneration = generation;
@@ -1013,7 +1051,20 @@ private:
             e.dryBlock[slot] = k + 1;
 
             // Local play: processed here and now, played when a reply would be.
-            if (auto* l = e.local.load(); l != nullptr && ! bypassed)
+            // Returning to the server: for a few blocks, here and there both.
+            auto* l = e.local.load();
+            const bool returning = l != nullptr && e.returning.load();
+            if (! returning)
+                e.returnStarted = false;
+            if (returning && ! e.returnStarted)
+            {
+                e.returnStarted = true;
+                e.returnFirst = k;
+                e.returnEnd = k + (std::uint64_t) e.returnBlocks.load();
+            }
+            if (l != nullptr && returning && k >= e.returnEnd)
+                l = nullptr;   // the crossfade is over: the server alone
+            if (l != nullptr && ! bypassed)
             {
                 const int outs = e.host.numOutputs;
                 float* o = e.localOut.data() + slot * (std::size_t) (outs * n);
@@ -1022,11 +1073,15 @@ private:
                 const bool reset = e.localParityKnown && resetParity != e.localParity;
                 e.localParity = resetParity;
                 e.localParityKnown = true;
+                // The last local block of a return: its notes released, as
+                // the server's chain does at a break.
+                const bool last = returning && k + 1 == e.returnEnd;
                 l->processLocalBlock (block, e.host.numInputs, e.localPointers.data(), outs, n,
-                                      e.stream.getBlockMidi(), e.stream.getBlockMidiBytes(), offline, reset);
+                                      e.stream.getBlockMidi(), e.stream.getBlockMidiBytes(), offline, reset || last);
                 e.localBlock[slot] = k + 1;
                 e.sentBlock[slot] = 0;
-                return;
+                if (! returning)
+                    return;
             }
 
             const bool send = link != nullptr && ! bypassed;
@@ -1059,6 +1114,34 @@ private:
         {
             const int n = e.stream.getBlockSize();
             const auto slot = (std::size_t) (k % (std::uint64_t) e.maxInFlight);
+            const bool haveLocal = ! bypassed && e.localBlock[slot] == k + 1;
+
+            // Returning to the server: the crossfade, local to server.
+            if (e.returnStarted && k >= e.returnFirst)
+            {
+                if (k + 1 >= e.returnEnd)
+                    e.returnDone.store (true);
+                if (haveLocal)
+                {
+                    const float* o = e.localOut.data() + slot * (std::size_t) (e.host.numOutputs * n);
+                    const bool sent = link != nullptr && ! bypassed && e.sentBlock[slot] == k + 1;
+                    if (! (sent && link->fetch (k, dest, offline, deadline)))
+                    {
+                        for (int c = 0; c < e.host.numOutputs; ++c)   // no reply: the local block alone
+                            std::copy (o + c * n, o + (c + 1) * n, dest[c]);
+                        return true;
+                    }
+                    const auto span = (float) juce::jmax<std::uint64_t> (1, e.returnEnd - e.returnFirst);
+                    for (int c = 0; c < e.host.numOutputs; ++c)
+                        for (int i = 0; i < n; ++i)
+                        {
+                            const float g = juce::jlimit (0.0f, 1.0f, ((float) (k - e.returnFirst) + (float) i / (float) n) / span);
+                            dest[c][i] = o[c * n + i] * (1.0f - g) + dest[c][i] * g;
+                        }
+                    return true;
+                }
+            }
+
             if (link != nullptr && ! bypassed && e.sentBlock[slot] == k + 1)
                 return link->fetch (k, dest, offline, deadline);
 
@@ -1066,7 +1149,7 @@ private:
                 link->skip (k);
 
             // Processed here (local play).
-            if (! bypassed && e.localBlock[slot] == k + 1)
+            if (haveLocal)
             {
                 const float* o = e.localOut.data() + slot * (std::size_t) (e.host.numOutputs * n);
                 for (int c = 0; c < e.host.numOutputs; ++c)
@@ -1800,6 +1883,10 @@ private:
     // Local play (audio thread, sized by prepare).
     std::atomic<LocalProcessor*> local { nullptr };
     LocalJsfx localJsfx;   // message thread
+    std::atomic<bool> returning { false }, returnDone { false };
+    std::atomic<int> returnBlocks { 8 };
+    bool returnStarted = false;                    // audio thread
+    std::uint64_t returnFirst = 0, returnEnd = 0;  // audio thread
     std::vector<float> localOut;               ///< a processed block per slot, numOutputs x N
     std::vector<std::uint64_t> localBlock;     ///< k + 1 per slot
     std::vector<float*> localPointers;

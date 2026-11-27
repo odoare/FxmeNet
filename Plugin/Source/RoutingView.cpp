@@ -59,7 +59,7 @@ public:
                 if (s.slotId == b.id)
                     sig << s.name << (s.loaded ? "+" : "-") << (s.bypassed ? "b" : "")
                         << processor.getLocalProblem (s.slotId) << ";";
-        sig << (processor.getProcessing() == FxmeNetAudioProcessor::Processing::local ? "L" : "S");
+        sig << (processor.isPlayingLocal() ? "L" : "S");
         }
         for (auto& c : model.getConnections())
             sig << (int) c.from.box << "." << c.from.channel << ">" << (int) c.to.box << "." << c.to.channel
@@ -311,7 +311,7 @@ private:
                     if (s.slotId == box.id)
                     {
                         shape.name << s.name;
-                        const bool local = processor.getProcessing() == FxmeNetAudioProcessor::Processing::local;
+                        const bool local = processor.isPlayingLocal();
                         const auto problem = local ? processor.getLocalProblem (s.slotId) : juce::String();
                         shape.loaded = local ? problem.isEmpty() : s.loaded;
                         if (local && problem.isNotEmpty())

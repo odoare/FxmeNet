@@ -159,6 +159,9 @@ private:
 
     FxmeNetAudioProcessor& processor;
     juce::ComboBox blockBox, budgetBox, processingBox;
+    juce::ToggleButton autoReturnButton { "Back to the server by itself" };
+    juce::ToggleButton preloadButton { "Local copies loaded in advance" };
+    juce::TextButton backButton { "Back to the server" };
     juce::TextButton rescanButton { "Rescan" }, fullRescanButton { "Full rescan" }, foldersButton { "Folders..." };
     juce::TextButton flushButton { "Silence in-flight audio at reset" }, logButton { "Log transport events" };
     std::unique_ptr<juce::FileChooser> chooser;

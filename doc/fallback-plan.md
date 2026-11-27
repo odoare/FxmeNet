@@ -200,6 +200,36 @@ utility/volume) gives the same samples as the same scripts on the server.
 Not tried yet in a DAW: the display in Local, the switch while a display
 is open.
 
+Phase 4 written (2026-11-27). Engine: while a local processor is set, a
+lost or new link no longer restarts the stream (a new link starts at the
+current block, `AudioLink::startAt`); `startReturnToServer (blocks)`
+processes each block here and sends it too for that many blocks, the output
+crossfading from local to server per sample (a block with no reply plays
+the local result alone), the last local block releasing its notes; then
+`isReturnDone`. Processor: mode Auto (`Processing::automatic`, saved as
+"auto", with `autoReturn`); while the server plays, every loaded slot's
+copy is made in advance (`syncShadows`); `followAuto` at the timer: lost
+when the session is down (not building) for 2 s, or replies stop for 2 s
+while blocks are sent; then `goLocal` (the copies take the local role,
+`Shadow::setLocal`, the scripts are made); back when the session has been
+ready for 3 s, by itself or on "Back to the server" (`startReturn`: the
+copies' states to the server, then a 50 ms crossfade; `finishReturn`:
+mirrors again, the local scripts removed, the displays restarted from the
+server). Checked: fxmenet-wavclient `--return-test` (local play, the
+server connected a third of the way in, then the return) with
+utility/volume, offline and in real time: the same samples as a run kept
+local throughout (no gap, no click). Not done: the latency matching of
+"Switching" (local and server chain latencies are taken as equal), the
+marking of a render that switched sides (phase 5), the loss direction
+tested only by reading (it relies on concealment's fade).
+
+Added 2026-11-27 (user request): "Local copies loaded in advance"
+(`preloadCopies`, saved as "autoPreload", on by default). The copies cost
+memory, not processing, while the server plays; off, they are loaded only
+when the server is lost (`goLocal` publishes the chain before handing it
+to the engine: silence while they load, not a chain missing plugins), and
+those no editor shows are dropped again after the return.
+
 1. **The chain core in Common.** `ChainProcessor` (serial, routed, bypass,
    release of notes, latency per slot) and `MidiGuard` move to Common; the
    server's `Chain` uses them. No change in behaviour: the server's tests

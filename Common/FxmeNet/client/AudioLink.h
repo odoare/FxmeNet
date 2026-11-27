@@ -298,6 +298,14 @@ public:
         ring.setNextRead (base);
     }
 
+    /** A new link joining a stream that goes on (local play, then the
+        server again: doc/fallback-plan.md): its first block is `streamBlock`. */
+    void startAt (std::uint64_t streamBlock) noexcept
+    {
+        nextWire = juce::jmax (nextWire, base + streamBlock);
+        ring.setNextRead (base + streamBlock);
+    }
+
 private:
     struct Request
     {
