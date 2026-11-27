@@ -227,7 +227,8 @@ struct ErrorMessage
         pluginLoadFailed = 5,
         noSuchSlot       = 6,
         notConfigured    = 7,
-        notAllowed       = 8    ///< a monitor without the "admin" capability
+        notAllowed       = 8,   ///< a monitor without the "admin" capability
+        layoutRefused    = 9    ///< SLOT_LAYOUT: the plugin keeps its widths
     };
 
     int code = unknown;
@@ -428,6 +429,7 @@ struct SlotReady
     int fxmenetAbi = 0;
     bool jsfx = false;      ///< a JSFX script (doc/jsfx-plan.md)
     bool jsfxGfx = false;   ///< ... that has a @gfx section
+    std::vector<int> inputWidths, outputWidths;   ///< main bus widths it accepts (doc/bus-width-plan.md)
 
     juce::var toVar() const
     {
@@ -451,6 +453,13 @@ struct SlotReady
             o->setProperty ("kind", "jsfx");
             o->setProperty ("hasGfx", jsfxGfx);
         }
+        juce::Array<juce::var> ins, outs;
+        for (auto w : inputWidths)
+            ins.add (w);
+        for (auto w : outputWidths)
+            outs.add (w);
+        o->setProperty ("inputWidths", ins);
+        o->setProperty ("outputWidths", outs);
         return o;
     }
 
@@ -471,6 +480,12 @@ struct SlotReady
         s.fxmenetAbi = v["fxmenetAbi"].isVoid() ? 0 : (int) v["fxmenetAbi"];
         s.jsfx = v["kind"].toString() == "jsfx";
         s.jsfxGfx = s.jsfx && (bool) json::get (v, "hasGfx", false);
+        if (auto* a = v["inputWidths"].getArray())
+            for (auto& w : *a)
+                s.inputWidths.push_back ((int) w);
+        if (auto* a = v["outputWidths"].getArray())
+            for (auto& w : *a)
+                s.outputWidths.push_back ((int) w);
         return s;
     }
 };

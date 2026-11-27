@@ -103,6 +103,7 @@ private:
     void handleParamSet (const control::Frame&);
     void handleState (const control::Frame&);
     void handleRouting (const control::Frame&);
+    void handleSlotLayout (const control::Frame&);
 
     void ack (const control::Frame&);
     void fail (const control::Frame&, int code, const juce::String& text);

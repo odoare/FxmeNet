@@ -116,7 +116,8 @@ void Chain::refreshLatencies()
 juce::String Chain::addSlot (std::uint32_t slotId, int position,
                              std::unique_ptr<juce::AudioPluginInstance> instance,
                              const std::vector<std::uint8_t>& state,
-                             control::SlotReady& ready)
+                             control::SlotReady& ready,
+                             int mainInputs, int mainOutputs)
 {
     if (instance == nullptr)
         return "no instance";
@@ -127,6 +128,15 @@ juce::String Chain::addSlot (std::uint32_t slotId, int position,
     slot->slotId = slotId;
 
     catalog::useDefaultBuses (*instance);   // not enableAllBuses: see Buses.h
+
+    // The widths asked for, then those it accepts: before preparing (JUCE's
+    // VST3 host can only ask an inactive plugin).
+    if (! catalog::setMainWidths (*instance, mainInputs, mainOutputs))
+        log ("slot " + juce::String ((int) slotId) + ": " + instance->getName() + " refused "
+             + juce::String (mainInputs) + " in / " + juce::String (mainOutputs) + " out; it keeps its own");
+    slot->inputWidths = catalog::acceptedMainWidths (*instance, true, wire::maxChannels);
+    slot->outputWidths = catalog::acceptedMainWidths (*instance, false, wire::maxChannels);
+
     if (auto* vst3 = instance->getVST3Client())
         slot->net = fxme::net::queryNetPlugin (vst3->getIComponentPtr());
 
@@ -144,45 +154,91 @@ juce::String Chain::addSlot (std::uint32_t slotId, int position,
     if (slot->numChannels > wire::maxChannels)
         return instance->getName() + " has more than " + juce::String (wire::maxChannels) + " channels";
 
-    ready.slotId = slotId;
-    ready.latency = instance->getLatencySamples();
-    ready.numInputs = instance->getTotalNumInputChannels();
-    ready.numOutputs = instance->getTotalNumOutputChannels();
-    ready.buses = describeBuses (*instance);
-    ready.params = describeParameters (*instance);
+    slot->instance = std::move (instance);
+    slot->processor = slot->instance.get();
+    describe (*slot, ready);
+
+    // For the routing: its buses at full width, and the layout it has.
+    slot->box = control::toBox (ready);
+    for (const bool input : { true, false })
+        for (int i = 0; i < slot->instance->getBusCount (input); ++i)
+            (input ? slot->wantedIn : slot->wantedOut).push_back (slot->instance->getBus (input, i)->isEnabled());
+
+    slot->watcher = std::make_unique<ParamWatcher> (*slot->instance);   // after the state is loaded: no echo of it
+    position = juce::jlimit (0, (int) slots.size(), position);
+    slots.insert (slots.begin() + position, std::move (slot));
+    update();
+    return {};
+}
+
+void Chain::describe (Slot& slot, control::SlotReady& ready) const
+{
+    auto& instance = *slot.instance;
+    ready = {};
+    ready.slotId = slot.slotId;
+    ready.latency = instance.getLatencySamples();
+    ready.numInputs = instance.getTotalNumInputChannels();
+    ready.numOutputs = instance.getTotalNumOutputChannels();
+    ready.buses = describeBuses (instance);
+    ready.params = describeParameters (instance);
+    ready.inputWidths = slot.inputWidths;
+    ready.outputWidths = slot.outputWidths;
     ready.fxmenetAbi = 0;
    #if FXMENET_JSFX
-    if (auto* script = dynamic_cast<jsfx::JsfxInstance*> (instance.get()))
+    if (auto* script = dynamic_cast<jsfx::JsfxInstance*> (&instance))
     {
         ready.jsfx = true;
         ready.jsfxGfx = script->hasGfx();
     }
    #endif
-    if (slot->net != nullptr)
+    if (slot.net != nullptr)
     {
-        ready.fxmenetAbi = (int) slot->net->getAbiVersion();
-        const auto needed = -slot->net->getTelemetrySchema (nullptr, 0);
+        ready.fxmenetAbi = (int) slot.net->getAbiVersion();
+        const auto needed = -slot.net->getTelemetrySchema (nullptr, 0);
         if (needed > 0)
         {
             std::vector<std::uint8_t> schema ((std::size_t) needed);
-            const auto n = slot->net->getTelemetrySchema (schema.data(), needed);
+            const auto n = slot.net->getTelemetrySchema (schema.data(), needed);
             if (n > 0)
                 ready.telemetrySchema.append (schema.data(), (std::size_t) n);
         }
     }
+}
 
-    // For the routing: its buses at full width, and the layout it has.
-    slot->box = control::toBox (ready);
+juce::String Chain::setMainWidths (std::uint32_t slotId, int inputs, int outputs, control::SlotReady& ready)
+{
+    auto* s = findSlot (slotId);
+    if (s == nullptr)
+        return "no slot " + juce::String ((int) slotId);
+
+    // Out of the audio thread's way first (as update() does for aux buses).
+    s->muted = true;
+    if (! publish())
+    {
+        s->muted = false;
+        return "the audio thread is busy";
+    }
+
+    auto& p = *s->instance;
+    p.releaseResources();   // inactive: the plugin can be asked about layouts
+    const bool ok = catalog::setMainWidths (p, inputs, outputs);
+    s->inputWidths = catalog::acceptedMainWidths (p, true, wire::maxChannels);
+    s->outputWidths = catalog::acceptedMainWidths (p, false, wire::maxChannels);
+    p.prepareToPlay (sampleRate, blockSize);
+
+    s->numChannels = juce::jmax (1, p.getTotalNumInputChannels(), p.getTotalNumOutputChannels());
+    describe (*s, ready);
+    s->box = control::toBox (ready);
+    s->wantedIn.clear();
+    s->wantedOut.clear();
     for (const bool input : { true, false })
-        for (int i = 0; i < instance->getBusCount (input); ++i)
-            (input ? slot->wantedIn : slot->wantedOut).push_back (instance->getBus (input, i)->isEnabled());
+        for (int i = 0; i < p.getBusCount (input); ++i)
+            (input ? s->wantedIn : s->wantedOut).push_back (p.getBus (input, i)->isEnabled());
 
-    slot->instance = std::move (instance);
-    slot->processor = slot->instance.get();
-    slot->watcher = std::make_unique<ParamWatcher> (*slot->instance);   // after the state is loaded: no echo of it
-    position = juce::jlimit (0, (int) slots.size(), position);
-    slots.insert (slots.begin() + position, std::move (slot));
-    update();
+    s->muted = false;
+    update();   // the routing refits on its new pins
+    if (! ok)
+        return "refused";
     return {};
 }
 
@@ -343,7 +399,13 @@ bool Chain::publish()
         plan = std::make_unique<chain::RoutingPlan> (numInputs, numOutputs, layouts, routing, blockSize, core.getPlan());
     }
 
-    if (core.publish (std::vector<chain::ChainProcessor::SlotPtr> (slots.begin(), slots.end()), std::move (plan)))
+    // In series, a muted slot (its layout changing) is left out; routed, the
+    // plan keeps it, silent.
+    std::vector<chain::ChainProcessor::SlotPtr> list;
+    for (auto& s : slots)
+        if (routed || ! s->muted)
+            list.push_back (s);
+    if (core.publish (std::move (list), std::move (plan)))
         return true;
     log ("warning: the audio thread holds an old chain for over 2 s; leaking it");
     return false;

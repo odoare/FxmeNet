@@ -103,6 +103,8 @@ struct Options
     bool engine = false;
     bool local = false;   ///< --local: the engine's local play, no server
     bool returnTest = false;   ///< --return-test: local, then back to the server midway (Auto's return)
+    int widthIn = 0, widthOut = 0;       ///< --widths: main bus widths asked in SLOT_ADD (doc/bus-width-plan.md)
+    int relayoutIn = -1, relayoutOut = -1;   ///< --relayout: then a SLOT_LAYOUT
     int hostBlock = 512;
     bool randomBlocks = false;
 
@@ -139,6 +141,18 @@ struct Options
             else if (a == "--engine")                engine = true;
             else if (a == "--local")                 local = engine = true;
             else if (a == "--return-test")           returnTest = local = engine = true;
+            else if (a == "--widths" && i + 2 < args.size())
+            {
+                widthIn = args[++i].getIntValue();
+                widthOut = args[++i].getIntValue();
+                compare = false;   // the local reference keeps the default buses
+            }
+            else if (a == "--relayout" && i + 2 < args.size())
+            {
+                relayoutIn = args[++i].getIntValue();
+                relayoutOut = args[++i].getIntValue();
+                compare = false;
+            }
             else if (a == "--host-block" && hasValue) hostBlock = args[++i].getIntValue();
             else if (a == "--random-blocks")         randomBlocks = true;
             else
@@ -972,12 +986,39 @@ int run (const Options& o)
         add.uid = (std::uint32_t) d->uniqueId;
         add.name = d->name.toStdString();
         add.vendor = d->manufacturerName.toStdString();
+        add.mainInputs = (std::uint16_t) juce::jmax (0, o.widthIn);
+        add.mainOutputs = (std::uint16_t) juce::jmax (0, o.widthOut);
         if (! request (*connection, Type::slotAdd, id++, 0, encode (add), Type::slotReady, reply, 30000))
             return 1;
-        const auto ready = control::SlotReady::fromVar (control::fromPayload (reply.payload));
+        auto ready = control::SlotReady::fromVar (control::fromPayload (reply.payload));
+        const auto widths = [] (const control::SlotReady& r)
+        {
+            juce::StringArray ins, outs;
+            for (auto w : r.inputWidths)
+                ins.add (juce::String (w));
+            for (auto w : r.outputWidths)
+                outs.add (juce::String (w));
+            return juce::String (r.numInputs) + " in / " + juce::String (r.numOutputs) + " out (accepts in: "
+                 + ins.joinIntoString (",") + "; out: " + outs.joinIntoString (",") + ")";
+        };
         say ("  slot " + juce::String ((int) ready.slotId) + ": " + d->name + ", "
              + juce::String ((int) ready.params.size()) + " parameters, latency " + juce::String (ready.latency)
-             + (ready.fxmenetAbi > 0 ? ", FxmeNet-aware (ABI " + juce::String (ready.fxmenetAbi) + ")" : ""));
+             + (ready.fxmenetAbi > 0 ? ", FxmeNet-aware (ABI " + juce::String (ready.fxmenetAbi) + ")" : "")
+             + ", " + widths (ready));
+
+        if (o.relayoutIn >= 0)
+        {
+            const control::SlotLayout layout { ready.slotId, (std::uint16_t) o.relayoutIn, (std::uint16_t) o.relayoutOut };
+            if (request (*connection, Type::slotLayout, id++, 0, encode (layout), Type::slotReady, reply, 30000))
+            {
+                ready = control::SlotReady::fromVar (control::fromPayload (reply.payload));
+                say ("    SLOT_LAYOUT " + juce::String (o.relayoutIn) + "/" + juce::String (o.relayoutOut) + ": " + widths (ready));
+            }
+            else
+            {
+                say ("    SLOT_LAYOUT " + juce::String (o.relayoutIn) + "/" + juce::String (o.relayoutOut) + " refused");
+            }
+        }
 
         if (o.telemetry && ready.fxmenetAbi > 0)
         {

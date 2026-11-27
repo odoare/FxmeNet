@@ -85,6 +85,17 @@ No compatibility with older servers (development phase, as agreed).
 
 ## Phases
 
+State (2026-11-27): phase 1 written. `catalog::channelSetsFor`,
+`acceptedMainWidths`, `setMainWidths` (Buses.h, shared with the client's
+copies); SLOT_ADD's widths, SLOT_READY's `inputWidths` / `outputWidths`,
+SLOT_LAYOUT (27) and `layoutRefused` (9); `Chain::setMainWidths` (the slot
+muted, which in series now leaves it out of the published chain). Checked
+with fxmenet-wavclient `--widths` / `--relayout` and the IEM
+BinauralDecoder: 4 inputs by default, 16 when asked in SLOT_ADD, 25 or 7
+after a SLOT_LAYOUT; it accepts 1 to 9, 16, 25, 36, 49 and 64; FxmeFX
+plugins accept 2 only. Open questions answered by default: the setting in
+the Parameters tab, every accepted width listed.
+
 Each ends usable; the user tests and commits between them.
 
 1. **Server and protocol.** The widths tested at load, in SLOT_READY;
@@ -106,6 +117,9 @@ Each ends usable; the user tests and commits between them.
 
 - The setting in the Parameters tab (proposed), or on the routing boxes,
   or both?
+  > Both
 - Width lists: every accepted width (an IEM plugin accepts most from 1 to
   64), or only the "useful" ones (squares for ambisonics: 1, 4, 9, 16, 25,
   36, 49, 64, plus 2)? Proposed: every accepted width, as DAWs do.
+  > Only the useful ones
+  

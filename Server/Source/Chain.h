@@ -90,6 +90,7 @@ public:
         std::uint32_t slotId = 0;
         std::unique_ptr<juce::AudioPluginInstance> instance;   ///< owned; `processor` points to it
         fxme::net::INetPlugin* net = nullptr;   ///< nullptr: not FxmeNet-aware
+        std::vector<int> inputWidths, outputWidths;   ///< main widths it accepts (doc/bus-width-plan.md)
 
         // Routing, message thread.
         chain::Box box;                          ///< its buses at full width (SLOT_READY's)
@@ -131,7 +132,14 @@ public:
     juce::String addSlot (std::uint32_t slotId, int position,
                           std::unique_ptr<juce::AudioPluginInstance> instance,
                           const std::vector<std::uint8_t>& state,
-                          control::SlotReady& ready);
+                          control::SlotReady& ready,
+                          int mainInputs = 0, int mainOutputs = 0);
+
+    /** SLOT_LAYOUT: the slot's main input and output widths (0: as it is).
+        The slot leaves the audio path meanwhile. Fills `ready` (the slot
+        described again) either way; returns an error, "refused" when the
+        plugin kept its layout, or {}. */
+    juce::String setMainWidths (std::uint32_t slotId, int inputs, int outputs, control::SlotReady& ready);
 
     bool removeSlot (std::uint32_t slotId);
     bool moveSlot (std::uint32_t slotId, int position);
@@ -194,6 +202,9 @@ private:
     /** Routed: switches buses as the routing needs (muting what changes),
         then publishes. Not routed: publishes. */
     void update();
+
+    /** SLOT_READY's description of a slot as it is now. */
+    void describe (Slot&, control::SlotReady&) const;
 
     /** Sets a slot's buses on or off as wanted and prepares it again. */
     void applyBuses (Slot&, const std::vector<bool>& in, const std::vector<bool>& out);

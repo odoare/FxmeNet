@@ -403,6 +403,7 @@ int main()
         add.name = "FxmeCompressor";
         add.vendor = "FX-Mechanics";
         add.state.assign (100000, 0x5a);
+        add.mainInputs = 16;   // doc/bus-width-plan.md
 
         std::vector<ParamChange> params { { 3, 7, 0.25f }, { 4, 0, 1.0f } };
         SlotState st { 3, { 1, 2, 3 } };
@@ -444,6 +445,7 @@ int main()
             CHECK (frames[1].type == Type::slotAdd && decode (frames[1].payload, got));
             CHECK (got.slotId == 3 && got.position == 1 && got.uid == 0x1668ba35);
             CHECK (got.name == "FxmeCompressor" && got.vendor == "FX-Mechanics" && got.state == add.state);
+            CHECK (got.mainInputs == 16 && got.mainOutputs == 0);
 
             std::vector<ParamChange> gotParams;
             CHECK (decode (frames[2].payload, gotParams) && gotParams.size() == 2);
@@ -470,6 +472,15 @@ int main()
             writeFrame (big, Type::stateSet, 0, 0, payload.data(), payload.size());   // 2008 > 1024
             b.append (big.data(), 16);
             CHECK (b.next (f) == FrameAssembler::Result::corrupt);
+        }
+
+        // SLOT_LAYOUT.
+        {
+            SlotLayout layout { 9, 16, 2 }, back;
+            const auto bytes = encode (layout);
+            CHECK (bytes.size() == 8 && decode (bytes, back));
+            CHECK (back.slotId == 9 && back.inputs == 16 && back.outputs == 2);
+            CHECK (! decode (Bytes (bytes.begin(), bytes.begin() + 6), back));
         }
 
         // Truncated payloads are refused.

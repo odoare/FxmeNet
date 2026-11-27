@@ -430,6 +430,10 @@ void Session::handleFrame (const Frame& f, int gen)
             handleRouting (f);
             break;
 
+        case Type::slotLayout:
+            handleSlotLayout (f);
+            break;
+
         case Type::telemetryActive:
             handleTelemetryActive (f);
             break;
@@ -579,7 +583,8 @@ void Session::handleSlotAdd (const Frame& f)
     }
 
     control::SlotReady ready;
-    error = chain.addSlot (add.slotId, (int) add.position, std::move (instance), add.state, ready);
+    error = chain.addSlot (add.slotId, (int) add.position, std::move (instance), add.state, ready,
+                           add.mainInputs, add.mainOutputs);
     if (error.isNotEmpty())
         return fail (f, ErrorMessage::pluginLoadFailed, error);
 
@@ -627,6 +632,28 @@ void Session::handleState (const Frame& f)
     reply.state.assign ((const std::uint8_t*) block.getData(),
                         (const std::uint8_t*) block.getData() + block.getSize());
     connection->sendBinary (Type::state, f.requestId, encode (reply));
+}
+
+void Session::handleSlotLayout (const Frame& f)
+{
+    control::SlotLayout m;
+    if (! decode (f.payload, m) || m.inputs > wire::maxChannels || m.outputs > wire::maxChannels)
+        return fail (f, ErrorMessage::badRequest, "malformed SLOT_LAYOUT");
+
+    control::SlotReady ready;
+    const auto error = chain.setMainWidths (m.slotId, m.inputs, m.outputs, ready);
+    if (error == "refused")
+    {
+        log ("session " + juce::String ((int) sessionId) + ": slot " + juce::String ((int) m.slotId) + " refused "
+             + juce::String ((int) m.inputs) + " in / " + juce::String ((int) m.outputs) + " out");
+        return fail (f, ErrorMessage::layoutRefused, "the plugin keeps " + juce::String (ready.numInputs) + " in / "
+                                                       + juce::String (ready.numOutputs) + " out");
+    }
+    if (error.isNotEmpty())
+        return fail (f, ErrorMessage::noSuchSlot, error);
+    log ("session " + juce::String ((int) sessionId) + ": slot " + juce::String ((int) m.slotId) + " now "
+         + juce::String (ready.numInputs) + " in / " + juce::String (ready.numOutputs) + " out");
+    connection->sendJson (Type::slotReady, f.requestId, ready.toVar());
 }
 
 void Session::handleRouting (const Frame& f)
