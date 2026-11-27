@@ -7,13 +7,13 @@
   ------------------------------------------------------------------------------
 */
 
-#include "JsfxInstance.h"
+#include <FxmeNet/jsfx/JsfxInstance.h>
 
 #include <jsfx_embed.h>
 
 #include <cmath>
 
-namespace fxmenet::server
+namespace fxmenet::jsfx
 {
 
 namespace
@@ -526,4 +526,4 @@ void JsfxInstance::setStateInformation (const void* data, int size)
         sx_loadSerState (sx, (const char*) state.serialized.data(), (int) state.serialized.size());
 }
 
-} // namespace fxmenet::server
+} // namespace fxmenet::jsfx

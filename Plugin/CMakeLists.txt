@@ -54,7 +54,8 @@ function(fxmenet_add_client target)
 
     # JSFX scripts' @gfx display, drawn here from the server's data (doc/jsfx-plan.md).
     if(FXMENET_JSFX)
-        target_sources(${target} PRIVATE Source/JsfxView.cpp)
+        target_sources(${target} PRIVATE Source/JsfxView.cpp
+                                         ${CMAKE_SOURCE_DIR}/Common/FxmeNet/jsfx/JsfxInstance.cpp)   # local play
         target_compile_definitions(${target} PRIVATE FXMENET_JSFX=1)
         target_link_libraries(${target} PRIVATE fxjsfx)
     else()

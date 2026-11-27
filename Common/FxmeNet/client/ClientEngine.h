@@ -642,7 +642,9 @@ public:
             const std::lock_guard<std::mutex> jl (jsfxLock);
             jsfxQueues.erase (slotId);   // a JSFX display starts again from a reset
         }
-        if (ready && slot->onServer)
+        if (on && local.load() != nullptr && localJsfx.reset)
+            localJsfx.reset (slotId);   // local play: the local script is the source
+        else if (ready && slot->onServer)
             sendFrame (control::Type::telemetryActive, 0, encode (control::SlotValue { slotId, on ? 1u : 0u }));
     }
 
@@ -665,14 +667,22 @@ public:
     /** The display touched these memory blocks: the server sends them. */
     void subscribeJsfx (std::uint32_t slotId, const std::vector<std::uint32_t>& blocks)
     {
-        if (! blocks.empty())
+        if (blocks.empty())
+            return;
+        if (local.load() != nullptr && localJsfx.subscribe)
+            localJsfx.subscribe (slotId, blocks);
+        else
             sendFrame (control::Type::jsfxSubscribe, 0, jsfx::encodeSubscribe (slotId, blocks));
     }
 
     /** What a display's @gfx changed (JSFX_WRITE, an encoded SyncFrame). */
     void writeJsfx (const std::vector<std::uint8_t>& payload)
     {
-        if (! payload.empty())
+        if (payload.empty())
+            return;
+        if (local.load() != nullptr && localJsfx.write)
+            localJsfx.write (payload);
+        else
             sendFrame (control::Type::jsfxWrite, 0, payload);
     }
 
@@ -680,10 +690,51 @@ public:
         next JSFX_SYNC is a reset). */
     void restartJsfxSync (std::uint32_t slotId)
     {
+        if (local.load() != nullptr && localJsfx.reset)
+        {
+            localJsfx.reset (slotId);
+            return;
+        }
         const std::lock_guard<std::mutex> l (lock);
         auto* slot = find (slotId);
         if (slot != nullptr && slot->telemetryWanted && ready && slot->onServer)
             sendFrame (control::Type::telemetryActive, 0, encode (control::SlotValue { slotId, 1u }));
+    }
+
+    /** Local play (doc/fallback-plan.md, phase 3): a JSFX display's mirror
+        fed by the local script instead of the server. The caller sets these
+        once (message thread), and pushes the script's frames with
+        pushJsfxSync; the display's requests go to them while local. */
+    struct LocalJsfx
+    {
+        std::function<void (std::uint32_t slotId)> reset;   ///< send everything anew
+        std::function<void (std::uint32_t slotId, const std::vector<std::uint32_t>& blocks)> subscribe;
+        std::function<void (const std::vector<std::uint8_t>& payload)> write;   ///< a JSFX_WRITE
+    };
+    void setLocalJsfx (LocalJsfx hooks)   { localJsfx = std::move (hooks); }
+
+    /** A JSFX_SYNC payload from the local script, queued for its display as
+        the server's are. Message thread. */
+    void pushJsfxSync (std::uint32_t slotId, std::vector<std::uint8_t> payload)
+    {
+        const std::lock_guard<std::mutex> l (jsfxLock);
+        auto& q = jsfxQueues[slotId];
+        if (q.frames.size() >= maxJsfxQueued)
+        {
+            q.frames.clear();
+            q.overflowed = true;
+        }
+        q.frames.push_back (std::move (payload));
+    }
+
+    /** True while a slot's display is shown (its telemetry asked for). */
+    bool isTelemetryWanted (std::uint32_t slotId) const
+    {
+        const std::lock_guard<std::mutex> l (lock);
+        for (auto& s : slots)
+            if (s.slotId == slotId)
+                return s.telemetryWanted;
+        return false;
     }
 
     /** Message thread: the telemetry frames received since the last call,
@@ -1748,6 +1799,7 @@ private:
 
     // Local play (audio thread, sized by prepare).
     std::atomic<LocalProcessor*> local { nullptr };
+    LocalJsfx localJsfx;   // message thread
     std::vector<float> localOut;               ///< a processed block per slot, numOutputs x N
     std::vector<std::uint64_t> localBlock;     ///< k + 1 per slot
     std::vector<float*> localPointers;

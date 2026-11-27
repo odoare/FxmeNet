@@ -12,6 +12,12 @@
 
     The audio sections run here. @gfx never does: the client draws (phase 3).
 
+    Used by the server's chain and, in local play (doc/fallback-plan.md,
+    phase 3), by the plugin as a JSFX slot's local copy; there the plugin
+    feeds its display's mirror (the sync calls below) instead of the
+    server. Not header-only: JsfxInstance.cpp is added to each target that
+    uses it (FxmeNetServer, the plugins), which link the fxjsfx library.
+
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-FXME-Commercial
   ------------------------------------------------------------------------------
@@ -30,7 +36,7 @@
 
 class SX_Instance;
 
-namespace fxmenet::server
+namespace fxmenet::jsfx
 {
 
 /** A parameter that knows its values in the plugin's own units (a JSFX
@@ -127,4 +133,4 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JsfxInstance)
 };
 
-} // namespace fxmenet::server
+} // namespace fxmenet::jsfx

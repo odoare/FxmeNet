@@ -9,7 +9,7 @@
 
 #include "Chain.h"
 #if FXMENET_JSFX
- #include "JsfxInstance.h"
+ #include <FxmeNet/jsfx/JsfxInstance.h>
 #endif
 #include "Log.h"
 
@@ -152,7 +152,7 @@ juce::String Chain::addSlot (std::uint32_t slotId, int position,
     ready.params = describeParameters (*instance);
     ready.fxmenetAbi = 0;
    #if FXMENET_JSFX
-    if (auto* script = dynamic_cast<JsfxInstance*> (instance.get()))
+    if (auto* script = dynamic_cast<jsfx::JsfxInstance*> (instance.get()))
     {
         ready.jsfx = true;
         ready.jsfxGfx = script->hasGfx();
@@ -360,7 +360,7 @@ std::vector<control::ParamInfo> describeParameters (juce::AudioPluginInstance& i
     return chain::describeParameters (instance, [] (juce::AudioProcessorParameter& p, control::ParamInfo& i)
     {
        #if FXMENET_JSFX
-        if (auto* ranged = dynamic_cast<RangedParameter*> (&p))
+        if (auto* ranged = dynamic_cast<jsfx::RangedParameter*> (&p))
         {
             i.hasRange = ranged->getRange (i.rangeMin, i.rangeMax, i.rangeStep);
             i.choices = ranged->isChoice();

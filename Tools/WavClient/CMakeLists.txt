@@ -27,3 +27,10 @@ target_link_libraries(FxmeNetWavClient
         juce::juce_recommended_config_flags
         juce::juce_recommended_warning_flags
 )
+
+# --local with --jsfx: scripts played here, as the plugin's local play does.
+if(FXMENET_JSFX)
+    target_sources(FxmeNetWavClient PRIVATE ${CMAKE_SOURCE_DIR}/Common/FxmeNet/jsfx/JsfxInstance.cpp)
+    target_compile_definitions(FxmeNetWavClient PRIVATE FXMENET_JSFX=1)
+    target_link_libraries(FxmeNetWavClient PRIVATE fxjsfx)
+endif()

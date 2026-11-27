@@ -72,6 +72,13 @@ public:
         return std::unique_ptr<Shadow> (new Shadow (std::move (instance), sampleRate, blockSize, local));
     }
 
+    /** Wraps an instance made elsewhere (a JSFX script's, for local play). */
+    static std::unique_ptr<Shadow> fromInstance (std::unique_ptr<juce::AudioPluginInstance> instance,
+                                                 double sampleRate, int blockSize, bool local)
+    {
+        return std::unique_ptr<Shadow> (new Shadow (std::move (instance), sampleRate, blockSize, local));
+    }
+
     /** True when it processes (local play), false for a mirror. */
     bool isLocal() const noexcept                           { return local; }
 

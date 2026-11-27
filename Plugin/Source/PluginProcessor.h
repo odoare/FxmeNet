@@ -36,6 +36,7 @@
 #include "LocalCatalog.h"
 #include "ParameterPool.h"
 #include "LocalChain.h"
+#include <FxmeNet/jsfx/JsfxSync.h>
 #include "Shadow.h"
 
 #include <array>
@@ -43,6 +44,8 @@
 #include <mutex>
 #include <set>
 #include <utility>
+
+namespace fxmenet::jsfx { class JsfxInstance; }
 
 class FxmeNetAudioProcessor : public juce::AudioProcessor,
                               private juce::Timer
@@ -256,6 +259,14 @@ private:
 
     /** Publishes the local chain (all slots but `without`). */
     void publishLocal (std::uint32_t without = 0);
+
+    /** Local play: a JSFX slot's local script (null for other slots). */
+    fxmenet::jsfx::JsfxInstance* findLocalScript (std::uint32_t slotId) const;
+    /** Local play: the local scripts' frames for their shown displays. */
+    void pumpLocalJsfx();
+    std::set<std::uint32_t> localDisplays;   ///< scripts whose display got its reset
+    fxmenet::jsfx::SyncFrame localJsfxFrame;
+    std::vector<std::uint8_t> localJsfxPayload;
 
     /** Prepares the shadows and the local chain for the current format. */
     void prepareLocal (double sampleRate, int streamBlock);

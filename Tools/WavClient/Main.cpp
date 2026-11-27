@@ -55,6 +55,9 @@
 
 #include <FxmeNet/catalog/Buses.h>
 #include <FxmeNet/chain/ChainProcessor.h>
+#if FXMENET_JSFX
+ #include <FxmeNet/jsfx/JsfxInstance.h>
+#endif
 #include <FxmeNet/client/ClientEngine.h>
 #include <FxmeNet/control/ControlConnection.h>
 #include <FxmeNet/control/Discovery.h>
@@ -84,7 +87,7 @@ struct Options
     int port = 54322;
     juce::File in, out;
     juce::StringArray plugins;
-    juce::StringArray jsfxFolders, jsfxPaths;   ///< --jsfx: scripts, after the plugins, on the server only
+    juce::StringArray jsfxFolders, jsfxPaths;   ///< --jsfx: scripts, after the plugins (on the server, or here with --local)
     int blockSize = 128;
     bool realtime = false;
     int budgetBlocks = 2;
@@ -577,9 +580,28 @@ class WavLocalChain : public client::LocalProcessor
 {
 public:
     bool load (const juce::OwnedArray<juce::PluginDescription>& descriptions, juce::AudioPluginFormatManager& formats,
-               double sampleRate, int n)
+               double sampleRate, int n, const std::vector<std::vector<std::uint8_t>>& scripts)
     {
         std::vector<chain::ChainProcessor::SlotPtr> list;
+       #if FXMENET_JSFX
+        for (auto& state : scripts)   // after the plugins, as the server's chain has them
+        {
+            juce::String error;
+            auto script = jsfx::JsfxInstance::create (state, sampleRate, error);
+            if (script == nullptr)
+            {
+                fail ("local play, a script: " + error);
+                return false;
+            }
+            pending.push_back (std::move (script));
+        }
+       #else
+        if (! scripts.empty())
+        {
+            fail ("local play of scripts: this build has no JSFX engine");
+            return false;
+        }
+       #endif
         for (auto* d : descriptions)
         {
             juce::String error;
@@ -597,6 +619,16 @@ public:
             slot->numChannels = juce::jmax (1, instance->getTotalNumInputChannels(), instance->getTotalNumOutputChannels());
             list.push_back (slot);
             instances.push_back (std::move (instance));
+        }
+        for (auto& script : pending)
+        {
+            script->setPlayHead (&playHead);
+            script->prepareToPlay (sampleRate, n);
+            auto slot = std::make_shared<chain::ProcessorSlot>();
+            slot->processor = script.get();
+            slot->numChannels = juce::jmax (1, script->getTotalNumInputChannels(), script->getTotalNumOutputChannels());
+            list.push_back (slot);
+            instances.push_back (std::move (script));
         }
         work.setSize (wire::maxChannels, n);
         midi.ensureSize (8 * wire::maxMidiBytes + (std::size_t) chain::MidiGuard::releaseSize());
@@ -629,7 +661,7 @@ public:
 
 private:
     EmptyPlayHead playHead;
-    std::vector<std::unique_ptr<juce::AudioPluginInstance>> instances;
+    std::vector<std::unique_ptr<juce::AudioPluginInstance>> instances, pending;
     chain::ChainProcessor core;
     juce::AudioBuffer<float> work;
     juce::MidiBuffer midi;
@@ -657,7 +689,21 @@ int runEngine (const Options& o, const juce::AudioBuffer<float>& input, double s
     WavLocalChain localChain;
     if (o.local)
     {
-        if (! localChain.load (descriptions, formats, sampleRate, o.blockSize))
+        std::vector<std::vector<std::uint8_t>> scripts;
+        for (int i = 0; i < o.jsfxPaths.size(); ++i)
+        {
+            jsfx::Bundle bundle;
+            juce::String error;
+            jsfx::BundleBuilder builder (juce::File (o.jsfxFolders[i]));
+            builder.convertAudio = jsfx::convertAudioForJsfx;
+            if (! builder.build (o.jsfxPaths[i], bundle, error))
+            {
+                fail (error);
+                return 1;
+            }
+            scripts.push_back (jsfx::makeSlotState (std::move (bundle)));
+        }
+        if (! localChain.load (descriptions, formats, sampleRate, o.blockSize, scripts))
             return 1;
         engine.setLocalProcessor (&localChain);
         say ("Local play: no server");

@@ -9,7 +9,7 @@
 
 #include "Session.h"
 #if FXMENET_JSFX
- #include "JsfxInstance.h"
+ #include <FxmeNet/jsfx/JsfxInstance.h>
 #endif
 #include "Log.h"
 #include "Server.h"
@@ -328,7 +328,7 @@ void Session::pumpJsfxSync()
     {
         if (! s.telemetryActive || left == 0)
             return;
-        auto* script = dynamic_cast<JsfxInstance*> (s.instance.get());
+        auto* script = dynamic_cast<jsfx::JsfxInstance*> (s.instance.get());
         if (script == nullptr || ! script->hasGfx())
             return;
         if (! script->syncCollect (s.slotId, juce::jmin (left, jsfx::defaultFrameBudget), jsfxFrame))
@@ -442,7 +442,7 @@ void Session::handleFrame (const Frame& f, int gen)
                 return fail (f, ErrorMessage::badRequest, "malformed JSFX_SUBSCRIBE");
            #if FXMENET_JSFX
             if (auto* slot = chain.findSlot (slotId))
-                if (auto* script = dynamic_cast<JsfxInstance*> (slot->instance.get()))
+                if (auto* script = dynamic_cast<jsfx::JsfxInstance*> (slot->instance.get()))
                     script->syncSubscribe (blocks);
            #endif
             break;   // no answer: the next JSFX_SYNC is it
@@ -455,7 +455,7 @@ void Session::handleFrame (const Frame& f, int gen)
                 return fail (f, ErrorMessage::badRequest, "malformed JSFX_WRITE");
            #if FXMENET_JSFX
             if (auto* slot = chain.findSlot (w.slotId))
-                if (auto* script = dynamic_cast<JsfxInstance*> (slot->instance.get()))
+                if (auto* script = dynamic_cast<jsfx::JsfxInstance*> (slot->instance.get()))
                     script->syncWrite (w);
            #endif
             break;   // no answer
@@ -540,7 +540,7 @@ void Session::handleTelemetryActive (const Frame& f)
    #if FXMENET_JSFX
     // A JSFX script's display: on (also on again) starts its mirror anew.
     if (v.value != 0)
-        if (auto* script = dynamic_cast<JsfxInstance*> (slot->instance.get()))
+        if (auto* script = dynamic_cast<jsfx::JsfxInstance*> (slot->instance.get()))
             script->syncReset();
    #endif
     ack (f);   // also for a plugin with no telemetry: there is simply nothing to send
@@ -559,7 +559,7 @@ void Session::handleSlotAdd (const Frame& f)
         // A JSFX script: it comes with the message, in the state (JsfxBundle.h).
         label = "JSFX " + juce::String::fromUTF8 (add.name.c_str());
        #if FXMENET_JSFX
-        instance = JsfxInstance::create (add.state, config.sampleRate, error);
+        instance = jsfx::JsfxInstance::create (add.state, config.sampleRate, error);
        #else
         error = "this server was built without JSFX";
        #endif

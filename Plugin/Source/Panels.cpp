@@ -292,7 +292,7 @@ void ParameterPanel::refresh (const client::SlotModel* slot)
         shadow = processor.getShadow (id, &why);
    #if FXMENET_JSFX
     // A JSFX script with @gfx: its display, drawn here (JsfxView).
-    const bool jsfxDisplay = slot != nullptr && slot->loaded && FxmeNetAudioProcessor::isJsfx (*slot)
+    const bool jsfxDisplay = slot != nullptr && FxmeNetAudioProcessor::isDescribed (*slot) && FxmeNetAudioProcessor::isJsfx (*slot)
                           && slot->info.jsfxGfx && id != jsfxFailedSlot;
     if (slot != nullptr && id == jsfxFailedSlot)
         why = jsfxFailure;

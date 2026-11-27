@@ -36,7 +36,10 @@ Common/                 shared by server and client, header-only:
                         JUCE-free), JsfxScripts.h (finding scripts on disk,
                         packing one with what it imports; juce_core),
                         JsfxSync.h (the @gfx display's mirror: messages and
-                        the server's side; JUCE-free)
+                        the server's side; JUCE-free), JsfxInstance (a JSFX
+                        script as a plugin of the chain, on the fxjsfx library;
+                        its .cpp compiled into the server, the plugins and
+                        fxmenet-wavclient: local play)
   FxmeNet/client/       the client: BlockStream (re-blocking, latency, jitter
                         buffer, concealment) and ReplyRing, JUCE-free; LocalProcessor
                         (local play's interface, JUCE-free); AudioLink
@@ -49,9 +52,8 @@ Server/Source/          fxmenet-server: Main (options, signals, message loop),
                         Server (listener, handshakes, UDP routing, orphans),
                         Session (control handling), Chain (slots, snapshots),
                         AudioWorker (ordering, reply cache, processing),
-                        PluginCatalog (scan, folders, rescans), JsfxInstance (a
-                        JSFX script as a plugin of the chain, on the fxjsfx
-                        library), Monitor (fxmenet-top's connections),
+                        PluginCatalog (scan, folders, rescans), Monitor
+                        (fxmenet-top's connections),
                         SystemLoad, UdpPeer, Log
 Plugin/                 FxmeNetPlugin ("FxmeNet", VST3 and AU) and FxmeNetInstrument
                         ("FxmeNet Instrument", same sources, FXMENET_INSTRUMENT=1): the client in the DAW,

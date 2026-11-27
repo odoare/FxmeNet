@@ -10,6 +10,9 @@
 #include "PluginProcessor.h"
 
 #include <FxmeNet/chain/Describe.h>
+#if FXMENET_JSFX
+ #include <FxmeNet/jsfx/JsfxInstance.h>
+#endif
 #include "PluginEditor.h"
 #include "AppSettings.h"
 
@@ -57,6 +60,38 @@ FxmeNetAudioProcessor::FxmeNetAudioProcessor()
         const std::lock_guard<std::mutex> l (serverChangesLock);
         serverChanges.push_back ({ slotId, index, value });
     };
+
+    // Local play: a JSFX display's mirror fed by the local script.
+    fxmenet::client::ClientEngine::LocalJsfx hooks;
+    hooks.reset = [this] (std::uint32_t slotId)
+    {
+       #if FXMENET_JSFX
+        if (auto* js = findLocalScript (slotId))
+            js->syncReset();
+       #endif
+        localDisplays.erase (slotId);   // the pump starts it again
+    };
+    hooks.subscribe = [this] (std::uint32_t slotId, const std::vector<std::uint32_t>& blocks)
+    {
+       #if FXMENET_JSFX
+        if (auto* js = findLocalScript (slotId))
+            js->syncSubscribe (blocks);
+       #else
+        juce::ignoreUnused (slotId, blocks);
+       #endif
+    };
+    hooks.write = [this] (const std::vector<std::uint8_t>& payload)
+    {
+       #if FXMENET_JSFX
+        fxmenet::jsfx::SyncFrame w;
+        if (fxmenet::jsfx::decode (payload.data(), payload.size(), w) && ! w.reset)
+            if (auto* js = findLocalScript (w.slotId))
+                js->syncWrite (w);
+       #else
+        juce::ignoreUnused (payload);
+       #endif
+    };
+    engine.setLocalJsfx (std::move (hooks));
 
     engine.setFlushOnReset (fxmenet::plugin::getFlushOnReset());
     logEvents = fxmenet::plugin::getLogEvents();
@@ -597,6 +632,7 @@ void FxmeNetAudioProcessor::removeShadow (std::uint32_t slotId)
     {
         publishLocal (slotId);   // the audio thread lets go of it first
         localSignature = {};
+        localDisplays.erase (slotId);
     }
     if (beforeShadowRemoved)
         beforeShadowRemoved (slotId);
@@ -1075,6 +1111,7 @@ void FxmeNetAudioProcessor::setProcessing (Processing p)
         removeShadow (id);
     localProblems.clear();
     localSignature = {};
+    localDisplays.clear();   // a script's display starts again from its new source
 
     processing = p;
     if (p == Processing::local)
@@ -1106,12 +1143,35 @@ void FxmeNetAudioProcessor::prepareLocal (double sampleRate, int streamBlock)
 fxmenet::plugin::Shadow* FxmeNetAudioProcessor::createLocalShadow (const SlotModel& slot, juce::String& why)
 {
     why = {};
+    double rate;
+    {
+        const std::lock_guard<std::mutex> l (settingsLock);
+        rate = preparedRate > 0.0 ? preparedRate : 48000.0;
+    }
+    const int block = getStreamSettings().blockSize;
+    std::unique_ptr<fxmenet::plugin::Shadow> shadow;
+    bool script = false;
+
     if (isJsfx (slot))
     {
-        why = "a JSFX script (not played locally yet)";
+       #if FXMENET_JSFX
+        // The script travels in the slot's state: loaded here as the server would.
+        juce::String error;
+        auto instance = fxmenet::jsfx::JsfxInstance::create (engine.getSlotState (slot.slotId), rate, error);
+        if (instance == nullptr)
+        {
+            why = "the script does not load here: " + error;
+            return nullptr;
+        }
+        shadow = fxmenet::plugin::Shadow::fromInstance (std::move (instance), rate, block, true);
+        script = true;
+       #else
+        why = "a JSFX script (this build has no JSFX engine)";
         return nullptr;
+       #endif
     }
-
+    else
+    {
     // The server's catalog says which version; without it, any version here.
     fxmenet::control::PluginEntry entry;
     if (! findCatalogEntry (slot, entry))
@@ -1129,18 +1189,15 @@ fxmenet::plugin::Shadow* FxmeNetAudioProcessor::createLocalShadow (const SlotMod
         return nullptr;
     }
 
-    double rate;
-    {
-        const std::lock_guard<std::mutex> l (settingsLock);
-        rate = preparedRate > 0.0 ? preparedRate : 48000.0;
-    }
     juce::String error;
-    auto shadow = fxmenet::plugin::Shadow::create (shadowFormats, m.local, rate, getStreamSettings().blockSize, error, true);
+    shadow = fxmenet::plugin::Shadow::create (shadowFormats, m.local, rate, block, error, true);
     if (shadow == nullptr)
     {
         why = "cannot load it: " + error;
         return nullptr;
     }
+    }
+
     if (! slot.info.params.empty() && shadow->getNumParameters() != (int) slot.info.params.size())
     {
         why = "it has " + juce::String (shadow->getNumParameters()) + " parameters here, "
@@ -1165,7 +1222,8 @@ fxmenet::plugin::Shadow* FxmeNetAudioProcessor::createLocalShadow (const SlotMod
 
     // The model's state (the last the server gave, or this computer's), then
     // the values set since. (`slot` comes from getSlotInfos: no state blob.)
-    if (const auto state = engine.getSlotState (slot.slotId); ! state.empty())
+    // A script was made from it already.
+    if (const auto state = engine.getSlotState (slot.slotId); ! state.empty() && ! script)
         shadow->getInstance().setStateInformation (state.data(), (int) state.size());
     for (auto& [index, v] : slot.params)
         shadow->setQuietly ((int) index, v.value);
@@ -1176,11 +1234,66 @@ fxmenet::plugin::Shadow* FxmeNetAudioProcessor::createLocalShadow (const SlotMod
 
     // Its parameters and buses, when no server has described the slot: the
     // generic controls, the mapping and the routing work without one.
-    engine.setLocalInfo (slotId, fxmenet::chain::describeSlot (slotId, shadow->getInstance()));
+    auto info = fxmenet::chain::describeSlot (slotId, shadow->getInstance());
+   #if FXMENET_JSFX
+    if (auto* js = dynamic_cast<fxmenet::jsfx::JsfxInstance*> (&shadow->getInstance()))
+    {
+        // As the server describes a script: its sliders' units and lists.
+        info.params = fxmenet::chain::describeParameters (*js, [] (juce::AudioProcessorParameter& p, fxmenet::control::ParamInfo& i)
+        {
+            if (auto* ranged = dynamic_cast<fxmenet::jsfx::RangedParameter*> (&p))
+            {
+                i.hasRange = ranged->getRange (i.rangeMin, i.rangeMax, i.rangeStep);
+                i.choices = ranged->isChoice();
+                i.hidden = ranged->isHidden();
+            }
+        });
+        info.jsfx = true;
+        info.jsfxGfx = js->hasGfx();
+    }
+   #endif
+    engine.setLocalInfo (slotId, std::move (info));
 
     auto* raw = shadow.get();
     shadows[slotId] = std::move (shadow);
     return raw;
+}
+
+fxmenet::jsfx::JsfxInstance* FxmeNetAudioProcessor::findLocalScript (std::uint32_t slotId) const
+{
+   #if FXMENET_JSFX
+    if (processing == Processing::local)
+        if (auto* shadow = findShadow (slotId))
+            return dynamic_cast<fxmenet::jsfx::JsfxInstance*> (&shadow->getInstance());
+   #else
+    juce::ignoreUnused (slotId);
+   #endif
+    return nullptr;
+}
+
+void FxmeNetAudioProcessor::pumpLocalJsfx()
+{
+   #if FXMENET_JSFX
+    // As the server's Session::pumpJsfxSync, into the display's queue.
+    for (auto& [id, shadow] : shadows)
+    {
+        auto* js = dynamic_cast<fxmenet::jsfx::JsfxInstance*> (&shadow->getInstance());
+        if (js == nullptr || ! js->hasGfx())
+            continue;
+        if (! engine.isTelemetryWanted (id))
+        {
+            localDisplays.erase (id);
+            continue;
+        }
+        if (localDisplays.insert (id).second)
+            js->syncReset();   // a display just shown: everything anew
+        if (js->syncCollect (id, fxmenet::jsfx::defaultFrameBudget, localJsfxFrame))
+        {
+            fxmenet::jsfx::encode (localJsfxFrame, localJsfxPayload);
+            engine.pushJsfxSync (id, localJsfxPayload);
+        }
+    }
+   #endif
 }
 
 void FxmeNetAudioProcessor::publishLocal (std::uint32_t without)
@@ -1352,6 +1465,8 @@ void FxmeNetAudioProcessor::syncLocal()
     }
     for (auto& c : routing)
         signature << "|" << (int) c.from.box << "." << c.from.channel << ">" << (int) c.to.box << "." << c.to.channel;
+
+    pumpLocalJsfx();
 
     if (signature != localSignature || localChain.takeLatencyStale())
     {

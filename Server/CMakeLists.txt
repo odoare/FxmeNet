@@ -29,7 +29,7 @@ target_compile_definitions(FxmeNetServer
 
 # JSFX scripts in the chain (doc/jsfx-plan.md).
 if(FXMENET_JSFX)
-    target_sources(FxmeNetServer PRIVATE Source/JsfxInstance.cpp)
+    target_sources(FxmeNetServer PRIVATE ${CMAKE_SOURCE_DIR}/Common/FxmeNet/jsfx/JsfxInstance.cpp)
     target_compile_definitions(FxmeNetServer PRIVATE FXMENET_JSFX=1)
     target_link_libraries(FxmeNetServer PRIVATE fxjsfx)
 else()

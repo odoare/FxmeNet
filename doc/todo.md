@@ -200,6 +200,10 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     misses assignments inside functions called from there. Extend the scan
     to the bodies of the functions those sections call (and what they
     call), if a script's display stays still because of it.
+27. Plan written 2026-11-27: doc/bus-width-plan.md. A per-slot choice of
+    the main buses' channel count (IEM ambisonic plugins follow it: AmbiRR2's
+    16 outputs into the IEM BinauralDecoder, stuck at 4 inputs). After the
+    local fallback.
 13. Later, optional: mDNS publishing (`_fxmenet._tcp`) for system browsers.
 8. Phase 4: shadow editors and telemetry; port Compressor and Equalizer.
    - 8c (written): telemetry into the shadows. Build the plugin; in Reaper

@@ -183,6 +183,23 @@ leaving side's states in the model. In Local, the plugin list shows this
 computer's plugins (LocalCatalog::getEntries), so that a chain can be
 made without a server and switched to it later.
 
+Phase 3 written (2026-11-27). `JsfxInstance` moved to
+Common/FxmeNet/jsfx (namespace `jsfx`; its .cpp built into the server,
+both plugins and fxmenet-wavclient). In Local, a JSFX slot's local copy is
+a `JsfxInstance` made from the slot's state (the bundle travels in it),
+wrapped in a Shadow (`Shadow::fromInstance`), so parameters, states and
+the local chain treat it as any plugin; its description (units, lists,
+hidden sliders, `jsfxGfx`) is the server's. Display: the mirror path is
+kept and fed locally (decided in the phase): the engine routes the
+display's requests (reset, subscribe, write) to the local script while
+local (`ClientEngine::setLocalJsfx`), and the processor pushes the
+script's frames into the display's queue at its timer
+(`pumpLocalJsfx`, as the server's `pumpJsfxSync`); JsfxView is unchanged.
+Checked: fxmenet-wavclient `--local --jsfx` (delay/delay then
+utility/volume) gives the same samples as the same scripts on the server.
+Not tried yet in a DAW: the display in Local, the switch while a display
+is open.
+
 1. **The chain core in Common.** `ChainProcessor` (serial, routed, bypass,
    release of notes, latency per slot) and `MidiGuard` move to Common; the
    server's `Chain` uses them. No change in behaviour: the server's tests
