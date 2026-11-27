@@ -17,6 +17,7 @@
 
 #include <juce_audio_processors_headless/juce_audio_processors_headless.h>
 
+#include <FxmeNet/catalog/Buses.h>
 #include <FxmeNet/control/ControlMessages.h>
 
 #include <functional>
@@ -88,6 +89,23 @@ inline std::vector<control::ParamInfo> describeParameters (
     return out;
 }
 
+/** The main bus layouts an instance accepts (doc/bus-width-plan.md), as
+    SLOT_READY reports them. Not prepared (catalog::acceptedMainLayouts). */
+inline std::vector<control::LayoutInfo> describeLayouts (juce::AudioProcessor& instance, bool input, int maxChannels = 64)
+{
+    std::vector<control::LayoutInfo> out;
+    for (auto& set : catalog::acceptedMainLayouts (instance, input, maxChannels))
+    {
+        control::LayoutInfo l;
+        l.key = catalog::layoutKey (set);
+        l.name = catalog::layoutName (set);
+        l.channels = set.size();
+        l.discrete = set.isDiscreteLayout();
+        out.push_back (std::move (l));
+    }
+    return out;
+}
+
 /** What SLOT_READY says of an instance, apart from the server's own
     fields (FxmeNet-awareness, telemetry, JSFX). */
 inline control::SlotReady describeSlot (std::uint32_t slotId, juce::AudioPluginInstance& instance)
@@ -99,6 +117,8 @@ inline control::SlotReady describeSlot (std::uint32_t slotId, juce::AudioPluginI
     ready.numOutputs = instance.getTotalNumOutputChannels();
     ready.buses = describeBuses (instance);
     ready.params = describeParameters (instance);
+    ready.inputLayout = catalog::mainLayoutKey (instance, true);
+    ready.outputLayout = catalog::mainLayoutKey (instance, false);
     return ready;
 }
 

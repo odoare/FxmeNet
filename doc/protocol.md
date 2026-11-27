@@ -90,14 +90,14 @@ state and parameter batches are binary.
 | 7 | `BYE` | either | none |
 | 10 | `LIST_PLUGINS` | client | none |
 | 11 | `PLUGIN_LIST` | server | JSON: entries (section 4.3) |
-| 20 | `SLOT_ADD` | client | binary: slotId, position, plugin uid (u32), name, vendor, state blob (u32 length + bytes, may be empty), main input and output widths asked for (u16 each, 0: the plugin's default; section 4.5b) |
+| 20 | `SLOT_ADD` | client | binary: slotId, position, plugin uid (u32), name, vendor, state blob (u32 length + bytes, may be empty), main input and output layouts asked for (two strings, keys; empty: the plugin's default; section 4.5b) |
 | 21 | `SLOT_READY` | server | JSON: slotId, latency, channel layout, buses (section 4.5), parameters (section 4.4), telemetry schema (base64 of the `TelemetryCodec` schema), FxmeNet ABI version or null |
 | 22 | `SLOT_REMOVE` | client | binary: slotId |
 | 23 | `SLOT_MOVE` | client | binary: slotId, new position |
 | 24 | `SLOT_BYPASS` | client | binary: slotId, u8 on |
 | 25 | `CHAIN_CLEAR` | client | none |
 | 26 | `ROUTING` | client | binary: count (u32), then (fromBox u32, fromChannel u16, toBox u32, toChannel u16); section 4.6 |
-| 27 | `SLOT_LAYOUT` | client | binary: slotId (u32), main input and output widths (u16 each, 0: as it is); section 4.5b |
+| 27 | `SLOT_LAYOUT` | client | binary: slotId (u32), main input and output layouts (two strings, keys; empty: as it is); section 4.5b |
 | 30 | `PARAM_SET` | client | binary: count, then (slotId u32, index u32, normalised value f32) |
 | 31 | `PARAM_CHANGED` | server | same layout: changes the plugin made itself |
 | 32 | `STATE_SET` | client | binary: slotId, state blob |
@@ -208,24 +208,32 @@ all arrive, in order).
 into the script and counts them as already sent. Sliders do not travel this
 way but as parameters (`PARAM_SET`), so that the script's `@slider` runs.
 
-### 4.5b Main bus widths (added 2026-11-27, doc/bus-width-plan.md)
+### 4.5b Main bus layouts (added 2026-11-27, doc/bus-width-plan.md)
 
-Some plugins set what they do from the width of their main buses (the IEM
-ambisonic plugins: their order). `SLOT_READY` lists the widths the plugin
-accepts, each side tried with the other as it is: `"inputWidths"` and
-`"outputWidths"` (arrays of channel counts, 1 to 64; a plugin with one
-layout lists one). For a width the server tries, in order, mono or stereo,
-the named layout of that size, ambisonics for a square count, then a
-discrete set; JUCE's VST3 host can only ask a plugin that is not prepared,
-so this happens at load and around a change.
+Some plugins set what they do from the layout of their main buses (the
+IEM ambisonic plugins: their order). At load the server tries, on each
+main bus with the other as it is, every layout JUCE knows from 1 to 64
+channels (discrete sets, the named surround layouts up to 9.1.6,
+ambisonic orders 0 to 7); JUCE's VST3 host can only ask a plugin that is
+not prepared, so this happens at load and around a change. `SLOT_READY`
+reports what the plugin accepts and has:
 
-`SLOT_ADD` may ask for widths (applied before the plugin is prepared; a
-refusal leaves its default, logged). `SLOT_LAYOUT` changes them on a loaded
-slot: the server takes the slot out of the audio path, sets the layout,
-prepares it again, and answers with a new `SLOT_READY` (its buses,
-parameters and latency as they are now; the routing refits on its pins).
-When the plugin refuses the pair, the answer is `ERROR` `layoutRefused`
-(9), and the plugin keeps its layout.
+```json
+"inputLayouts": [ { "key": "L R", "name": "Stereo", "channels": 2, "discrete": false },
+                  { "key": "amb:3", "name": "Ambisonics, order 3 (16 ch)", "channels": 16, "discrete": false } ],
+"outputLayouts": [ ... ],
+"inputLayout": "amb:1", "outputLayout": "L R"
+```
+
+A key identifies a layout exactly: `amb:<order>`, `dis:<channels>`, or a
+named layout's speaker string (JUCE's `getSpeakerArrangementAsString`,
+`L R C Lfe Ls Rs`). `SLOT_ADD` may ask for a key per side (empty: the
+plugin's default; applied before it is prepared, a refusal logged and its
+default kept). `SLOT_LAYOUT` (27) changes them on a loaded slot: the server
+takes the slot out of the audio path, sets the layout, prepares it again,
+and answers with a new `SLOT_READY` (its buses, parameters and latency as
+they are now; the routing refits on its pins). A refused pair is answered
+`ERROR` `layoutRefused` (9), the plugin keeping its layout.
 
 ### 4.5 Buses (in `SLOT_READY`)
 

@@ -228,7 +228,7 @@ struct ErrorMessage
         noSuchSlot       = 6,
         notConfigured    = 7,
         notAllowed       = 8,   ///< a monitor without the "admin" capability
-        layoutRefused    = 9    ///< SLOT_LAYOUT: the plugin keeps its widths
+        layoutRefused    = 9    ///< SLOT_LAYOUT: the plugin keeps its layouts
     };
 
     int code = unknown;
@@ -418,6 +418,40 @@ struct BusInfo
     }
 };
 
+/** A main bus layout a plugin accepts (doc/bus-width-plan.md). */
+struct LayoutInfo
+{
+    juce::String key;      ///< exact identity (catalog::layoutKey)
+    juce::String name;     ///< as shown ("5.1 Surround", "Ambisonics, order 3 (16 ch)")
+    int channels = 0;
+    bool discrete = false; ///< a plain set of channels, no speaker meaning
+
+    bool operator== (const LayoutInfo& o) const noexcept
+    {
+        return key == o.key && name == o.name && channels == o.channels && discrete == o.discrete;
+    }
+
+    juce::var toVar() const
+    {
+        auto* o = new juce::DynamicObject();
+        o->setProperty ("key", key);
+        o->setProperty ("name", name);
+        o->setProperty ("channels", channels);
+        o->setProperty ("discrete", discrete);
+        return o;
+    }
+
+    static LayoutInfo fromVar (const juce::var& v)
+    {
+        LayoutInfo l;
+        l.key = v["key"].toString();
+        l.name = v["name"].toString();
+        l.channels = json::get (v, "channels", 0);
+        l.discrete = (bool) json::get (v, "discrete", false);
+        return l;
+    }
+};
+
 struct SlotReady
 {
     std::uint32_t slotId = 0;
@@ -429,7 +463,8 @@ struct SlotReady
     int fxmenetAbi = 0;
     bool jsfx = false;      ///< a JSFX script (doc/jsfx-plan.md)
     bool jsfxGfx = false;   ///< ... that has a @gfx section
-    std::vector<int> inputWidths, outputWidths;   ///< main bus widths it accepts (doc/bus-width-plan.md)
+    std::vector<LayoutInfo> inputLayouts, outputLayouts;   ///< main bus layouts it accepts (doc/bus-width-plan.md)
+    juce::String inputLayout, outputLayout;                ///< the current ones, as keys
 
     juce::var toVar() const
     {
@@ -454,12 +489,14 @@ struct SlotReady
             o->setProperty ("hasGfx", jsfxGfx);
         }
         juce::Array<juce::var> ins, outs;
-        for (auto w : inputWidths)
-            ins.add (w);
-        for (auto w : outputWidths)
-            outs.add (w);
-        o->setProperty ("inputWidths", ins);
-        o->setProperty ("outputWidths", outs);
+        for (auto& l : inputLayouts)
+            ins.add (l.toVar());
+        for (auto& l : outputLayouts)
+            outs.add (l.toVar());
+        o->setProperty ("inputLayouts", ins);
+        o->setProperty ("outputLayouts", outs);
+        o->setProperty ("inputLayout", inputLayout);
+        o->setProperty ("outputLayout", outputLayout);
         return o;
     }
 
@@ -480,12 +517,14 @@ struct SlotReady
         s.fxmenetAbi = v["fxmenetAbi"].isVoid() ? 0 : (int) v["fxmenetAbi"];
         s.jsfx = v["kind"].toString() == "jsfx";
         s.jsfxGfx = s.jsfx && (bool) json::get (v, "hasGfx", false);
-        if (auto* a = v["inputWidths"].getArray())
-            for (auto& w : *a)
-                s.inputWidths.push_back ((int) w);
-        if (auto* a = v["outputWidths"].getArray())
-            for (auto& w : *a)
-                s.outputWidths.push_back ((int) w);
+        if (auto* a = v["inputLayouts"].getArray())
+            for (auto& l : *a)
+                s.inputLayouts.push_back (LayoutInfo::fromVar (l));
+        if (auto* a = v["outputLayouts"].getArray())
+            for (auto& l : *a)
+                s.outputLayouts.push_back (LayoutInfo::fromVar (l));
+        s.inputLayout = v["inputLayout"].toString();
+        s.outputLayout = v["outputLayout"].toString();
         return s;
     }
 };

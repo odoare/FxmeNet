@@ -117,7 +117,7 @@ juce::String Chain::addSlot (std::uint32_t slotId, int position,
                              std::unique_ptr<juce::AudioPluginInstance> instance,
                              const std::vector<std::uint8_t>& state,
                              control::SlotReady& ready,
-                             int mainInputs, int mainOutputs)
+                             const juce::String& inputLayout, const juce::String& outputLayout)
 {
     if (instance == nullptr)
         return "no instance";
@@ -129,13 +129,13 @@ juce::String Chain::addSlot (std::uint32_t slotId, int position,
 
     catalog::useDefaultBuses (*instance);   // not enableAllBuses: see Buses.h
 
-    // The widths asked for, then those it accepts: before preparing (JUCE's
+    // The layouts asked for, then those it accepts: before preparing (JUCE's
     // VST3 host can only ask an inactive plugin).
-    if (! catalog::setMainWidths (*instance, mainInputs, mainOutputs))
-        log ("slot " + juce::String ((int) slotId) + ": " + instance->getName() + " refused "
-             + juce::String (mainInputs) + " in / " + juce::String (mainOutputs) + " out; it keeps its own");
-    slot->inputWidths = catalog::acceptedMainWidths (*instance, true, wire::maxChannels);
-    slot->outputWidths = catalog::acceptedMainWidths (*instance, false, wire::maxChannels);
+    if (! catalog::setMainLayouts (*instance, inputLayout, outputLayout))
+        log ("slot " + juce::String ((int) slotId) + ": " + instance->getName() + " refused the layouts \""
+             + inputLayout + "\" / \"" + outputLayout + "\"; it keeps its own");
+    slot->inputLayouts = chain::describeLayouts (*instance, true, wire::maxChannels);
+    slot->outputLayouts = chain::describeLayouts (*instance, false, wire::maxChannels);
 
     if (auto* vst3 = instance->getVST3Client())
         slot->net = fxme::net::queryNetPlugin (vst3->getIComponentPtr());
@@ -181,8 +181,10 @@ void Chain::describe (Slot& slot, control::SlotReady& ready) const
     ready.numOutputs = instance.getTotalNumOutputChannels();
     ready.buses = describeBuses (instance);
     ready.params = describeParameters (instance);
-    ready.inputWidths = slot.inputWidths;
-    ready.outputWidths = slot.outputWidths;
+    ready.inputLayouts = slot.inputLayouts;
+    ready.outputLayouts = slot.outputLayouts;
+    ready.inputLayout = catalog::mainLayoutKey (instance, true);
+    ready.outputLayout = catalog::mainLayoutKey (instance, false);
     ready.fxmenetAbi = 0;
    #if FXMENET_JSFX
     if (auto* script = dynamic_cast<jsfx::JsfxInstance*> (&instance))
@@ -205,7 +207,8 @@ void Chain::describe (Slot& slot, control::SlotReady& ready) const
     }
 }
 
-juce::String Chain::setMainWidths (std::uint32_t slotId, int inputs, int outputs, control::SlotReady& ready)
+juce::String Chain::setMainLayouts (std::uint32_t slotId, const juce::String& inputLayout, const juce::String& outputLayout,
+                                    control::SlotReady& ready)
 {
     auto* s = findSlot (slotId);
     if (s == nullptr)
@@ -221,9 +224,9 @@ juce::String Chain::setMainWidths (std::uint32_t slotId, int inputs, int outputs
 
     auto& p = *s->instance;
     p.releaseResources();   // inactive: the plugin can be asked about layouts
-    const bool ok = catalog::setMainWidths (p, inputs, outputs);
-    s->inputWidths = catalog::acceptedMainWidths (p, true, wire::maxChannels);
-    s->outputWidths = catalog::acceptedMainWidths (p, false, wire::maxChannels);
+    const bool ok = catalog::setMainLayouts (p, inputLayout, outputLayout);
+    s->inputLayouts = chain::describeLayouts (p, true, wire::maxChannels);
+    s->outputLayouts = chain::describeLayouts (p, false, wire::maxChannels);
     p.prepareToPlay (sampleRate, blockSize);
 
     s->numChannels = juce::jmax (1, p.getTotalNumInputChannels(), p.getTotalNumOutputChannels());

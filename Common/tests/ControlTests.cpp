@@ -199,12 +199,16 @@ int main()
         CHECK (oldBox.id == 4 && oldBox.inputs.size() == 1 && oldBox.outputs.size() == 1);
         CHECK (oldBox.numInputs() == 2 && oldBox.numOutputs() == 2 && oldBox.inputs[0].main);
 
-        // The main widths it accepts (doc/bus-width-plan.md).
-        CHECK (s2.inputWidths.empty() && s2.outputWidths.empty());
-        s.inputWidths = { 1, 2, 4, 9, 16 };
-        s.outputWidths = { 2 };
+        // The main layouts it accepts and has (doc/bus-width-plan.md).
+        CHECK (s2.inputLayouts.empty() && s2.outputLayouts.empty() && s2.inputLayout.isEmpty());
+        s.inputLayouts = { { "L R", "Stereo", 2, false }, { "amb:3", "Ambisonics, order 3 (16 ch)", 16, false },
+                           { "dis:16", "16 channels", 16, true } };
+        s.outputLayouts = { { "L R", "Stereo", 2, false } };
+        s.inputLayout = "amb:3";
+        s.outputLayout = "L R";
         const auto sw = SlotReady::fromVar (viaText (s.toVar()));
-        CHECK (sw.inputWidths == s.inputWidths && sw.outputWidths == s.outputWidths);
+        CHECK (sw.inputLayouts == s.inputLayouts && sw.outputLayouts == s.outputLayouts);
+        CHECK (sw.inputLayout == "amb:3" && sw.outputLayout == "L R");
 
         s.buses = { { "Input", true, 2, true }, { "Sidechain", true, 2, false },
                     { "Output", false, 2, true }, { "Aux out", false, 4, false } };

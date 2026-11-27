@@ -72,17 +72,17 @@ private:
     /** The menu of the last touched control: map, unmap, learn. */
     void lastTouchedMenu();
 
-    /** The slot's main bus widths, when it offers a choice
+    /** The slot's main bus layouts, when it offers a choice
         (doc/bus-width-plan.md). */
-    void refreshWidths (const client::SlotModel* slot);
+    void refreshLayouts (const client::SlotModel* slot);
 
     FxmeNetAudioProcessor& processor;
     juce::TextButton viewButton, lastTouchedButton;
-    juce::ComboBox widthIn, widthOut;   ///< the main bus widths
-    std::vector<int> inWidths, outWidths;
-    std::uint32_t widthSlot = 0;
-    juce::String widthSignature;
-    juce::Rectangle<int> infoArea, widthLabelIn, widthLabelOut;
+    juce::ComboBox layoutIn, layoutOut;   ///< the main bus layouts
+    std::vector<control::LayoutInfo> inLayouts, outLayouts;
+    std::uint32_t layoutSlot = 0;
+    juce::String layoutSignature;
+    juce::Rectangle<int> infoArea, layoutLabelIn, layoutLabelOut;
     juce::String info;
 
     juce::Viewport viewport;

@@ -54,7 +54,7 @@ enum class Type : std::uint16_t
     slotBypass      = 24,
     chainClear      = 25,
     routing         = 26,
-    slotLayout      = 27,   ///< a slot's main bus widths (doc/bus-width-plan.md)
+    slotLayout      = 27,   ///< a slot's main bus layouts (doc/bus-width-plan.md)
     paramSet        = 30,
     paramChanged    = 31,
     stateSet        = 32,
@@ -188,7 +188,7 @@ struct SlotAdd
     std::uint32_t uid = 0;
     std::string name, vendor;
     std::vector<std::uint8_t> state;
-    std::uint16_t mainInputs = 0, mainOutputs = 0;   ///< widths asked for (0: the plugin's default)
+    std::string inputLayout, outputLayout;   ///< main bus layouts asked for, as keys (empty: the plugin's default)
 };
 
 inline std::vector<std::uint8_t> encode (const SlotAdd& m)
@@ -202,8 +202,8 @@ inline std::vector<std::uint8_t> encode (const SlotAdd& m)
     writeString (w, m.vendor);
     w.u32 ((std::uint32_t) m.state.size());
     w.bytes (m.state.data(), m.state.size());
-    w.u16 (m.mainInputs);
-    w.u16 (m.mainOutputs);
+    writeString (w, m.inputLayout);
+    writeString (w, m.outputLayout);
     return out;
 }
 
@@ -219,16 +219,17 @@ inline bool decode (const std::vector<std::uint8_t>& in, SlotAdd& m)
     const auto* p = r.take (n);
     if (p != nullptr)
         m.state.assign (p, p + n);
-    m.mainInputs = r.u16();
-    m.mainOutputs = r.u16();
+    m.inputLayout = readString (r);
+    m.outputLayout = readString (r);
     return r.ok();
 }
 
-/** SLOT_LAYOUT: a slot's main input and output widths (0: as it is). */
+/** SLOT_LAYOUT: a slot's main input and output layouts, as keys (empty:
+    as it is; catalog::layoutKey). */
 struct SlotLayout
 {
     std::uint32_t slotId = 0;
-    std::uint16_t inputs = 0, outputs = 0;
+    std::string inputLayout, outputLayout;
 };
 
 inline std::vector<std::uint8_t> encode (const SlotLayout& m)
@@ -236,8 +237,8 @@ inline std::vector<std::uint8_t> encode (const SlotLayout& m)
     std::vector<std::uint8_t> out;
     ByteWriter w (out);
     w.u32 (m.slotId);
-    w.u16 (m.inputs);
-    w.u16 (m.outputs);
+    writeString (w, m.inputLayout);
+    writeString (w, m.outputLayout);
     return out;
 }
 
@@ -245,8 +246,8 @@ inline bool decode (const std::vector<std::uint8_t>& in, SlotLayout& m)
 {
     ByteReader r (in.data(), in.size());
     m.slotId = r.u32();
-    m.inputs = r.u16();
-    m.outputs = r.u16();
+    m.inputLayout = readString (r);
+    m.outputLayout = readString (r);
     return r.ok();
 }
 

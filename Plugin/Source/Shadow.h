@@ -43,6 +43,7 @@
 #include <JuceHeader.h>
 
 #include <FxmeNet/catalog/Buses.h>
+#include <FxmeNet/chain/Describe.h>
 #include <FxmeTools/net/NetAbi.h>
 
 #include <functional>
@@ -64,37 +65,39 @@ public:
     static std::unique_ptr<Shadow> create (juce::AudioPluginFormatManager& formats,
                                            const juce::PluginDescription& description,
                                            double sampleRate, int blockSize, juce::String& error,
-                                           bool local = false, int mainInputs = 0, int mainOutputs = 0)
+                                           bool local = false, const juce::String& inputLayout = {},
+                                           const juce::String& outputLayout = {})
     {
         auto instance = formats.createPluginInstance (description, sampleRate, blockSize, error);
         if (instance == nullptr)
             return nullptr;
         return std::unique_ptr<Shadow> (new Shadow (std::move (instance), sampleRate, blockSize, local,
-                                                    mainInputs, mainOutputs));
+                                                    inputLayout, outputLayout));
     }
 
-    /** The main bus widths it accepts (doc/bus-width-plan.md), found before
+    /** The main bus layouts it accepts (doc/bus-width-plan.md), found before
         it was prepared (as the server does). */
-    const std::vector<int>& getInputWidths() const noexcept    { return inputWidths; }
-    const std::vector<int>& getOutputWidths() const noexcept   { return outputWidths; }
+    const std::vector<control::LayoutInfo>& getInputLayouts() const noexcept    { return inputLayouts; }
+    const std::vector<control::LayoutInfo>& getOutputLayouts() const noexcept   { return outputLayouts; }
 
-    /** True when setMainWidths (inputs, outputs) has something to try. */
-    bool wantsMainWidths (int inputs, int outputs) const noexcept
+    /** True when setMainLayouts (input, output) has something to try. */
+    bool wantsMainLayouts (const juce::String& input, const juce::String& output) const noexcept
     {
-        return inputs != askedIn || outputs != askedOut;
+        return input != askedIn || output != askedOut;
     }
 
-    /** The slot's main bus widths (0: as it is), as on the server: released,
-        laid out, prepared again. Message thread, while the audio thread does
-        not process it. False when the plugin refused (it keeps its own). */
-    bool setMainWidths (int inputs, int outputs)
+    /** The slot's main bus layouts as keys (empty: as it is), as on the
+        server: released, laid out, prepared again. Message thread, while the
+        audio thread does not process it. False when the plugin refused (it
+        keeps its own). */
+    bool setMainLayouts (const juce::String& input, const juce::String& output)
     {
-        askedIn = inputs;
-        askedOut = outputs;
+        askedIn = input;
+        askedOut = output;
         instance->releaseResources();
-        const bool ok = catalog::setMainWidths (*instance, inputs, outputs);
-        inputWidths = catalog::acceptedMainWidths (*instance, true);
-        outputWidths = catalog::acceptedMainWidths (*instance, false);
+        const bool ok = catalog::setMainLayouts (*instance, input, output);
+        inputLayouts = chain::describeLayouts (*instance, true);
+        outputLayouts = chain::describeLayouts (*instance, false);
         instance->prepareToPlay (preparedRate, preparedBlock);
         return ok;
     }
@@ -103,7 +106,7 @@ public:
     static std::unique_ptr<Shadow> fromInstance (std::unique_ptr<juce::AudioPluginInstance> instance,
                                                  double sampleRate, int blockSize, bool local)
     {
-        return std::unique_ptr<Shadow> (new Shadow (std::move (instance), sampleRate, blockSize, local, 0, 0));
+        return std::unique_ptr<Shadow> (new Shadow (std::move (instance), sampleRate, blockSize, local, {}, {}));
     }
 
     /** Local play starts (true) or ends (false) for it, in Auto: an
@@ -277,9 +280,9 @@ public:
 
 private:
     Shadow (std::unique_ptr<juce::AudioPluginInstance> loaded, double sampleRate, int blockSize, bool isLocalCopy,
-            int mainInputs, int mainOutputs)
+            const juce::String& inputLayout, const juce::String& outputLayout)
         : instance (std::move (loaded)), local (isLocalCopy), preparedRate (sampleRate), preparedBlock (blockSize),
-          askedIn (mainInputs), askedOut (mainOutputs)
+          askedIn (inputLayout), askedOut (outputLayout)
     {
         if (auto* vst3 = instance->getVST3Client())
             net = fxme::net::queryNetPlugin (vst3->getIComponentPtr());
@@ -287,9 +290,9 @@ private:
             net->setRole ((std::int32_t) (local ? fxme::net::Role::local : fxme::net::Role::mirror));
 
         catalog::useDefaultBuses (*instance);   // as on the server (Buses.h)
-        catalog::setMainWidths (*instance, askedIn, askedOut);   // the slot's widths, before preparing
-        inputWidths = catalog::acceptedMainWidths (*instance, true);
-        outputWidths = catalog::acceptedMainWidths (*instance, false);
+        catalog::setMainLayouts (*instance, askedIn, askedOut);   // the slot's layouts, before preparing
+        inputLayouts = chain::describeLayouts (*instance, true);
+        outputLayouts = chain::describeLayouts (*instance, false);
         instance->prepareToPlay (sampleRate, blockSize);   // editors read the rate; a mirror is never processed
         lastStateChangeCount = getStateChangeCount();
 
@@ -366,8 +369,8 @@ private:
     int preparedBlock = 128;
     std::vector<bool> wantedIn, wantedOut;   ///< setWantedBuses
 
-    int askedIn = 0, askedOut = 0;       ///< the main widths last asked for
-    std::vector<int> inputWidths, outputWidths;
+    juce::String askedIn, askedOut;      ///< the main layouts last asked for
+    std::vector<control::LayoutInfo> inputLayouts, outputLayouts;
 
     std::size_t referenceHash = 0;       ///< takeStateReference / takeStateChange
     std::vector<float> referenceValues;

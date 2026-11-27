@@ -584,7 +584,7 @@ void Session::handleSlotAdd (const Frame& f)
 
     control::SlotReady ready;
     error = chain.addSlot (add.slotId, (int) add.position, std::move (instance), add.state, ready,
-                           add.mainInputs, add.mainOutputs);
+                           juce::String::fromUTF8 (add.inputLayout.c_str()), juce::String::fromUTF8 (add.outputLayout.c_str()));
     if (error.isNotEmpty())
         return fail (f, ErrorMessage::pluginLoadFailed, error);
 
@@ -637,15 +637,16 @@ void Session::handleState (const Frame& f)
 void Session::handleSlotLayout (const Frame& f)
 {
     control::SlotLayout m;
-    if (! decode (f.payload, m) || m.inputs > wire::maxChannels || m.outputs > wire::maxChannels)
+    if (! decode (f.payload, m))
         return fail (f, ErrorMessage::badRequest, "malformed SLOT_LAYOUT");
+    const auto in = juce::String::fromUTF8 (m.inputLayout.c_str()), out = juce::String::fromUTF8 (m.outputLayout.c_str());
 
     control::SlotReady ready;
-    const auto error = chain.setMainWidths (m.slotId, m.inputs, m.outputs, ready);
+    const auto error = chain.setMainLayouts (m.slotId, in, out, ready);
     if (error == "refused")
     {
-        log ("session " + juce::String ((int) sessionId) + ": slot " + juce::String ((int) m.slotId) + " refused "
-             + juce::String ((int) m.inputs) + " in / " + juce::String ((int) m.outputs) + " out");
+        log ("session " + juce::String ((int) sessionId) + ": slot " + juce::String ((int) m.slotId) + " refused \""
+             + in + "\" / \"" + out + "\"");
         return fail (f, ErrorMessage::layoutRefused, "the plugin keeps " + juce::String (ready.numInputs) + " in / "
                                                        + juce::String (ready.numOutputs) + " out");
     }

@@ -96,8 +96,8 @@ struct SlotModel
     bool onServer = false;   ///< SLOT_ADD sent and not refused
     bool loaded = false;     ///< SLOT_READY received: `info` is valid
     bool localInfo = false;  ///< `info` describes its local copy (local play, no SLOT_READY yet)
-    int mainInputs = 0, mainOutputs = 0;   ///< main bus widths chosen (0: the plugin's default; doc/bus-width-plan.md)
-    juce::String layoutError;              ///< the last width change refused, and why
+    juce::String inputLayout, outputLayout;   ///< main bus layouts chosen, as keys (empty: the plugin's default; doc/bus-width-plan.md)
+    juce::String layoutError;                 ///< the last layout change refused, and why
     juce::String error;      ///< why it is not loaded
     control::SlotReady info;
 
@@ -352,23 +352,24 @@ public:
         notify();
     }
 
-    /** A slot's main bus widths (doc/bus-width-plan.md), 0 keeping a side
-        as the plugin has it. Kept in the model (saved, sent at a rebuild);
-        on the server at once (SLOT_LAYOUT), whose answer updates the slot's
-        description, buses and routing. A refusal is kept in `layoutError`. */
-    void setMainWidths (std::uint32_t slotId, int inputs, int outputs)
+    /** A slot's main bus layouts, as keys (catalog::layoutKey; empty keeps a
+        side as the plugin has it; doc/bus-width-plan.md). Kept in the model
+        (saved, sent at a rebuild); on the server at once (SLOT_LAYOUT),
+        whose answer updates the slot's description, buses and routing. A
+        refusal is kept in `layoutError`. */
+    void setMainLayouts (std::uint32_t slotId, const juce::String& inputKey, const juce::String& outputKey)
     {
         {
             const std::lock_guard<std::mutex> l (lock);
             auto* slot = find (slotId);
             if (slot == nullptr)
                 return;
-            slot->mainInputs = juce::jlimit (0, wire::maxChannels, inputs);
-            slot->mainOutputs = juce::jlimit (0, wire::maxChannels, outputs);
+            slot->inputLayout = inputKey;
+            slot->outputLayout = outputKey;
             slot->layoutError = {};
             if (ready && slot->onServer && slot->loaded)
             {
-                control::SlotLayout m { slotId, (std::uint16_t) slot->mainInputs, (std::uint16_t) slot->mainOutputs };
+                control::SlotLayout m { slotId, inputKey.toStdString(), outputKey.toStdString() };
                 dirty |= ! sendAsync (control::Type::slotLayout, 0, encode (m), [this, slotId] (const control::Frame* f)
                 {
                     {
@@ -425,8 +426,8 @@ public:
             copy.onServer = s.onServer;
             copy.loaded = s.loaded;
             copy.localInfo = s.localInfo;
-            copy.mainInputs = s.mainInputs;
-            copy.mainOutputs = s.mainOutputs;
+            copy.inputLayout = s.inputLayout;
+            copy.outputLayout = s.outputLayout;
             copy.layoutError = s.layoutError;
             copy.error = s.error;
             copy.info = s.info;
@@ -1475,8 +1476,8 @@ private:
                 add.name = s.name.toStdString();
                 add.vendor = s.vendor.toStdString();
                 add.state = s.state;
-                add.mainInputs = (std::uint16_t) juce::jlimit (0, wire::maxChannels, s.mainInputs);
-                add.mainOutputs = (std::uint16_t) juce::jlimit (0, wire::maxChannels, s.mainOutputs);
+                add.inputLayout = s.inputLayout.toStdString();
+                add.outputLayout = s.outputLayout.toStdString();
 
                 const auto r = call (control::Type::slotAdd, 0, encode (add), control::Type::slotReady, reply, 60000);
                 if (r == CallResult::lost)
@@ -1706,8 +1707,8 @@ private:
         add.name = s.name.toStdString();
         add.vendor = s.vendor.toStdString();
         add.state = s.state;
-        add.mainInputs = (std::uint16_t) juce::jlimit (0, wire::maxChannels, s.mainInputs);
-        add.mainOutputs = (std::uint16_t) juce::jlimit (0, wire::maxChannels, s.mainOutputs);
+        add.inputLayout = s.inputLayout.toStdString();
+        add.outputLayout = s.outputLayout.toStdString();
         s.onServer = true;
 
         const auto slotId = s.slotId;

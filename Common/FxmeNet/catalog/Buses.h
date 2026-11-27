@@ -22,6 +22,7 @@
 
 #include <juce_audio_processors_headless/juce_audio_processors_headless.h>
 
+#include <algorithm>
 #include <vector>
 
 namespace fxmenet::catalog
@@ -38,82 +39,120 @@ inline void useDefaultBuses (juce::AudioProcessor& plugin)
 }
 
 //==============================================================================
-// The main buses' width, chosen per slot (doc/bus-width-plan.md): plugins
-// such as the IEM ambisonic ones set their order from it. JUCE's VST3 host
-// can only ask a plugin about a layout while it is not prepared, so these
-// are called before prepareToPlay (or after releaseResources).
+// The main buses' layout, chosen per slot (doc/bus-width-plan.md, revised:
+// layouts, not widths). What the plugin accepts decides what is offered.
+// JUCE's VST3 host can only ask a plugin about a layout while it is not
+// prepared, so these are called before prepareToPlay (or after
+// releaseResources).
 
-/** The channel sets tried for a width, in order: mono and stereo, the
-    named layout of that size, ambisonics for a square count (4, 9, 16...),
-    then a discrete set. */
-inline std::vector<juce::AudioChannelSet> channelSetsFor (int channels)
+/** A layout's key, exact and stable: "amb:<order>", "dis:<channels>", or a
+    named layout's speaker string ("L R C Lfe Ls Rs"). */
+inline juce::String layoutKey (const juce::AudioChannelSet& set)
+{
+    if (set.isDisabled())
+        return {};
+    if (const int order = set.getAmbisonicOrder(); order >= 0)
+        return "amb:" + juce::String (order);
+    if (set.isDiscreteLayout())
+        return "dis:" + juce::String (set.size());
+    return set.getSpeakerArrangementAsString();
+}
+
+/** The layout of a key (disabled when the key means nothing). */
+inline juce::AudioChannelSet layoutFromKey (const juce::String& key)
+{
+    if (key.startsWith ("amb:"))
+    {
+        const int order = key.fromFirstOccurrenceOf (":", false, false).getIntValue();
+        return order >= 0 && order <= 7 ? juce::AudioChannelSet::ambisonic (order) : juce::AudioChannelSet::disabled();
+    }
+    if (key.startsWith ("dis:"))
+    {
+        const int n = key.fromFirstOccurrenceOf (":", false, false).getIntValue();
+        return n > 0 ? juce::AudioChannelSet::discreteChannels (n) : juce::AudioChannelSet::disabled();
+    }
+    return key.isEmpty() ? juce::AudioChannelSet::disabled() : juce::AudioChannelSet::fromAbbreviatedString (key);
+}
+
+/** A layout as shown: JUCE's name for named layouts ("5.1 Surround"),
+    "Ambisonics, order 3 (16 ch)", "16 channels". */
+inline juce::String layoutName (const juce::AudioChannelSet& set)
+{
+    if (const int order = set.getAmbisonicOrder(); order >= 0)
+        return "Ambisonics, order " + juce::String (order) + " (" + juce::String (set.size()) + " ch)";
+    if (set.isDiscreteLayout())
+        return juce::String (set.size()) + (set.size() == 1 ? " channel" : " channels");
+    return set.getDescription();
+}
+
+/** Every layout tried, 1 to maxChannels channels: JUCE's list for each
+    count (discrete, named, ambisonics) and the named layouts it leaves out. */
+inline std::vector<juce::AudioChannelSet> candidateLayouts (int maxChannels)
 {
     std::vector<juce::AudioChannelSet> sets;
-    if (channels == 1)
-        sets.push_back (juce::AudioChannelSet::mono());
-    if (channels == 2)
-        sets.push_back (juce::AudioChannelSet::stereo());
-    const auto canonical = juce::AudioChannelSet::canonicalChannelSet (channels);
-    if (! canonical.isDisabled() && canonical.size() == channels && channels > 2)
-        sets.push_back (canonical);
-    for (int order = 1; order <= 7; ++order)
-        if ((order + 1) * (order + 1) == channels)
-            sets.push_back (juce::AudioChannelSet::ambisonic (order));
-    if (channels > 2)
-        sets.push_back (juce::AudioChannelSet::discreteChannels (channels));
+    const auto add = [&sets] (const juce::AudioChannelSet& set)
+    {
+        if (! set.isDisabled() && std::find (sets.begin(), sets.end(), set) == sets.end())
+            sets.push_back (set);
+    };
+    for (int n = 1; n <= maxChannels; ++n)
+        for (auto& set : juce::AudioChannelSet::channelSetsWithNumberOfChannels (n))
+            add (set);
+    add (juce::AudioChannelSet::create5point0point2());
+    add (juce::AudioChannelSet::create5point0point4());
+    std::stable_sort (sets.begin(), sets.end(), [] (const juce::AudioChannelSet& a, const juce::AudioChannelSet& b)
+    {
+        return a.size() < b.size();
+    });
     return sets;
 }
 
-/** The widths (1 to maxChannels) the plugin accepts on its main input (or
-    output), the other buses as they are. Not prepared. */
-inline std::vector<int> acceptedMainWidths (juce::AudioProcessor& plugin, bool input, int maxChannels = 64)
+/** The layouts the plugin accepts on its main input (or output), the other
+    buses as they are. Not prepared. */
+inline std::vector<juce::AudioChannelSet> acceptedMainLayouts (juce::AudioProcessor& plugin, bool input,
+                                                               int maxChannels = 64)
 {
-    std::vector<int> widths;
+    std::vector<juce::AudioChannelSet> accepted;
     if (plugin.getBus (input, 0) == nullptr)
-        return widths;
+        return accepted;
     const auto current = plugin.getBusesLayout();
-    for (int n = 1; n <= maxChannels; ++n)
-        for (auto& set : channelSetsFor (n))
-        {
-            auto layout = current;
-            (input ? layout.inputBuses : layout.outputBuses).getReference (0) = set;
-            if (plugin.checkBusesLayoutSupported (layout))
-            {
-                widths.push_back (n);
-                break;
-            }
-        }
-    return widths;
+    for (auto& set : candidateLayouts (maxChannels))
+    {
+        auto layout = current;
+        (input ? layout.inputBuses : layout.outputBuses).getReference (0) = set;
+        if (plugin.checkBusesLayoutSupported (layout))
+            accepted.push_back (set);
+    }
+    return accepted;
 }
 
-/** Sets the main input and output to `inputs` and `outputs` channels (0:
-    as they are), the other buses kept. False when the plugin refuses every
-    way of having that pair: it keeps its layout. Not prepared. */
-inline bool setMainWidths (juce::AudioProcessor& plugin, int inputs, int outputs)
+/** The main input's (or output's) layout now, as a key. */
+inline juce::String mainLayoutKey (const juce::AudioProcessor& plugin, bool input)
 {
-    const auto current = plugin.getBusesLayout();
-    const auto setsOf = [&] (bool input, int n)
-    {
-        if (n <= 0 || plugin.getBus (input, 0) == nullptr)
-            return std::vector<juce::AudioChannelSet> { current.getChannelSet (input, 0) };
-        return channelSetsFor (n);
-    };
-    if ((inputs <= 0 || current.getMainInputChannels() == inputs)
-        && (outputs <= 0 || current.getMainOutputChannels() == outputs))
-        return true;   // nothing to change
+    return plugin.getBus (input, 0) != nullptr ? layoutKey (plugin.getBusesLayout().getChannelSet (input, 0)) : juce::String();
+}
 
-    for (auto& in : setsOf (true, inputs))
-        for (auto& out : setsOf (false, outputs))
-        {
-            auto layout = current;
-            if (! layout.inputBuses.isEmpty())
-                layout.inputBuses.getReference (0) = in;
-            if (! layout.outputBuses.isEmpty())
-                layout.outputBuses.getReference (0) = out;
-            if (plugin.checkBusesLayoutSupported (layout) && plugin.setBusesLayout (layout))
-                return true;
-        }
-    return false;
+/** Sets the main input and output layouts by key (empty: as they are), the
+    other buses kept. False when the plugin refuses the pair (or a key means
+    nothing): it keeps its layout. Not prepared. */
+inline bool setMainLayouts (juce::AudioProcessor& plugin, const juce::String& inputKey, const juce::String& outputKey)
+{
+    auto layout = plugin.getBusesLayout();
+    bool change = false;
+    for (const bool input : { true, false })
+    {
+        const auto& key = input ? inputKey : outputKey;
+        if (key.isEmpty() || plugin.getBus (input, 0) == nullptr || key == mainLayoutKey (plugin, input))
+            continue;
+        const auto set = layoutFromKey (key);
+        if (set.isDisabled())
+            return false;
+        (input ? layout.inputBuses : layout.outputBuses).getReference (0) = set;
+        change = true;
+    }
+    if (! change)
+        return true;
+    return plugin.checkBusesLayoutSupported (layout) && plugin.setBusesLayout (layout);
 }
 
 } // namespace fxmenet::catalog

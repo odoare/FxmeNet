@@ -8,7 +8,7 @@
 */
 
 #include "RoutingView.h"
-#include "Widths.h"
+#include "Layouts.h"
 #include "Theme.h"
 
 namespace fxmenet::plugin
@@ -562,7 +562,7 @@ private:
         return valid;
     }
 
-    /** A plugin's main bus widths (doc/bus-width-plan.md), as in the
+    /** A plugin's main bus layouts (doc/bus-width-plan.md), as in the
         Parameters tab. */
     void widthsMenu (std::uint32_t slotId)
     {
@@ -577,16 +577,16 @@ private:
             }
         if (! found || ! FxmeNetAudioProcessor::isDescribed (slot))
             return;
-        const auto ins = usefulWidths (slot, true), outs = usefulWidths (slot, false);
+        const auto ins = offeredLayouts (slot, true), outs = offeredLayouts (slot, false);
         if (ins.size() < 2 && outs.size() < 2)
             return;
 
-        const int nowIn = currentMainWidth (slot, true), nowOut = currentMainWidth (slot, false);
+        const auto nowIn = currentLayoutKey (slot, true), nowOut = currentLayoutKey (slot, false);
         juce::PopupMenu inputs, outputs;
         for (std::size_t i = 0; i < ins.size(); ++i)
-            inputs.addItem (100 + (int) i, widthText (ins[i]), true, ins[i] == nowIn);
+            inputs.addItem (1000 + (int) i, layoutText (ins[i]), true, ins[i].key == nowIn);
         for (std::size_t i = 0; i < outs.size(); ++i)
-            outputs.addItem (200 + (int) i, widthText (outs[i]), true, outs[i] == nowOut);
+            outputs.addItem (2000 + (int) i, layoutText (outs[i]), true, outs[i].key == nowOut);
         juce::PopupMenu menu;
         menu.addSectionHeader (slot.name + (slot.layoutError.isNotEmpty() ? " (refused: " + slot.layoutError + ")" : juce::String()));
         if (ins.size() > 1)
@@ -599,12 +599,12 @@ private:
         {
             if (safe == nullptr || result == 0)
                 return;
-            int in = nowIn, out = nowOut;
-            if (result >= 200)
-                out = outs[(std::size_t) (result - 200)];
+            auto in = nowIn, out = nowOut;
+            if (result >= 2000)
+                out = outs[(std::size_t) (result - 2000)].key;
             else
-                in = ins[(std::size_t) (result - 100)];
-            safe->processor.getEngine().setMainWidths (slotId, in, out);
+                in = ins[(std::size_t) (result - 1000)].key;
+            safe->processor.getEngine().setMainLayouts (slotId, in, out);
             safe->update();
         });
     }

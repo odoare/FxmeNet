@@ -83,6 +83,61 @@ its title); can be added later, the message is the same.
 
 No compatibility with older servers (development phase, as agreed).
 
+## Revision (2026-11-27): layouts, not widths
+
+Asked by the user after phase 2: the labels ("16 (order 3)") and the list
+(stereo and the ambisonic sizes) were interpretations of a channel count,
+true for the IEM plugins, wrong for others (a 16-channel 9.1.6 plugin
+would have been called order 3; a 7.1.4 one, refusing 12 discrete
+channels, would have offered nothing). Generic instead: what the plugin
+accepts decides.
+
+- **Candidates:** every layout JUCE knows, for 1 to 64 channels:
+  `AudioChannelSet::channelSetsWithNumberOfChannels` (discrete, the named
+  surround layouts up to 9.1.6, ambisonics for square counts) and the
+  named layouts it leaves out (5.0.2, 5.0.4). Tested at load as before
+  (not prepared), each side with the other as it is.
+- **Reported:** SLOT_READY's `inputLayouts` / `outputLayouts`, each
+  accepted layout as `{ key, name, channels, discrete }`, and
+  `inputLayout` / `outputLayout`, the current ones. A key identifies the
+  layout exactly: `amb:<order>`, `dis:<channels>`, or the named layout's
+  speaker string (JUCE's `getSpeakerArrangementAsString`, e.g. `L R C Lfe
+  Ls Rs`). Names: JUCE's description for named layouts ("5.1 Surround",
+  "7.1.4 Surround"), "Ambisonics, order 3 (16 ch)", "16 channels".
+- **Chosen and sent:** a layout key per side, empty for the plugin's
+  default: SLOT_ADD and SLOT_LAYOUT carry two strings; the model and the
+  project keep the keys. Two layouts of the same size (9.1.6 and order-3
+  ambisonics) are told apart.
+- **Offered (client):** the named and ambisonic layouts the plugin
+  accepts; its discrete counts only when it accepts no named layout on
+  that side (a generic multichannel plugin); and always its current one.
+  Shown when there is more than one.
+
+This replaces phase 1's widths (`inputWidths`, `mainInputs`, ...) and
+phase 2's filter and labels (Widths.h becomes Layouts.h); the rest of
+phases 1 and 2 stands.
+
+Written 2026-11-27. `catalog::candidateLayouts`, `acceptedMainLayouts`,
+`layoutKey` / `layoutFromKey` / `layoutName`, `setMainLayouts` (Buses.h),
+`chain::describeLayouts` (Describe.h, server and copies);
+`control::LayoutInfo`; SLOT_ADD, SLOT_LAYOUT and the model carry keys
+(`SlotModel::inputLayout` / `outputLayout`, saved as such);
+Plugin/Source/Layouts.h (offered, labels). Checked with fxmenet-wavclient
+(`--layouts`, `--relayout`, keys): the IEM BinauralDecoder reports its
+default as `amb:1`, accepts every named layout JUCE has (it counts
+channels) and the ambisonic orders 0 to 7, but one discrete count only
+(so `dis:16` is refused, as it should, while `amb:3` gives 16 inputs);
+a 5.1 input applied by SLOT_LAYOUT; FxmeCompressor accepts Stereo only
+(no choice shown), audio still bit-identical.
+
+Then (user, same day): the lists show channel counts only, as numbers
+("the user knows what the plugin expects"): every count the plugin
+accepts in some layout. A count is applied as the plugin's current layout
+when it has that count, else as the first accepted layout of that count
+(JUCE's order: discrete, named, ambisonic). The keys stay on the wire and
+in the project (exact, generic); only the offered list and its labels
+changed (Layouts.h).
+
 ## Phases
 
 State (2026-11-27): phase 1 written. `catalog::channelSetsFor`,

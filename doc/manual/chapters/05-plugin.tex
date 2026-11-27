@@ -94,11 +94,12 @@ generic controls. A \ui{last touched} button next to it names the control you
 moved last in the plugin's editor, with a menu to map it to an automation
 parameter (below).
 
-For a plugin that can work with several channel counts, two lists, \ui{in}
-and \ui{out}, set the channels of its main input and output. Ambisonic
-plugins, such as the IEM ones, set their order from them: 4 channels is
-order 1, 16 order 3, up to 64 (order 7). The lists offer stereo and the
-ambisonic sizes the plugin accepts, plus the count it has now. A change
+For a plugin that can work with several channel counts, two lists,
+\ui{in} and \ui{out}, set the channels of its main input and output,
+among the counts the plugin accepts. Choose what the plugin expects:
+ambisonic plugins, such as the IEM ones, set their order from it (4
+channels: order 1, 9: order 2, 16: order 3, up to 64: order 7); a surround
+plugin wants its format's count (6 for 5.1). A change
 prepares that plugin again (a brief gap on it only); its pins in the
 \ui{Routing} tab follow, and the choice is saved with the project. When
 the plugin refuses a count, it keeps its own, and the list's tooltip says
