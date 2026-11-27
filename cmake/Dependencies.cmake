@@ -9,10 +9,8 @@ include_guard(GLOBAL)
 include(${CMAKE_CURRENT_LIST_DIR}/FxmeDeps.cmake)
 
 fxme_dependency(JUCE https://github.com/juce-framework/JUCE 9.0.4 SHALLOW)
-# TODO: bump to the FxmeTools commit with FxmeNet ABI 2 (INetPlugin::readEvents
-# / writeEvents, SLOT_EVENTS, 2026-11-27; not pushed when this was written).
 fxme_dependency(FxmeTools https://github.com/odoare/FxmeTools
-    b017307dabed9f7ef9da0662e3bd4ed4c4dd2a34)
+    b2b4e458baa55b7dc80f122f036089311da7c712)
 
 # The JSFX engine (Cockos' sources as a library, doc/jsfx-plan.md): the
 # fork's branch fxmenet-branch. Locally the clone is ~/src/jsfx.

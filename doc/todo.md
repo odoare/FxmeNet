@@ -50,32 +50,6 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     still open, within a fifth of a second); save, reload the project: the
     pattern is there. Turning a knob in a tier 1 editor while it plays
     stays smooth (a state reload per move would be heard as resets).
-17. (written 2026-11-27: a, b and c, with the hit markers as telemetry; to
-    check in Reaper) Priority among the later items (user, 2026-11-17). ModalDish as a tier 2 plugin (seen 2026-11-05: in FxmeNet the editor
-    works, a plate can be drawn and computed, but nothing sounds, neither
-    clicks, MIDI nor input audio). Causes: the shape, the boundaries and the
-    computed modes are state, built in the client's mirror and never sent,
-    so the server's instance has no modes (item 16, but polling does not
-    suit a state holding megabytes of mode cache); and saving the DAW
-    project fetches the server's empty state, so the design is lost. Mouse
-    strikes (`requestStrike`, an atomic mailbox read by the audio thread)
-    stay in the mirror, which never processes. Plan, three commits:
-    - a. In ModalDish: a `NetBridge`, and `net.notifyStateChanged()` when a
-      computation completes and when the shape or the boundaries change; the
-      tier 2 path then sends the state with its modal cache, and the server
-      restores the modes from it without recomputing. This alone brings
-      MIDI and input audio back.
-    - b. An event channel from client to server: in FxmeTools (`NetAbi.h`,
-      ABI 2, backward compatible) a call where the mirror queues a small
-      event and one where the server delivers it; in FxmeNet a control
-      message carrying them to the slot (protocol.md to update). Reusable by
-      any FX-Mechanics plugin whose editor triggers something.
-    - c. In ModalDish: `requestStrike` queues an event in a mirror, the
-      server's instance posts it into its strike mailbox. Optionally,
-      telemetry for its hit display and meters.
-    Cheaper alternative to b and c: strikes as hidden parameters (x, y,
-    velocity, a counter), no protocol change, but four more parameters
-    shown by DAWs.
 18. (written) Telemetry frames dropped by the client's UDP reassembler.
     Seen 2026-11-05 with the Equalizer in FxmeNet, Reaper on its PulseAudio
     driver with large buffers: the spectrum updated slowly (fine with JACK,

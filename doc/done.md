@@ -2,6 +2,32 @@
 
 Newest first. Numbers are those of `todo.md`.
 
+## 2026-11-27
+
+- 17, done: ModalDish as a tier 2 plugin, in three parts, checked in
+  Reaper (shape drawn and computed in the mirror, presets, MIDI and input
+  audio, clicks on the plate, MIDI learn, all meters).
+  - a. ModalDish: a `NetBridge`; `notifyStateChanged()` at each geometry
+    edit, each completed computation and each preset load, so the server
+    gets the whole state with its modal cache and restores the modes
+    without solving. On the server a state without modes (an edit before
+    Compute) starts no solve, the previous plate keeps sounding; it solves
+    only when nothing sounds yet.
+  - b. Events from a mirror to its source: FxmeTools `NetAbi.h` ABI 2
+    (`readEvents` / `writeEvents`, called only on plugins that answer 2),
+    `NetBridge::postEvent` / `onEvent`; FxmeNet `SLOT_EVENTS` (35, no
+    reply, protocol.md 4.2 and 8), read from each shadow at the client's
+    50 Hz timer after the state check, dropped for a slot not loaded and
+    across a switch to or from local play; `Tools/Loopback` pumps them too.
+  - c. ModalDish: clicks (`requestStrike`), the pickup panel's meter and
+    MIDI learn go as events; the server's instance applies a learn capture
+    itself (its own timer) and the parameter comes back as a parameter
+    change. Telemetry: output and pickup meters, the hit ring for the
+    markers, the count of learn captures. Not sent, by choice: the
+    animated displacement and velocity view.
+  Lesson: client and server only change once installed (`make`), the
+  first test ran against binaries from before the change.
+
 ## 2026-11-06
 
 - 15, done: routing between the chain's plugins (design, decisions and
