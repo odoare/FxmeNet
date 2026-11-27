@@ -64,6 +64,8 @@ FxmeNetAudioProcessor::FxmeNetAudioProcessor()
 FxmeNetAudioProcessor::~FxmeNetAudioProcessor()
 {
     stopTimer();
+    engine.setLocalProcessor (nullptr);
+    localChain.publish ({}, nullptr);   // nothing points to the shadows any more
     shadows.clear();   // the editor, and the shadows' views, are gone already
 }
 
@@ -107,6 +109,7 @@ void FxmeNetAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
     e.blockSize = s.blockSize;
     e.budgetBlocks = s.budgetBlocks;
     engine.prepare (sampleRate, samplesPerBlock, preparedInputs, preparedOutputs, e);
+    prepareLocal (sampleRate, s.blockSize);
     setLatencySamples (engine.getLatency());
 }
 
@@ -133,6 +136,7 @@ void FxmeNetAudioProcessor::applyStreamSettings (const StreamSettings& s)
 
     suspendProcessing (true);   // waits for a processBlock in progress
     engine.prepare (rate, block, ins, outs, e);
+    prepareLocal (rate, s.blockSize);
     suspendProcessing (false);
     setLatencySamples (engine.getLatency());
 }
@@ -431,9 +435,9 @@ void FxmeNetAudioProcessor::connectTo (const juce::String& hostAndPort)
         server = hostAndPort.trim();
     }
     const auto [host, port] = splitServer (hostAndPort);
-    if (host.isEmpty())
+    if (host.isEmpty() || processing == Processing::local)
     {
-        engine.disconnect();
+        engine.disconnect();   // local play: the address is kept for later
         return;
     }
     fxmenet::plugin::setLastServer (hostAndPort.trim());
@@ -474,6 +478,16 @@ fxmenet::plugin::Shadow* FxmeNetAudioProcessor::getShadow (std::uint32_t slotId,
 {
     if (auto* s = findShadow (slotId))
         return s;
+
+    if (processing == Processing::local)   // local copies are made by syncLocal
+    {
+        if (why != nullptr)
+        {
+            const auto problem = getLocalProblem (slotId);
+            *why = problem.isNotEmpty() ? "played locally without it: " + problem : juce::String ("its local copy is loading");
+        }
+        return nullptr;
+    }
 
     auto fail = [why] (const juce::String& reason) -> fxmenet::plugin::Shadow*
     {
@@ -532,7 +546,14 @@ fxmenet::plugin::Shadow* FxmeNetAudioProcessor::getShadow (std::uint32_t slotId,
             endSlotParameterGesture ({ slotId, (std::uint32_t) index });
     };
 
-    // The server's state, then the values set since (syncShadows).
+    // The model's state at once (the editor does not open on the defaults),
+    // then the server's when it comes, and the values set since (syncShadows).
+    // (`slot` comes from getSlotInfos: no state blob in it.)
+    if (const auto state = engine.getSlotState (slotId); ! state.empty())
+        shadow->getInstance().setStateInformation (state.data(), (int) state.size());
+    for (auto& [index, v] : slot.params)
+        shadow->setQuietly ((int) index, v.value);
+
     auto* raw = shadow.get();
     shadows[slotId] = std::move (shadow);
     juce::WeakReference<fxmenet::plugin::Shadow> weak (raw);
@@ -570,6 +591,11 @@ void FxmeNetAudioProcessor::removeShadow (std::uint32_t slotId)
 {
     if (findShadow (slotId) == nullptr)
         return;
+    if (processing == Processing::local)
+    {
+        publishLocal (slotId);   // the audio thread lets go of it first
+        localSignature = {};
+    }
     if (beforeShadowRemoved)
         beforeShadowRemoved (slotId);
     shadows.erase (slotId);
@@ -580,6 +606,11 @@ void FxmeNetAudioProcessor::removeShadow (std::uint32_t slotId)
     shadows of removed or unloaded slots deleted. */
 void FxmeNetAudioProcessor::syncShadows()
 {
+    if (processing == Processing::local)
+    {
+        syncLocal();
+        return;
+    }
     if (shadows.empty())
         return;
 
@@ -815,8 +846,10 @@ juce::AudioProcessorEditor* FxmeNetAudioProcessor::createEditor()
 void FxmeNetAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     // The slots' states live on the server: bring them back first. Kept as
-    // they were when the server does not answer in time.
-    engine.refreshStates (2000);
+    // they were when the server does not answer in time. Local play: the
+    // local copies' states are in the model already (syncLocal).
+    if (processing != Processing::local)
+        engine.refreshStates (2000);
 
     juce::XmlElement root ("FxmeNet");
     root.setAttribute ("stateVersion", stateVersion);
@@ -826,6 +859,7 @@ void FxmeNetAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
         root.setAttribute ("blockSize", stream.blockSize);
         root.setAttribute ("budgetBlocks", stream.budgetBlocks);
     }
+    root.setAttribute ("processing", processing == Processing::local ? "local" : "server");
 
     for (auto& s : engine.getSlots())
     {
@@ -986,7 +1020,345 @@ void FxmeNetAudioProcessor::setStateInformation (const void* data, int sizeInByt
     s.budgetBlocks = xml->getIntAttribute ("budgetBlocks", s.budgetBlocks);
     applyStreamSettings (s);
 
+    {
+        const std::lock_guard<std::mutex> l (settingsLock);
+        server = xml->getStringAttribute ("server").trim();
+    }
+    setProcessing (xml->getStringAttribute ("processing") == "local" ? Processing::local : Processing::server);
     connectTo (xml->getStringAttribute ("server"));
+}
+
+//==============================================================================
+// Local play (doc/fallback-plan.md).
+
+void FxmeNetAudioProcessor::setProcessing (Processing p)
+{
+    if (p == processing)
+        return;
+
+    // The side leaving holds the plugins' current state (presets, files,
+    // every value): into the model, which the side arriving starts from, so
+    // that nothing jumps back to an older state, or to the defaults.
+    if (processing == Processing::local)
+    {
+        for (auto& [id, shadow] : shadows)
+        {
+            juce::MemoryBlock block;
+            shadow->getInstance().getStateInformation (block);
+            engine.setSlotState (id, std::vector<std::uint8_t> ((const std::uint8_t*) block.getData(),
+                                                                (const std::uint8_t*) block.getData() + block.getSize()));
+        }
+    }
+    else if (! (engine.getStatus() == ClientEngine::Status::ready && engine.refreshStates (2000)))
+    {
+        for (auto& [id, shadow] : shadows)   // no server: its mirrors, as last shown
+            if (shadow->stateReceived)
+            {
+                juce::MemoryBlock block;
+                shadow->getInstance().getStateInformation (block);
+                engine.setSlotState (id, std::vector<std::uint8_t> ((const std::uint8_t*) block.getData(),
+                                                                    (const std::uint8_t*) block.getData() + block.getSize()));
+            }
+    }
+
+    // The shadows change role: the current ones go (out of the local chain
+    // first), the next ones are made as needed.
+    engine.setLocalProcessor (nullptr);
+    localChain.publish ({}, nullptr);
+    processing = Processing::server;   // removeShadow: no local chain to update meanwhile
+    std::vector<std::uint32_t> ids;
+    for (auto& [id, shadow] : shadows)
+        ids.push_back (id);
+    for (auto id : ids)
+        removeShadow (id);
+    localProblems.clear();
+    localSignature = {};
+
+    processing = p;
+    if (p == Processing::local)
+    {
+        engine.disconnect();
+        engine.setLocalProcessor (&localChain);
+        syncLocal();
+    }
+    else
+    {
+        connectTo (getServer());
+    }
+    setLatencySamples (engine.getLatency());
+}
+
+juce::String FxmeNetAudioProcessor::getLocalProblem (std::uint32_t slotId) const
+{
+    const auto it = localProblems.find (slotId);
+    return it != localProblems.end() ? it->second : juce::String();
+}
+
+void FxmeNetAudioProcessor::prepareLocal (double sampleRate, int streamBlock)
+{
+    for (auto& [id, shadow] : shadows)
+        shadow->prepare (sampleRate, streamBlock);
+    localChain.prepare (streamBlock);
+}
+
+fxmenet::plugin::Shadow* FxmeNetAudioProcessor::createLocalShadow (const SlotModel& slot, juce::String& why)
+{
+    why = {};
+    if (isJsfx (slot))
+    {
+        why = "a JSFX script (not played locally yet)";
+        return nullptr;
+    }
+
+    // The server's catalog says which version; without it, any version here.
+    fxmenet::control::PluginEntry entry;
+    if (! findCatalogEntry (slot, entry))
+    {
+        entry.uid = slot.uid;
+        entry.name = slot.name;
+        entry.vendor = slot.vendor;
+    }
+    const auto m = matchLocal (entry);
+    if (m.kind == fxmenet::plugin::LocalMatch::Kind::unknown)
+        return nullptr;   // the local scan is not finished: asked again later (why stays empty)
+    if (m.kind == fxmenet::plugin::LocalMatch::Kind::missing)
+    {
+        why = "not installed here";
+        return nullptr;
+    }
+
+    double rate;
+    {
+        const std::lock_guard<std::mutex> l (settingsLock);
+        rate = preparedRate > 0.0 ? preparedRate : 48000.0;
+    }
+    juce::String error;
+    auto shadow = fxmenet::plugin::Shadow::create (shadowFormats, m.local, rate, getStreamSettings().blockSize, error, true);
+    if (shadow == nullptr)
+    {
+        why = "cannot load it: " + error;
+        return nullptr;
+    }
+    if (! slot.info.params.empty() && shadow->getNumParameters() != (int) slot.info.params.size())
+    {
+        why = "it has " + juce::String (shadow->getNumParameters()) + " parameters here, "
+            + juce::String ((int) slot.info.params.size()) + " on the server";
+        return nullptr;
+    }
+
+    const auto slotId = slot.slotId;
+    shadow->onParameterChanged = [this, slotId] (int index, float value)
+    {
+        lastTouched = { slotId, (std::uint32_t) index };
+        setSlotParameter ({ slotId, (std::uint32_t) index }, value);
+    };
+    shadow->onGesture = [this, slotId] (int index, bool starting)
+    {
+        lastTouched = { slotId, (std::uint32_t) index };
+        if (starting)
+            beginSlotParameterGesture ({ slotId, (std::uint32_t) index });
+        else
+            endSlotParameterGesture ({ slotId, (std::uint32_t) index });
+    };
+
+    // The model's state (the last the server gave, or this computer's), then
+    // the values set since. (`slot` comes from getSlotInfos: no state blob.)
+    if (const auto state = engine.getSlotState (slot.slotId); ! state.empty())
+        shadow->getInstance().setStateInformation (state.data(), (int) state.size());
+    for (auto& [index, v] : slot.params)
+        shadow->setQuietly ((int) index, v.value);
+    shadow->lastStateChangeCount = shadow->getStateChangeCount();
+    if (shadow->getNet() == nullptr)
+        shadow->takeStateReference();
+    shadow->stateReceived = true;
+
+    auto* raw = shadow.get();
+    shadows[slotId] = std::move (shadow);
+    return raw;
+}
+
+void FxmeNetAudioProcessor::publishLocal (std::uint32_t without)
+{
+    const auto slots = engine.getSlotInfos();
+    bool complete = false;
+    const auto routing = engine.getLocalRouting (complete);
+    int ins, outs, streamBlock;
+    {
+        const std::lock_guard<std::mutex> l (settingsLock);
+        ins = juce::jmax (1, preparedInputs);
+        outs = juce::jmax (1, preparedOutputs);
+        streamBlock = stream.blockSize;
+    }
+
+    // A slot keeps its object while its copy is the same (its bypass state
+    // goes on: no release of notes for nothing).
+    std::vector<fxmenet::plugin::LocalChain::SlotPtr> list;
+    std::vector<fxmenet::chain::SlotLayout> layouts;
+    for (auto& slot : slots)
+    {
+        auto* shadow = slot.slotId == without ? nullptr : findShadow (slot.slotId);
+        auto* instance = shadow != nullptr ? &shadow->getInstance() : nullptr;
+
+        fxmenet::plugin::LocalChain::SlotPtr ls;
+        for (auto& old : localChain.getSlots())
+            if (old->slotId == slot.slotId && old->processor == instance)
+                ls = old;
+        if (ls == nullptr)
+        {
+            ls = std::make_shared<fxmenet::plugin::LocalChain::Slot>();
+            ls->slotId = slot.slotId;
+            ls->processor = instance;
+        }
+        ls->bypassed = slot.bypassed;
+        ls->numChannels = instance != nullptr
+                            ? juce::jmax (1, instance->getTotalNumInputChannels(), instance->getTotalNumOutputChannels())
+                            : 2;
+        list.push_back (ls);
+
+        if (complete)
+        {
+            fxmenet::chain::SlotLayout l;
+            l.box = slot.box;
+            for (const bool input : { true, false })
+            {
+                const auto& buses = input ? slot.box.inputs : slot.box.outputs;
+                for (int i = 0; i < (int) buses.size(); ++i)
+                {
+                    int width = buses[(std::size_t) i].channels;   // bridged: every bus
+                    if (instance != nullptr)
+                    {
+                        auto* bus = instance->getBus (input, i);
+                        width = bus != nullptr && bus->isEnabled() ? bus->getNumberOfChannels() : 0;
+                    }
+                    (input ? l.inputWidths : l.outputWidths).push_back (width);
+                }
+            }
+            l.latency = instance != nullptr ? instance->getLatencySamples() : 0;
+            layouts.push_back (std::move (l));
+        }
+    }
+
+    std::unique_ptr<fxmenet::chain::RoutingPlan> plan;
+    if (complete)
+        plan = std::make_unique<fxmenet::chain::RoutingPlan> (ins, outs, layouts, routing, streamBlock, localChain.getPlan());
+    localChain.publish (list, std::move (plan));
+}
+
+void FxmeNetAudioProcessor::syncLocal()
+{
+    const auto slots = engine.getSlotInfos();
+    const bool pollTick = ++statePollTick >= statePollTicks;
+    if (pollTick)
+        statePollTick = 0;
+
+    // Copies of slots gone.
+    std::vector<std::uint32_t> gone;
+    for (auto& [id, shadow] : shadows)
+        if (std::none_of (slots.begin(), slots.end(), [id = id] (const SlotModel& s) { return s.slotId == id; }))
+            gone.push_back (id);
+    for (auto id : gone)
+    {
+        removeShadow (id);
+        localProblems.erase (id);
+    }
+
+    // A copy for each slot (once: a slot that cannot have one is bridged).
+    for (auto& slot : slots)
+        if (findShadow (slot.slotId) == nullptr && localProblems.count (slot.slotId) == 0)
+        {
+            juce::String why;
+            if (createLocalShadow (slot, why) == nullptr && why.isNotEmpty())
+                localProblems[slot.slotId] = why;
+        }
+
+    // Parameters, buses and states in step with the model.
+    bool complete = false;
+    const auto routing = engine.getLocalRouting (complete);
+    std::vector<std::uint32_t> busChanges;
+    for (auto& slot : slots)
+    {
+        auto* shadow = findShadow (slot.slotId);
+        if (shadow == nullptr)
+            continue;
+
+        for (auto& [index, v] : slot.params)
+            shadow->setQuietly ((int) index, v.value);
+
+        if (complete && slot.hasBox)
+        {
+            std::vector<bool> in, out;
+            fxmenet::chain::wantedBuses (slot.box, routing, in, out);
+            if (shadow->wantsBuses (in, out))
+                busChanges.push_back (slot.slotId);
+        }
+
+        if (! pollTick)
+            continue;
+        juce::MemoryBlock block;
+        bool changed = false;
+        if (shadow->getNet() != nullptr)
+        {
+            const auto count = shadow->getStateChangeCount();
+            if (count != shadow->lastStateChangeCount)
+            {
+                shadow->lastStateChangeCount = count;
+                shadow->getInstance().getStateInformation (block);
+                changed = true;
+            }
+        }
+        else
+        {
+            changed = shadow->takeStateChange (block);
+        }
+        if (changed)
+            engine.setSlotState (slot.slotId, std::vector<std::uint8_t> ((const std::uint8_t*) block.getData(),
+                                                                         (const std::uint8_t*) block.getData() + block.getSize()));
+    }
+
+    // A copy whose buses change is prepared again: out of the chain first.
+    for (auto id : busChanges)
+    {
+        publishLocal (id);
+        for (auto& slot : slots)
+            if (slot.slotId == id)
+            {
+                std::vector<bool> in, out;
+                fxmenet::chain::wantedBuses (slot.box, routing, in, out);
+                findShadow (id)->setWantedBuses (in, out);
+            }
+        localSignature = {};
+    }
+
+    // Republished when the chain, its copies, their channels or latencies,
+    // or the routing changed.
+    juce::String signature;
+    signature << (complete ? "R" : "S");
+    for (auto& slot : slots)
+    {
+        signature << ";" << (int) slot.slotId;
+        if (auto* shadow = findShadow (slot.slotId))
+        {
+            auto& p = shadow->getInstance();
+            signature << ":" << juce::String::toHexString ((juce::pointer_sized_int) &p)
+                      << ":" << p.getTotalNumInputChannels() << "/" << p.getTotalNumOutputChannels()
+                      << ":" << p.getLatencySamples();
+        }
+    }
+    for (auto& c : routing)
+        signature << "|" << (int) c.from.box << "." << c.from.channel << ">" << (int) c.to.box << "." << c.to.channel;
+
+    if (signature != localSignature || localChain.takeLatencyStale())
+    {
+        localSignature = signature;
+        publishLocal();
+    }
+    else
+    {
+        for (auto& ls : localChain.getSlots())   // bypass: no republish
+            for (auto& slot : slots)
+                if (slot.slotId == ls->slotId)
+                    ls->bypassed = slot.bypassed;
+    }
 }
 
 //==============================================================================

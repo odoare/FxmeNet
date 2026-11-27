@@ -58,15 +58,33 @@ class Shadow : private juce::AudioProcessorParameter::Listener
 public:
     static constexpr juce::uint32 touchHoldMs = 300;
 
-    /** Loads `description` as a mirror; nullptr and `error` on failure. */
+    /** Loads `description`; nullptr and `error` on failure. `local`: it
+        will process (local play, doc/fallback-plan.md), so an FxmeNet-aware
+        plugin is told `local` rather than `mirror`. */
     static std::unique_ptr<Shadow> create (juce::AudioPluginFormatManager& formats,
                                            const juce::PluginDescription& description,
-                                           double sampleRate, int blockSize, juce::String& error)
+                                           double sampleRate, int blockSize, juce::String& error,
+                                           bool local = false)
     {
         auto instance = formats.createPluginInstance (description, sampleRate, blockSize, error);
         if (instance == nullptr)
             return nullptr;
-        return std::unique_ptr<Shadow> (new Shadow (std::move (instance), sampleRate, blockSize));
+        return std::unique_ptr<Shadow> (new Shadow (std::move (instance), sampleRate, blockSize, local));
+    }
+
+    /** True when it processes (local play), false for a mirror. */
+    bool isLocal() const noexcept                           { return local; }
+
+    /** Prepares it again for another rate or block size. Message thread,
+        with the audio stopped (or not processing it). */
+    void prepare (double sampleRate, int blockSize)
+    {
+        if (juce::exactlyEqual (sampleRate, preparedRate) && blockSize == preparedBlock)
+            return;
+        preparedRate = sampleRate;
+        preparedBlock = blockSize;
+        instance->releaseResources();
+        instance->prepareToPlay (preparedRate, preparedBlock);
     }
 
     ~Shadow() override
@@ -168,6 +186,12 @@ public:
         buses always, the others when the routing connects them. Prepares
         the instance again when the layout changes; asked once per change
         (a refused layout is not asked again). */
+    /** True when setWantedBuses (in, out) would have something to do. */
+    bool wantsBuses (const std::vector<bool>& in, const std::vector<bool>& out) const
+    {
+        return in != wantedIn || out != wantedOut;
+    }
+
     void setWantedBuses (const std::vector<bool>& in, const std::vector<bool>& out)
     {
         if (in == wantedIn && out == wantedOut)
@@ -202,16 +226,16 @@ public:
     }
 
 private:
-    Shadow (std::unique_ptr<juce::AudioPluginInstance> loaded, double sampleRate, int blockSize)
-        : instance (std::move (loaded)), preparedRate (sampleRate), preparedBlock (blockSize)
+    Shadow (std::unique_ptr<juce::AudioPluginInstance> loaded, double sampleRate, int blockSize, bool isLocalCopy)
+        : instance (std::move (loaded)), local (isLocalCopy), preparedRate (sampleRate), preparedBlock (blockSize)
     {
         if (auto* vst3 = instance->getVST3Client())
             net = fxme::net::queryNetPlugin (vst3->getIComponentPtr());
-        if (net != nullptr)
-            net->setRole ((std::int32_t) fxme::net::Role::mirror);   // before preparing
+        if (net != nullptr)   // before preparing
+            net->setRole ((std::int32_t) (local ? fxme::net::Role::local : fxme::net::Role::mirror));
 
         catalog::useDefaultBuses (*instance);   // as on the server (Buses.h)
-        instance->prepareToPlay (sampleRate, blockSize);   // editors read the rate; never processed
+        instance->prepareToPlay (sampleRate, blockSize);   // editors read the rate; a mirror is never processed
         lastStateChangeCount = getStateChangeCount();
 
         touched.assign ((std::size_t) instance->getParameters().size(), 0);
@@ -280,6 +304,7 @@ private:
 
     std::unique_ptr<juce::AudioPluginInstance> instance;
     fxme::net::INetPlugin* net = nullptr;
+    bool local = false;
     std::vector<juce::uint32> touched;   ///< when the editor last moved each parameter
 
     double preparedRate = 48000.0;

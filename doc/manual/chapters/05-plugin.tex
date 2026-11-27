@@ -128,7 +128,8 @@ The \ui{Settings} tab has four parts.
 
 \begin{description}
   \item[Stream.] \ui{Block size N} and \ui{Network budget D}, with the latency
-    they give (chapter~\ref{ch:performance}).
+    they give (chapter~\ref{ch:performance}), and \ui{Processing}: where the
+    chain plays, \ui{Server} or \ui{Local} (section~\ref{sec:local}).
   \item[Transport.] \ui{Silence in-flight audio at reset}: when the DAW restarts
     playback or jumps, drop the audio still on its way back from the server,
     so you hear silence for the length of the latency (as a local plugin
@@ -175,8 +176,9 @@ keep up with the chosen settings (chapter~\ref{ch:performance}).
   \item \textbf{Saving.} The project stores the server, the settings, each
     plugin with its state, the parameter mapping and the routing. When you open
     the project, the plugin rebuilds the chain on the server and connects. If
-    the server is not reachable then, the plugin keeps the state, and you can
-    connect later.
+    the server is not reachable then, the plugin keeps the state, plays
+    silence, and you can connect later or play locally
+    (section~\ref{sec:local}). The \ui{Processing} setting is saved too.
   \item \textbf{Offline rendering.} When the DAW renders faster than real
     time (a bounce or an export), the plugin waits for each reply, so
     nothing is concealed and the result is exact.
@@ -212,6 +214,28 @@ plugin of the chain.
     plugin of the chain. Each message also repeats the MIDI of the few
     before it, so a lost message loses no note's end: it arrives one block
     late. A note that would start more than a block late is skipped.
+\end{itemize}
+
+\section{Playing without the server}
+\label{sec:local}
+
+With \ui{Processing} set to \ui{Local} (in the \ui{Settings} tab), the chain
+plays on this computer, with the plugins installed here, and the plugin does
+not connect to a server. Use it to work on a project away from the server,
+or to render it there. The latency the DAW sees stays the same, so the
+tracks keep their timing; set it back to \ui{Server} to play through the
+server again (the changes made meanwhile go with the chain).
+
+\begin{itemize}
+  \item Each plugin uses its local copy, the one that shows its editor, so
+    its editor shows what you hear. An FX-Mechanics plugin shows its own
+    meters, as in a normal track.
+  \item A plugin not installed on this computer is passed through, its
+    sound missing; the status line counts them, and its \ui{Parameters}
+    tab says why. JSFX scripts are passed through for now.
+  \item The processing load is on this computer's CPU.
+  \item With \ui{Server} and no server answering, the track is silent:
+    a missing server does not go unnoticed in a mix.
 \end{itemize}
 
 \section{The same project on another computer}

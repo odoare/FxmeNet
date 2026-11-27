@@ -35,6 +35,7 @@
 #include <FxmeNet/jsfx/JsfxAudio.h>
 #include "LocalCatalog.h"
 #include "ParameterPool.h"
+#include "LocalChain.h"
 #include "Shadow.h"
 
 #include <array>
@@ -115,6 +116,19 @@ public:
     /** The server's catalog entry of a slot; false when the catalog does not
         have it (not received yet, or the plugin is gone from the server). */
     bool findCatalogEntry (const fxmenet::client::SlotModel&, fxmenet::control::PluginEntry& out) const;
+
+    //==============================================================================
+    // Local play (doc/fallback-plan.md).
+
+    /** Where the chain is processed: on the server, or on this computer with
+        the slots' local copies (no connection then). Saved with the project. */
+    enum class Processing { server, local };
+
+    Processing getProcessing() const noexcept   { return processing; }
+    void setProcessing (Processing);
+
+    /** Local play: why a slot plays without its plugin (bridged), or {}. */
+    juce::String getLocalProblem (std::uint32_t slotId) const;
 
     /** "host" or "host:port"; empty disconnects. Remembered for new instances. */
     void connectTo (const juce::String& hostAndPort);
@@ -222,6 +236,25 @@ private:
     int statePollTick = 0;
     void deliverTelemetry();
     void removeShadow (std::uint32_t slotId);
+
+    // Local play, message thread.
+    Processing processing = Processing::server;
+    fxmenet::plugin::LocalChain localChain;
+    std::map<std::uint32_t, juce::String> localProblems;   ///< slots bridged, and why
+    juce::String localSignature;                          ///< what localChain was last built from
+
+    /** A local copy for `slot`, told it processes; null with the reason. */
+    fxmenet::plugin::Shadow* createLocalShadow (const fxmenet::client::SlotModel& slot, juce::String& why);
+
+    /** Local play: every slot's local copy, the parameters and states in
+        step with the model, the chain republished when it changed. */
+    void syncLocal();
+
+    /** Publishes the local chain (all slots but `without`). */
+    void publishLocal (std::uint32_t without = 0);
+
+    /** Prepares the shadows and the local chain for the current format. */
+    void prepareLocal (double sampleRate, int streamBlock);
 
     /** With mappingLock held: names a mapped entry after its parameter;
         returns the parameter's current value (or -1 if not found). */

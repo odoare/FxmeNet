@@ -92,6 +92,11 @@ public:
 
     LocalMatch match (const control::PluginEntry& server) const;
 
+    /** The plugins installed here, as catalog entries (local play lists
+        them in place of the server's). Instruments and FxmeNet's own are in
+        too, as in the server's catalog; the editor filters. */
+    std::vector<control::PluginEntry> getEntries() const;
+
     static juce::File getCacheFile();
 
 private:

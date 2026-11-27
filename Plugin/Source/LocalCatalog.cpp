@@ -235,6 +235,29 @@ void LocalCatalog::scan (bool full)
 }
 
 //==============================================================================
+std::vector<control::PluginEntry> LocalCatalog::getEntries() const
+{
+    std::vector<control::PluginEntry> out;
+    const std::lock_guard<std::mutex> l (lock);
+    for (auto& e : entries)
+    {
+        const auto& d = e.description;
+        control::PluginEntry p;
+        p.uid = (std::uint32_t) d.uniqueId;
+        p.name = d.name;
+        p.vendor = d.manufacturerName;
+        p.version = d.version;
+        p.category = d.category;
+        p.sha256 = e.sha256;
+        p.inputs = d.numInputChannels;
+        p.outputs = d.numOutputChannels;
+        p.isInstrument = d.isInstrument;
+        p.platforms.add (catalog::bundlePlatformFolder());
+        out.push_back (std::move (p));
+    }
+    return out;
+}
+
 LocalMatch LocalCatalog::match (const control::PluginEntry& server) const
 {
     LocalMatch m;

@@ -41,7 +41,9 @@ namespace fxmenet::chain
 {
 
 /** What the audio thread needs of a slot. The owner derives its own slot
-    type from it and sets `processor` (it keeps the instance's ownership). */
+    type from it and sets `processor` (it keeps the instance's ownership).
+    A null `processor` is a bridged slot: its audio passes through (a plugin
+    not installed for the plugin's local play). */
 struct ProcessorSlot
 {
     virtual ~ProcessorSlot() = default;
@@ -172,6 +174,8 @@ public:
             int total = 0;
             for (auto& slot : s->slots)
             {
+                if (slot->processor == nullptr)
+                    continue;   // bridged: the buffer goes on as it is
                 auto& instance = *slot->processor;
                 if (instance.isNonRealtime() != offline)
                     instance.setNonRealtime (offline);
@@ -209,6 +213,12 @@ private:
                       [&] (int index, float* const* channels, int width, int count)
         {
             auto& slot = *s.slots[(std::size_t) index];
+            if (slot.processor == nullptr)
+            {
+                // Bridged: each output takes the input of the same index.
+                juce::ignoreUnused (channels, width, count);
+                return;
+            }
             auto& instance = *slot.processor;
             if (instance.isNonRealtime() != offline)
                 instance.setNonRealtime (offline);

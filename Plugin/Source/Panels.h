@@ -158,13 +158,13 @@ private:
     void jsfxFoldersMenu();
 
     FxmeNetAudioProcessor& processor;
-    juce::ComboBox blockBox, budgetBox;
+    juce::ComboBox blockBox, budgetBox, processingBox;
     juce::TextButton rescanButton { "Rescan" }, fullRescanButton { "Full rescan" }, foldersButton { "Folders..." };
     juce::TextButton flushButton { "Silence in-flight audio at reset" }, logButton { "Log transport events" };
     std::unique_ptr<juce::FileChooser> chooser;
     juce::TextButton jsfxRescanButton { "Rescan" }, jsfxFoldersButton { "Folders..." };
     juce::String latencyText, localText, foldersText, jsfxText, jsfxFoldersText;
-    juce::Rectangle<int> streamLabel, blockLabel, budgetLabel, latencyArea, localArea, foldersArea, diagnosticsLabel,
+    juce::Rectangle<int> streamLabel, blockLabel, budgetLabel, processingLabel, latencyArea, localArea, foldersArea, diagnosticsLabel,
                          jsfxArea, jsfxFoldersArea;
 };
 

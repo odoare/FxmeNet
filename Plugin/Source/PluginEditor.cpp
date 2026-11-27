@@ -167,6 +167,16 @@ void FxmeNetAudioProcessorEditor::timerCallback()
     statusColour = status == ClientEngine::Status::ready  ? theme::accent
                  : status == ClientEngine::Status::idle   ? theme::dimText
                                                           : theme::warning;
+    if (processor.getProcessing() == FxmeNetAudioProcessor::Processing::local)
+    {
+        int bridged = 0;
+        for (auto& s : engine.getSlotInfos())
+            bridged += processor.getLocalProblem (s.slotId).isNotEmpty() ? 1 : 0;
+        statusLine = "LOCAL: the chain plays on this computer (Settings)";
+        if (bridged > 0)
+            statusLine << ", " << bridged << (bridged == 1 ? " plugin" : " plugins") << " missing here";
+        statusColour = theme::warning;
+    }
     connectButton.setButtonText (processor.getServer().isNotEmpty() ? "Disconnect" : "Connect");
 
     const auto& st = engine.getStatistics();
@@ -197,9 +207,12 @@ void FxmeNetAudioProcessorEditor::timerCallback()
 void FxmeNetAudioProcessorEditor::refreshCatalog()
 {
     const auto filter = filterBox.getText().trim();
-    auto latest = processor.getEngine().getCatalog();
+    // Local play lists this computer's plugins in place of the server's: a
+    // chain made here goes to the server when switched back (if it has them).
+    const bool local = processor.getProcessing() == FxmeNetAudioProcessor::Processing::local;
+    auto latest = local ? processor.getLocalCatalog().getEntries() : processor.getEngine().getCatalog();
     juce::String signature;
-    signature << (int) processor.getLocalCatalog().getRevision() << ":"
+    signature << (local ? "local:" : "server:") << (int) processor.getLocalCatalog().getRevision() << ":"
               << processor.getJsfxLibrary().getRevision() << ":" << filter << ":";
     for (auto& e : latest)
         signature << fxmenet::control::json::hex32 (e.uid) << e.name << ";";
@@ -295,9 +308,11 @@ void FxmeNetAudioProcessorEditor::refreshCatalog()
         }
         catalogRows.rows.push_back ({ e.name,
                                       e.vendor + "  " + juce::String (e.inputs) + "/" + juce::String (e.outputs)
-                                          + (e.isInstrument ? "  INST" : "") + "  " + tierTag (m),
-                                      tierColour (m),
-                                      m.text });
+                                          + (e.isInstrument ? "  INST" : "") + "  " + (local ? juce::String ("HERE") : tierTag (m)),
+                                      local ? theme::text : tierColour (m),
+                                      local ? juce::String ("Installed on this computer: played here (Local), "
+                                                            "and on the server if it has it too")
+                                            : m.text });
     }
     // While typing, the first match is selected, so Return adds it.
     if (reselect < 0 && filterChanged && filter.isNotEmpty() && ! shown.empty())
@@ -468,7 +483,8 @@ void FxmeNetAudioProcessorEditor::paint (juce::Graphics& g)
     g.setFont (juce::Font (juce::FontOptions (12.0f)));
     g.setColour (theme::dimText);
     auto title = catalogTitle;
-    g.drawText ("SERVER PLUGINS", title.removeFromLeft (110), juce::Justification::centredLeft);
+    g.drawText (processor.getProcessing() == FxmeNetAudioProcessor::Processing::local ? "LOCAL PLUGINS" : "SERVER PLUGINS",
+                title.removeFromLeft (110), juce::Justification::centredLeft);
     g.drawText (catalogCount, title.withTrimmedRight (filterBox.getWidth() + 8), juce::Justification::centredRight);
     g.drawText ("CHAIN", chainTitle, juce::Justification::centredLeft);
     g.drawText (statsLine, statsArea, juce::Justification::centredLeft, true);

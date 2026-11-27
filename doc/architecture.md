@@ -38,7 +38,8 @@ Common/                 shared by server and client, header-only:
                         JsfxSync.h (the @gfx display's mirror: messages and
                         the server's side; JUCE-free)
   FxmeNet/client/       the client: BlockStream (re-blocking, latency, jitter
-                        buffer, concealment) and ReplyRing, JUCE-free; AudioLink
+                        buffer, concealment) and ReplyRing, JUCE-free; LocalProcessor
+                        (local play's interface, JUCE-free); AudioLink
                         (one session's UDP audio) and ClientEngine (chain,
                         connection thread, audio entry point), JUCE
   tests/                FxmeNetProtocolTests and FxmeNetClientTests (no JUCE),

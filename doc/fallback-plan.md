@@ -159,6 +159,30 @@ fxmenet-wavclient through two plugins in series, offline and in real time
 (also with random host blocks): bit-identical. Not exercised by those
 runs: the routed path (moved as is).
 
+Phase 2 written (2026-11-26). `client::LocalProcessor` (the engine hands
+it each complete block, its output played where the reply would be;
+silence with no server, dry only when bypassed); the plugin's
+`LocalChain` (Plugin/Source/LocalChain.h) on `ChainProcessor`, built from
+the shadows (created for every slot in Local, role `local`, state and
+values from the model, states polled back into the model at 5 Hz, buses
+changed out of the chain first; routed when every slot's buses are known,
+`ClientEngine::getLocalRouting`); a slot without a copy (missing here, a
+JSFX script) bridged. Settings: Processing, Server or Local, saved with
+the project; the status line says LOCAL. Checked: fxmenet-wavclient
+`--local` (the engine's local play with the same core, no server) against
+the reference: bit-identical, offline, real time and random host blocks.
+Not tried yet in a DAW: the plugin's LocalChain, its routed path, the
+switch at run time, the Settings layout (one more row). Known limits:
+DAW automation reaches the local copies through the model at the 50 Hz
+timer (not sample-accurate); slots have no parameter list in Local when
+the project was never connected (generic controls empty, editors fine).
+Fixed after the first try (2026-11-27): the local copies (and the editor
+copies) were given an empty state, since `getSlotInfos` leaves the state
+blobs out: they read `getSlotState` now, and a switch first stores the
+leaving side's states in the model. In Local, the plugin list shows this
+computer's plugins (LocalCatalog::getEntries), so that a chain can be
+made without a server and switched to it later.
+
 1. **The chain core in Common.** `ChainProcessor` (serial, routed, bypass,
    release of notes, latency per slot) and `MidiGuard` move to Common; the
    server's `Chain` uses them. No change in behaviour: the server's tests

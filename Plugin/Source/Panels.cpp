@@ -287,7 +287,8 @@ void ParameterPanel::refresh (const client::SlotModel* slot)
     // The plugin's own editor, when it can have one here.
     juce::String why;
     fxmenet::plugin::Shadow* shadow = nullptr;
-    if (slot != nullptr && slot->loaded)
+    const bool local = processor.getProcessing() == FxmeNetAudioProcessor::Processing::local;
+    if (slot != nullptr && (slot->loaded || local))   // local play: its local copy, server or not
         shadow = processor.getShadow (id, &why);
    #if FXMENET_JSFX
     // A JSFX script with @gfx: its display, drawn here (JsfxView).
@@ -391,8 +392,10 @@ void ParameterPanel::showGeneric (const client::SlotModel* slot)
 {
     const std::uint32_t id = slot != nullptr ? slot->slotId : 0;
     juce::String signature;
+    const bool local = processor.getProcessing() == FxmeNetAudioProcessor::Processing::local;
+    const auto localProblem = slot != nullptr && local ? processor.getLocalProblem (id) : juce::String();
     if (slot != nullptr)
-        signature << (int) id << (slot->loaded ? "L" : "-") << (int) slot->info.params.size();
+        signature << (int) id << (slot->loaded ? "L" : "-") << (int) slot->info.params.size() << localProblem;
 
     if (id != shownSlot || signature != shownSignature)
     {
@@ -401,6 +404,9 @@ void ParameterPanel::showGeneric (const client::SlotModel* slot)
         rows.clear();
         viewport.setVisible (true);
         message = slot == nullptr ? "Select a plugin in the chain to see its parameters."
+                : localProblem.isNotEmpty() ? slot->name + " is played locally without it: " + localProblem + "."
+                : ! slot->loaded && local ? "Generic controls are known once " + slot->name
+                                              + " has been loaded on a server; its own editor works here."
                 : ! slot->loaded  ? slot->name + " is not loaded on the server."
                                   : juce::String();
 
@@ -695,6 +701,16 @@ SettingsPanel::SettingsPanel (FxmeNetAudioProcessor& p) : processor (p)
     addAndMakeVisible (blockBox);
     addAndMakeVisible (budgetBox);
 
+    processingBox.addItem ("Server", 1);
+    processingBox.addItem ("Local", 2);
+    processingBox.setTooltip (tips::processing);
+    processingBox.onChange = [this]
+    {
+        processor.setProcessing (processingBox.getSelectedId() == 2 ? FxmeNetAudioProcessor::Processing::local
+                                                                     : FxmeNetAudioProcessor::Processing::server);
+    };
+    addAndMakeVisible (processingBox);
+
     rescanButton.setTooltip (tips::rescan);
     fullRescanButton.setTooltip (tips::fullRescan);
     rescanButton.onClick = [this] { processor.getLocalCatalog().rescan (false); };
@@ -738,6 +754,8 @@ void SettingsPanel::refresh()
             blockIndex = i;
     blockBox.setSelectedItemIndex (blockIndex, juce::dontSendNotification);
     budgetBox.setSelectedId (s.budgetBlocks, juce::dontSendNotification);
+    processingBox.setSelectedId (processor.getProcessing() == FxmeNetAudioProcessor::Processing::local ? 2 : 1,
+                                 juce::dontSendNotification);
 
     auto& engine = processor.getEngine();
     const double rate = processor.getSampleRate() > 0.0 ? processor.getSampleRate() : 48000.0;
@@ -885,6 +903,7 @@ void SettingsPanel::paint (juce::Graphics& g)
     g.drawText ("STREAM", streamLabel, juce::Justification::centredLeft);
     g.drawText ("Block size N", blockLabel, juce::Justification::centredLeft);
     g.drawText ("Network budget D", budgetLabel, juce::Justification::centredLeft);
+    g.drawText ("Processing", processingLabel, juce::Justification::centredLeft);
     g.drawText ("TRANSPORT", diagnosticsLabel, juce::Justification::centredLeft);
     g.drawText ("LOCAL PLUGINS (for the plugins' own editors)", localArea.withHeight (18), juce::Justification::centredLeft);
     g.setColour (theme::text);
@@ -913,6 +932,10 @@ void SettingsPanel::resized()
     row.removeFromLeft (24);
     budgetLabel = row.removeFromLeft (130);
     budgetBox.setBounds (row.removeFromLeft (110));
+    r.removeFromTop (6);
+    row = r.removeFromTop (26);
+    processingLabel = row.removeFromLeft (120);
+    processingBox.setBounds (row.removeFromLeft (130));
     r.removeFromTop (6);
     latencyArea = r.removeFromTop (34);
     r.removeFromTop (18);

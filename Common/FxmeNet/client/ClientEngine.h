@@ -40,9 +40,13 @@
     Audio: BlockStream re-blocks and keeps the latency; blocks go to the
     current AudioLink, published to the audio thread with a hazard pointer
     (the connection thread waits until the audio thread no longer uses a
-    link before deleting it). With no link (not connected, or rebuilding)
-    or when bypassed, a block is played dry, delayed by the same latency, so
-    timing never jumps; a new link restarts the stream at block 0.
+    link before deleting it). Bypassed, a block is played dry, delayed by
+    the same latency, so timing never jumps; with no link (not connected,
+    or rebuilding) it is played as silence (a dry track would pass unnoticed
+    in a mix; doc/fallback-plan.md). A new link restarts the stream at block
+    0. With a LocalProcessor set (local play), each block is processed on
+    this computer when it is complete, and played when the server's reply
+    would have been: same latency.
 
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-FXME-Commercial
@@ -57,6 +61,7 @@
 #include <FxmeNet/jsfx/JsfxSync.h>
 #include <FxmeNet/client/AudioLink.h>
 #include <FxmeNet/client/BlockStream.h>
+#include <FxmeNet/client/LocalProcessor.h>
 #include <FxmeNet/chain/Routing.h>
 #include <FxmeNet/control/ControlConnection.h>
 
@@ -180,6 +185,9 @@ public:
         dry.assign ((std::size_t) (maxInFlight * host.numInputs * n), 0.0f);
         dryBlock.assign ((std::size_t) maxInFlight, 0);
         sentBlock.assign ((std::size_t) maxInFlight, 0);
+        localOut.assign ((std::size_t) (maxInFlight * host.numOutputs * n), 0.0f);
+        localBlock.assign ((std::size_t) maxInFlight, 0);
+        localPointers.assign ((std::size_t) host.numOutputs, nullptr);
         audioSampleRate = sampleRate;
         audioGeneration = ~std::uint32_t (0);
         aheadAnchored = false;
@@ -215,7 +223,19 @@ public:
 
     /** The latency to report: re-blocking and network budget, plus the
         server chain's own. Any thread. */
-    int getLatency() const noexcept              { return stream.getLatency() + stats.chainLatency.load(); }
+    int getLatency() const noexcept
+    {
+        const auto* l = local.load();
+        return stream.getLatency() + (l != nullptr ? l->getLocalLatency() : stats.chainLatency.load());
+    }
+
+    /** Local play (doc/fallback-plan.md): the blocks go to `processor`
+        instead of a server (null: back to the server). The caller keeps it
+        alive as long as the engine, and disconnects while it is set. Any
+        thread but the audio thread. */
+    void setLocalProcessor (LocalProcessor* processor) noexcept   { local.store (processor); }
+
+    bool isLocal() const noexcept                { return local.load() != nullptr; }
     int getStreamLatency() const noexcept        { return stream.getLatency(); }
     std::uint64_t getConcealedCount() const noexcept   { return stream.getConcealedCount(); }
     std::uint64_t getMidiDropped() const noexcept      { return stream.getMidiDropped(); }   ///< MIDI events not sent (too long, block full)
@@ -279,6 +299,16 @@ public:
     // The chain. Not on the audio thread.
 
     std::vector<SlotModel> getSlots() const      { const std::lock_guard<std::mutex> l (lock); return slots; }
+
+    /** One slot's last known state (empty when unknown). */
+    std::vector<std::uint8_t> getSlotState (std::uint32_t slotId) const
+    {
+        const std::lock_guard<std::mutex> l (lock);
+        for (auto& s : slots)
+            if (s.slotId == slotId)
+                return s.state;
+        return {};
+    }
 
     /** The slots without their state blobs (which can be large): for
         displays polling often. */
@@ -455,6 +485,27 @@ public:
     {
         const std::lock_guard<std::mutex> l (lock);
         return serverConnections;
+    }
+
+    /** The connections for local play (doc/fallback-plan.md): the routing
+        resolved on every slot whose buses are known, with the host's
+        channels. Empty `complete`: some slot's buses are unknown (never
+        loaded on a server), and the chain is then processed in series. */
+    std::vector<chain::Connection> getLocalRouting (bool& complete) const
+    {
+        const std::lock_guard<std::mutex> l (lock);
+        std::vector<chain::Box> b { chain::Box::makeInputs (juce::jmax (1, host.numInputs)) };
+        complete = true;
+        for (auto& s : slots)
+        {
+            complete = complete && s.hasBox;
+            if (s.hasBox)
+                b.push_back (s.box);
+        }
+        b.push_back (chain::Box::makeOutputs (juce::jmax (1, host.numOutputs)));
+        auto resolved = routing;
+        resolved.setBoxes (b);
+        return resolved.getConnections();
     }
 
     /** The user's edits; false when not valid. */
@@ -723,7 +774,7 @@ public:
         if (! prepared)
             return;
 
-        if (offline)
+        if (offline && local.load() == nullptr)
             waitForSessionOffline();
 
         AudioLink* link = acquireLink();
@@ -763,6 +814,7 @@ public:
                 stream.flush();
             std::fill (dryBlock.begin(), dryBlock.end(), 0);   // k starts again: no old block may match
             std::fill (sentBlock.begin(), sentBlock.end(), 0);
+            std::fill (localBlock.begin(), localBlock.end(), 0);
             if (link != nullptr)
                 link->rebase();      // same link: its numbering goes on, older replies refused
             audioGeneration = generation;
@@ -885,6 +937,23 @@ private:
                 std::copy (block[c], block[c] + n, d + c * n);
             e.dryBlock[slot] = k + 1;
 
+            // Local play: processed here and now, played when a reply would be.
+            if (auto* l = e.local.load(); l != nullptr && ! bypassed)
+            {
+                const int outs = e.host.numOutputs;
+                float* o = e.localOut.data() + slot * (std::size_t) (outs * n);
+                for (int c = 0; c < outs; ++c)
+                    e.localPointers[(std::size_t) c] = o + c * n;
+                const bool reset = e.localParityKnown && resetParity != e.localParity;
+                e.localParity = resetParity;
+                e.localParityKnown = true;
+                l->processLocalBlock (block, e.host.numInputs, e.localPointers.data(), outs, n,
+                                      e.stream.getBlockMidi(), e.stream.getBlockMidiBytes(), offline, reset);
+                e.localBlock[slot] = k + 1;
+                e.sentBlock[slot] = 0;
+                return;
+            }
+
             const bool send = link != nullptr && ! bypassed;
             e.sentBlock[slot] = send ? k + 1 : 0;
             if (! send)
@@ -921,7 +990,17 @@ private:
             if (link != nullptr)
                 link->skip (k);
 
-            const bool have = e.dryBlock[slot] == k + 1;
+            // Processed here (local play).
+            if (! bypassed && e.localBlock[slot] == k + 1)
+            {
+                const float* o = e.localOut.data() + slot * (std::size_t) (e.host.numOutputs * n);
+                for (int c = 0; c < e.host.numOutputs; ++c)
+                    std::copy (o + c * n, o + (c + 1) * n, dest[c]);
+                return true;
+            }
+
+            // Bypassed: dry. No server: silence.
+            const bool have = bypassed && e.dryBlock[slot] == k + 1;
             const float* d = e.dry.data() + slot * (std::size_t) (e.host.numInputs * n);
             for (int c = 0; c < e.host.numOutputs; ++c)
             {
@@ -1642,6 +1721,13 @@ private:
     int maxInFlight = 16;
     std::vector<float> dry;
     std::vector<std::uint64_t> dryBlock, sentBlock;   ///< k + 1 per slot
+
+    // Local play (audio thread, sized by prepare).
+    std::atomic<LocalProcessor*> local { nullptr };
+    std::vector<float> localOut;               ///< a processed block per slot, numOutputs x N
+    std::vector<std::uint64_t> localBlock;     ///< k + 1 per slot
+    std::vector<float*> localPointers;
+    bool localParity = false, localParityKnown = false;
     double audioSampleRate = 0.0;
     std::uint32_t audioGeneration = 0;
     std::uint32_t audioResets = 0;   ///< the reset count the last callback saw

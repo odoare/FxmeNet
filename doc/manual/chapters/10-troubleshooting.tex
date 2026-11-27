@@ -93,4 +93,4 @@ the DAW applies it to this track.
 
 The plugin reconnects by itself and rebuilds the chain on the server. If the
 server does not have the same plugins any more, the affected plugins show an
-error in the chain. While the server is away, the sound becomes dry at once; when the server is back, the processed sound returns. Restarting the server during playback was tested, without audible glitches.
+error in the chain. While the server is away, the track is silent (so that a missing server does not go unnoticed in a mix); when the server is back, the processed sound returns. To keep working without the server, switch \ui{Processing} to \ui{Local} (section~\ref{sec:local}). Restarting the server during playback was tested, without audible glitches.

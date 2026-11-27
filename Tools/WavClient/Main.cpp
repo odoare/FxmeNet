@@ -23,6 +23,11 @@
     or paced in real time; the output, realigned by the latency the engine
     reports, is compared with local processing the same way.
 
+    --local (with --engine): no server; the engine's local play
+    (doc/fallback-plan.md) processes the chain here, through the shared
+    chain core (chain::ChainProcessor) with its own copies of the plugins,
+    as FxmeNetPlugin's Local mode does. Compared with the same reference.
+
     The plugins are given by path: the client reads their identity (uid,
     name, vendor) from its own copy, which also makes the local reference.
     The server must have the same plugins.
@@ -32,7 +37,7 @@
                         [--server host[:port]] [--block N] [--realtime] [--budget D]
                         [--settle ms] [--no-compare] [--telemetry]
                         [--jsfx EFFECTS_FOLDER SCRIPT_PATH]...
-                        [--engine [--host-block N] [--random-blocks]]
+                        [--engine [--host-block N] [--random-blocks] [--local]]
       fxmenet-wavclient --discover
 
     --telemetry switches telemetry on for every FxmeNet-aware slot (as an
@@ -49,6 +54,7 @@
 #include <juce_audio_processors_headless/juce_audio_processors_headless.h>
 
 #include <FxmeNet/catalog/Buses.h>
+#include <FxmeNet/chain/ChainProcessor.h>
 #include <FxmeNet/client/ClientEngine.h>
 #include <FxmeNet/control/ControlConnection.h>
 #include <FxmeNet/control/Discovery.h>
@@ -87,6 +93,7 @@ struct Options
     bool telemetry = false;
     bool discover = false;
     bool engine = false;
+    bool local = false;   ///< --local: the engine's local play, no server
     int hostBlock = 512;
     bool randomBlocks = false;
 
@@ -121,6 +128,7 @@ struct Options
             else if (a == "--telemetry")             telemetry = true;
             else if (a == "--discover")              discover = true;
             else if (a == "--engine")                engine = true;
+            else if (a == "--local")                 local = engine = true;
             else if (a == "--host-block" && hasValue) hostBlock = args[++i].getIntValue();
             else if (a == "--random-blocks")         randomBlocks = true;
             else
@@ -550,7 +558,7 @@ int compareWithLocal (const Options& o, const juce::OwnedArray<juce::PluginDescr
 
     if (juce::exactlyEqual (diff, 0.0f))
     {
-        say ("Server and local processing: bit-identical");
+        say (juce::String (o.local ? "Local play and the reference" : "Server and local processing") + ": bit-identical");
         return 0;
     }
 
@@ -561,6 +569,71 @@ int compareWithLocal (const Options& o, const juce::OwnedArray<juce::PluginDescr
          + (o.realtime ? "; expected in real time when blocks were late or lost" : ""));
     return o.realtime ? 0 : 1;
 }
+
+//==============================================================================
+/** --local: the chain on this computer, as FxmeNetPlugin's local play does
+    (its LocalChain, on the same core). */
+class WavLocalChain : public client::LocalProcessor
+{
+public:
+    bool load (const juce::OwnedArray<juce::PluginDescription>& descriptions, juce::AudioPluginFormatManager& formats,
+               double sampleRate, int n)
+    {
+        std::vector<chain::ChainProcessor::SlotPtr> list;
+        for (auto* d : descriptions)
+        {
+            juce::String error;
+            auto instance = formats.createPluginInstance (*d, sampleRate, n, error);
+            if (instance == nullptr)
+            {
+                fail ("local play, " + d->name + ": " + error);
+                return false;
+            }
+            fxmenet::catalog::useDefaultBuses (*instance);
+            instance->setPlayHead (&playHead);
+            instance->prepareToPlay (sampleRate, n);
+            auto slot = std::make_shared<chain::ProcessorSlot>();
+            slot->processor = instance.get();
+            slot->numChannels = juce::jmax (1, instance->getTotalNumInputChannels(), instance->getTotalNumOutputChannels());
+            list.push_back (slot);
+            instances.push_back (std::move (instance));
+        }
+        work.setSize (wire::maxChannels, n);
+        midi.ensureSize (8 * wire::maxMidiBytes + (std::size_t) chain::MidiGuard::releaseSize());
+        return core.publish (std::move (list), nullptr);
+    }
+
+    ~WavLocalChain() override
+    {
+        core.publish ({}, nullptr);   // before the instances go
+    }
+
+    void processLocalBlock (const float* const* in, int numInputs, float* const* out, int numOutputs, int numSamples,
+                            const std::uint8_t* midiBytes, std::size_t numMidiBytes, bool offline, bool reset) override
+    {
+        work.clear();
+        for (int c = 0; c < numInputs; ++c)
+            std::copy (in[c], in[c] + numSamples, work.getWritePointer (c));
+        midi.clear();
+        wire::MidiReader reader (midiBytes, numMidiBytes);
+        wire::MidiEvent e;
+        while (reader.next (e))
+            midi.addEvent (e.data, e.size, juce::jlimit (0, numSamples - 1, (int) e.sampleOffset));
+        juce::AudioBuffer<float> view (work.getArrayOfWritePointers(), work.getNumChannels(), numSamples);
+        core.process (view, midi, offline, reset, reset);
+        for (int c = 0; c < numOutputs; ++c)
+            std::copy (work.getReadPointer (c), work.getReadPointer (c) + numSamples, out[c]);
+    }
+
+    int getLocalLatency() const override   { return core.getLatency(); }
+
+private:
+    EmptyPlayHead playHead;
+    std::vector<std::unique_ptr<juce::AudioPluginInstance>> instances;
+    chain::ChainProcessor core;
+    juce::AudioBuffer<float> work;
+    juce::MidiBuffer midi;
+};
 
 //==============================================================================
 /** --engine: the WAV through ClientEngine, in host buffers, as a DAW would. */
@@ -581,14 +654,25 @@ int runEngine (const Options& o, const juce::AudioBuffer<float>& input, double s
         engine.addSlot ((std::uint32_t) descriptions[i]->uniqueId, descriptions[i]->name,
                         descriptions[i]->manufacturerName, i);
 
-    engine.connectTo (o.host, o.port);
+    WavLocalChain localChain;
+    if (o.local)
+    {
+        if (! localChain.load (descriptions, formats, sampleRate, o.blockSize))
+            return 1;
+        engine.setLocalProcessor (&localChain);
+        say ("Local play: no server");
+    }
+    else
+    {
+        engine.connectTo (o.host, o.port);
+    }
     say ("Engine: N " + juce::String (o.blockSize) + ", budget " + juce::String (o.budgetBlocks)
          + " blocks, host buffers " + (o.randomBlocks ? "of random sizes up to " : "of ") + juce::String (o.hostBlock));
 
     // Connected, and every slot answered.
     const auto deadline = juce::Time::getMillisecondCounter() + 60000;
     juce::String lastStatus;
-    for (;;)
+    for (; ! o.local;)
     {
         const auto text = engine.getStatusText();
         if (text != lastStatus)
@@ -610,6 +694,8 @@ int runEngine (const Options& o, const juce::AudioBuffer<float>& input, double s
     bool allLoaded = true;
     for (auto& s : engine.getSlots())
     {
+        if (o.local)
+            break;
         say ("  slot " + juce::String ((int) s.slotId) + ": " + s.name
              + (s.loaded ? ", " + juce::String ((int) s.info.params.size()) + " parameters, latency "
                            + juce::String (s.info.latency)
@@ -700,6 +786,7 @@ int runEngine (const Options& o, const juce::AudioBuffer<float>& input, double s
         return 1;
     }
     say ("Wrote " + o.out.getFullPathName());
+    engine.setLocalProcessor (nullptr);
 
     if (! o.realtime && st.offlineTimeouts.load() > 0)
         return 1;
@@ -942,7 +1029,7 @@ int main (int argc, char* argv[])
                      "                         [--server host[:port]] [--block N] [--realtime] [--budget D]\n"
                      "                         [--settle ms] [--no-compare] [--telemetry]\n"
                      "                         [--jsfx EFFECTS_FOLDER SCRIPT_PATH]...   (JSFX scripts, after the plugins; no comparison)\n"
-                     "                         [--engine [--host-block N] [--random-blocks]]\n"
+                     "                         [--engine [--host-block N] [--random-blocks] [--local]]\n"
                      "       fxmenet-wavclient --discover" << std::endl;
 
     juce::DeletedAtShutdown::deleteAll();
