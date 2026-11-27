@@ -102,6 +102,7 @@ private:
     void handleSlotAdd (const control::Frame&);
     void handleParamSet (const control::Frame&);
     void handleState (const control::Frame&);
+    void handleSlotEvents (const control::Frame&);
     void handleRouting (const control::Frame&);
     void handleSlotLayout (const control::Frame&);
 

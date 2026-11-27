@@ -394,6 +394,7 @@ void Session::handleFrame (const Frame& f, int gen)
 
         case Type::stateSet:
         case Type::stateGet:    handleState (f); break;
+        case Type::slotEvents:  handleSlotEvents (f); break;
 
         case Type::ping:
             connection->send (Type::pong, 0, f.requestId, f.payload.data(), f.payload.size());
@@ -632,6 +633,22 @@ void Session::handleState (const Frame& f)
     reply.state.assign ((const std::uint8_t*) block.getData(),
                         (const std::uint8_t*) block.getData() + block.getSize());
     connection->sendBinary (Type::state, f.requestId, encode (reply));
+}
+
+void Session::handleSlotEvents (const Frame& f)
+{
+    // No reply, as for PARAM_SET: an event is a moment, and a slot removed
+    // meanwhile simply does not get it.
+    control::SlotState m;
+    if (! decode (f.payload, m))
+        return fail (f, ErrorMessage::badRequest, "malformed SLOT_EVENTS");
+
+    auto* slot = chain.findSlot (m.slotId);
+    if (slot == nullptr || slot->net == nullptr || slot->net->getAbiVersion() < 2)
+        return;
+    if (slot->net->writeEvents (m.state.data(), (std::int32_t) m.state.size()) != fxme::net::resultOk)
+        log ("session " + juce::String ((int) sessionId) + ": slot " + juce::String ((int) m.slotId)
+             + " refused its events");
 }
 
 void Session::handleSlotLayout (const Frame& f)

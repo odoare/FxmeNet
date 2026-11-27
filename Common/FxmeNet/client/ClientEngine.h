@@ -894,6 +894,22 @@ public:
         });
     }
 
+    /** Events from a slot's mirror (INetPlugin::readEvents: clicks and the
+        like from its editor) for the instance on the server (SLOT_EVENTS,
+        no reply). Dropped when the slot is not loaded there: an event is a
+        moment, replaying it later would be wrong. Not on the audio thread. */
+    void sendSlotEvents (std::uint32_t slotId, std::vector<std::uint8_t> slotEvents)
+    {
+        const std::lock_guard<std::mutex> l (lock);
+        auto* slot = find (slotId);
+        if (slot == nullptr || ! ready || ! slot->onServer || ! slot->loaded)
+            return;
+        control::SlotState m;
+        m.slotId = slotId;
+        m.state = std::move (slotEvents);
+        sendFrame (control::Type::slotEvents, 0, encode (m));
+    }
+
     /** Asks the server for its plugins; getCatalog() has them after the
         next onStateChange. */
     void requestCatalog()

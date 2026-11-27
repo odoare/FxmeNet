@@ -316,9 +316,28 @@ private:
             }
         }
 
+        // Events (ABI 2), the other way: what the mirror's editor triggered
+        // (a click striking a plate) into the source. Always, as FxmeNet
+        // does: they do not depend on telemetry.
+        if (mirrorNet->getAbiVersion() >= 2 && sourceNet->getAbiVersion() >= 2)
+        {
+            int n = mirrorNet->readEvents (events.data(), (std::int32_t) events.size());
+            if (n < 0)
+            {
+                events.resize ((size_t) -n);
+                n = mirrorNet->readEvents (events.data(), (std::int32_t) events.size());
+            }
+            if (n > 0)
+            {
+                sourceNet->writeEvents (events.data(), n);
+                ++eventBatches;
+            }
+        }
+
         if (++statusTick % 15 == 0)
             status.setText (description + "  |  " + juce::String (frames) + " frames, "
-                              + juce::String (lastFrameBytes) + " bytes each"
+                              + juce::String (lastFrameBytes) + " bytes each, "
+                              + juce::String (eventBatches) + " event batches"
                               + (pumping ? "" : "  (telemetry off)"),
                             juce::dontSendNotification);
     }
@@ -334,8 +353,9 @@ private:
     std::vector<std::unique_ptr<ParameterLink>> links;
 
     std::vector<std::uint8_t> frame = std::vector<std::uint8_t> (4096);
+    std::vector<std::uint8_t> events = std::vector<std::uint8_t> (256);
     bool pumping = true;
-    int frames = 0, lastFrameBytes = 0, statusTick = 0;
+    int frames = 0, lastFrameBytes = 0, statusTick = 0, eventBatches = 0;
     juce::String description;
 
     juce::Label status, sourceTitle, mirrorTitle;

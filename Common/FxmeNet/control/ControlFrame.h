@@ -60,6 +60,7 @@ enum class Type : std::uint16_t
     stateSet        = 32,
     stateGet        = 33,
     state           = 34,
+    slotEvents      = 35,   ///< a mirror's events for the slot's instance, no reply
     telemetryActive = 40,
     // JSFX scripts' @gfx display (Common/FxmeNet/jsfx/JsfxSync.h).
     jsfxSubscribe   = 41,
@@ -314,7 +315,9 @@ inline bool decode (const std::vector<std::uint8_t>& in, std::vector<ParamChange
     return r.ok();
 }
 
-/** STATE_SET and STATE: a slot's state blob. STATE_GET: the slot alone. */
+/** STATE_SET and STATE: a slot's state blob. STATE_GET: the slot alone.
+    SLOT_EVENTS: the blob is what the mirror's INetPlugin::readEvents
+    returned, for the instance's writeEvents. */
 struct SlotState
 {
     std::uint32_t slotId = 0;

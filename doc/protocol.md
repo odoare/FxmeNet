@@ -102,6 +102,7 @@ state and parameter batches are binary.
 | 31 | `PARAM_CHANGED` | server | same layout: changes the plugin made itself |
 | 32 | `STATE_SET` | client | binary: slotId, state blob |
 | 33 | `STATE_GET` / 34 `STATE` | client / server | as `STATE_SET`, with an empty blob / slotId + blob |
+| 35 | `SLOT_EVENTS` | client | binary: slotId, blob (u32 length + bytes): what the slot's mirror returned from `INetPlugin::readEvents`, for the instance's `writeEvents` (added 2026-11-27) |
 | 40 | `TELEMETRY_ACTIVE` | client | binary: slotId, u8 on (the slot's editor opened or closed) |
 | 50 | `MONITOR_STATUS` | monitor / server | JSON: `logSince`, `catalogRevision` / the status (section 4.7) |
 | 51 | `MONITOR_PATHS` | monitor | JSON: `paths` (the saved plugin folders), `useDefaultPaths` |
@@ -114,8 +115,8 @@ anything that failed. Every other request (`CONFIGURE`, `SLOT_REMOVE`,
 `SLOT_MOVE`, `SLOT_BYPASS`, `CHAIN_CLEAR`, `ROUTING`, `STATE_SET`, `TELEMETRY_ACTIVE`,
 `MONITOR_PATHS`, `MONITOR_RESCAN`)
 is acknowledged on success by a frame of its own type with an empty payload
-and the same `requestId`. `PARAM_SET` is never acknowledged (a stream of
-changes); a failed one gets an `ERROR`. Chain
+and the same `requestId`. `PARAM_SET` and `SLOT_EVENTS` are never
+acknowledged (streams); a malformed one gets an `ERROR`. Chain
 edits are applied by the server off the audio thread and swapped in between
 two blocks; a slot's processing never stops for another slot's edit.
 
@@ -500,6 +501,16 @@ State changes made on the client side (an editor loading an IR in a mirror,
 a preset) reach the server with `STATE_SET`, triggered by the mirror's
 `INetPlugin::getStateChangeCount()` changing. Parameter changes go as
 `PARAM_SET`.
+
+What a mirror's editor triggers that is neither a parameter nor state (a
+click striking ModalDish's plate) goes as `SLOT_EVENTS` (FxmeNet ABI 2,
+`INetPlugin::readEvents` / `writeEvents`). The client reads each mirror's
+events at its 50 Hz timer, after the state check, so on the ordered control
+connection a state change made before a click arrives before it. The
+server delivers them to the instance on its message thread and drops
+them for a slot that is gone or a plugin built before ABI 2; the client
+drops them for a slot not loaded on the server, and when the copy switches
+to or from local play. Events are moments: none is kept for later.
 
 ## 9. Security (version 1)
 

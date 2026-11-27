@@ -750,6 +750,12 @@ void FxmeNetAudioProcessor::syncShadows()
         if (changed)
             engine.setSlotState (id, std::vector<std::uint8_t> ((const std::uint8_t*) block.getData(),
                                                                 (const std::uint8_t*) block.getData() + block.getSize()));
+
+        // What its editor triggered (a click striking ModalDish's plate),
+        // at every tick: after the state, on the same ordered connection,
+        // so an edit followed by a click reaches the server in that order.
+        if (auto events = shadow->takeEvents(); ! events.empty())
+            engine.sendSlotEvents (id, std::move (events));
     }
     for (auto id : gone)
         removeShadow (id);

@@ -50,7 +50,8 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     still open, within a fifth of a second); save, reload the project: the
     pattern is there. Turning a knob in a tier 1 editor while it plays
     stays smooth (a state reload per move would be heard as resets).
-17. Priority among the later items (user, 2026-11-17). ModalDish as a tier 2 plugin (seen 2026-11-05: in FxmeNet the editor
+17. (written 2026-11-27: a, b and c, with the hit markers as telemetry; to
+    check in Reaper) Priority among the later items (user, 2026-11-17). ModalDish as a tier 2 plugin (seen 2026-11-05: in FxmeNet the editor
     works, a plate can be drawn and computed, but nothing sounds, neither
     clicks, MIDI nor input audio). Causes: the shape, the boundaries and the
     computed modes are state, built in the client's mirror and never sent,
@@ -200,7 +201,7 @@ Numbered items keep their number when they move to `done.md`. Phases refer to
     misses assignments inside functions called from there. Extend the scan
     to the bodies of the functions those sections call (and what they
     call), if a script's display stays still because of it.
-27. Plan written 2026-11-27: doc/bus-width-plan.md. A per-slot choice of
+27. (written 2026-11-27: phases 1 and 2, then channel counts only) Plan written 2026-11-27: doc/bus-width-plan.md. A per-slot choice of
     the main buses' channel count (IEM ambisonic plugins follow it: AmbiRR2's
     16 outputs into the IEM BinauralDecoder, stuck at 4 inputs). After the
     local fallback.

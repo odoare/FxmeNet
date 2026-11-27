@@ -123,6 +123,7 @@ public:
         instance->releaseResources();
         net->setRole ((std::int32_t) (local ? fxme::net::Role::local : fxme::net::Role::mirror));
         instance->prepareToPlay (preparedRate, preparedBlock);
+        takeEvents();   // queued for a server it no longer plays on, or long ago
     }
 
     /** True when it processes (local play), false for a mirror. */
@@ -182,6 +183,24 @@ public:
         ended a gesture on it. */
     std::function<void (int index, float value)> onParameterChanged;
     std::function<void (int index, bool starting)> onGesture;
+
+    /** The events an FxmeNet-aware mirror queued since the last call (ABI 2:
+        clicks and the like from its editor, for the server's instance).
+        Empty when there are none, or for a plugin built before ABI 2. */
+    std::vector<std::uint8_t> takeEvents()
+    {
+        if (net == nullptr || netAbi < 2)
+            return {};
+        std::vector<std::uint8_t> bytes (256);
+        auto n = net->readEvents (bytes.data(), (std::int32_t) bytes.size());
+        if (n < 0)
+        {
+            bytes.resize ((std::size_t) -n);
+            n = net->readEvents (bytes.data(), (std::int32_t) bytes.size());
+        }
+        bytes.resize ((std::size_t) juce::jmax (0, n));
+        return bytes;
+    }
 
     /** The state-change counter of an FxmeNet-aware plugin (0 otherwise). */
     std::uint32_t getStateChangeCount() const               { return net != nullptr ? net->getStateChangeCount() : 0; }
@@ -287,7 +306,10 @@ private:
         if (auto* vst3 = instance->getVST3Client())
             net = fxme::net::queryNetPlugin (vst3->getIComponentPtr());
         if (net != nullptr)   // before preparing
+        {
+            netAbi = net->getAbiVersion();
             net->setRole ((std::int32_t) (local ? fxme::net::Role::local : fxme::net::Role::mirror));
+        }
 
         catalog::useDefaultBuses (*instance);   // as on the server (Buses.h)
         catalog::setMainLayouts (*instance, askedIn, askedOut);   // the slot's layouts, before preparing
@@ -362,6 +384,7 @@ private:
 
     std::unique_ptr<juce::AudioPluginInstance> instance;
     fxme::net::INetPlugin* net = nullptr;
+    std::uint32_t netAbi = 0;   ///< its getAbiVersion(): readEvents needs 2
     bool local = false;
     std::vector<juce::uint32> touched;   ///< when the editor last moved each parameter
 
