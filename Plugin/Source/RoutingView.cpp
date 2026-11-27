@@ -57,7 +57,9 @@ public:
             sig << (int) b.id << ":" << b.numInputs() << "," << b.numOutputs() << ";";
             for (auto& s : slots)
                 if (s.slotId == b.id)
-                    sig << s.name << (s.loaded ? "+" : "-") << (s.bypassed ? "b" : "") << ";";
+                    sig << s.name << (s.loaded ? "+" : "-") << (s.bypassed ? "b" : "")
+                        << processor.getLocalProblem (s.slotId) << ";";
+        sig << (processor.getProcessing() == FxmeNetAudioProcessor::Processing::local ? "L" : "S");
         }
         for (auto& c : model.getConnections())
             sig << (int) c.from.box << "." << c.from.channel << ">" << (int) c.to.box << "." << c.to.channel
@@ -309,8 +311,12 @@ private:
                     if (s.slotId == box.id)
                     {
                         shape.name << s.name;
-                        shape.loaded = s.loaded;
-                        if (! s.loaded)
+                        const bool local = processor.getProcessing() == FxmeNetAudioProcessor::Processing::local;
+                        const auto problem = local ? processor.getLocalProblem (s.slotId) : juce::String();
+                        shape.loaded = local ? problem.isEmpty() : s.loaded;
+                        if (local && problem.isNotEmpty())
+                            shape.note = "missing here: passed through";
+                        else if (! shape.loaded)
                             shape.note = "not loaded on the server: bypassed";
                         else if (s.bypassed)
                             shape.note = "bypassed";

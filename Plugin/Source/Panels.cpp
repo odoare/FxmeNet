@@ -395,7 +395,7 @@ void ParameterPanel::showGeneric (const client::SlotModel* slot)
     const bool local = processor.getProcessing() == FxmeNetAudioProcessor::Processing::local;
     const auto localProblem = slot != nullptr && local ? processor.getLocalProblem (id) : juce::String();
     if (slot != nullptr)
-        signature << (int) id << (slot->loaded ? "L" : "-") << (int) slot->info.params.size() << localProblem;
+        signature << (int) id << (FxmeNetAudioProcessor::isDescribed (*slot) ? "L" : "-") << (int) slot->info.params.size() << localProblem;
 
     if (id != shownSlot || signature != shownSignature)
     {
@@ -405,13 +405,12 @@ void ParameterPanel::showGeneric (const client::SlotModel* slot)
         viewport.setVisible (true);
         message = slot == nullptr ? "Select a plugin in the chain to see its parameters."
                 : localProblem.isNotEmpty() ? slot->name + " is played locally without it: " + localProblem + "."
-                : ! slot->loaded && local ? "Generic controls are known once " + slot->name
-                                              + " has been loaded on a server; its own editor works here."
-                : ! slot->loaded  ? slot->name + " is not loaded on the server."
+                : ! FxmeNetAudioProcessor::isDescribed (*slot) && local ? slot->name + " is loading here."
+                : ! slot->loaded && ! local ? slot->name + " is not loaded on the server."
                                   : juce::String();
 
         rowParams.clear();
-        if (slot != nullptr && slot->loaded)
+        if (slot != nullptr && FxmeNetAudioProcessor::isDescribed (*slot))
             for (std::size_t k = 0; k < slot->info.params.size(); ++k)
             {
                 const auto& paramInfo = slot->info.params[k];
@@ -421,13 +420,13 @@ void ParameterPanel::showGeneric (const client::SlotModel* slot)
                 rowParams.push_back (k);
                 content.addAndMakeVisible (*rows.back());
             }
-        if (slot != nullptr && slot->loaded && rows.empty() && ! slot->info.params.empty())
+        if (slot != nullptr && FxmeNetAudioProcessor::isDescribed (*slot) && rows.empty() && ! slot->info.params.empty())
             message = "Every slider of this script is hidden: it is set from its display.";
         resized();
         repaint();
     }
 
-    if (slot != nullptr && slot->loaded)
+    if (slot != nullptr && FxmeNetAudioProcessor::isDescribed (*slot))
         for (std::size_t i = 0; i < rows.size() && i < rowParams.size(); ++i)
             if (rowParams[i] < slot->info.params.size())
                 rows[i]->update (client::ClientEngine::currentValue (*slot, slot->info.params[rowParams[i]]));

@@ -95,6 +95,7 @@ struct SlotModel
     // The server's side.
     bool onServer = false;   ///< SLOT_ADD sent and not refused
     bool loaded = false;     ///< SLOT_READY received: `info` is valid
+    bool localInfo = false;  ///< `info` describes its local copy (local play, no SLOT_READY yet)
     juce::String error;      ///< why it is not loaded
     control::SlotReady info;
 
@@ -300,6 +301,28 @@ public:
 
     std::vector<SlotModel> getSlots() const      { const std::lock_guard<std::mutex> l (lock); return slots; }
 
+    /** Local play: a slot described from its local copy, for the generic
+        controls and the routing, when no server has (SLOT_READY wins). Its
+        buses are taken when unknown. */
+    void setLocalInfo (std::uint32_t slotId, control::SlotReady info)
+    {
+        {
+            const std::lock_guard<std::mutex> l (lock);
+            auto* slot = find (slotId);
+            if (slot == nullptr || slot->loaded)
+                return;
+            if (! slot->hasBox)
+            {
+                slot->box = control::toBox (info);
+                slot->hasBox = true;
+            }
+            slot->info = std::move (info);
+            slot->localInfo = true;
+            refreshRouting();
+        }
+        notify();
+    }
+
     /** One slot's last known state (empty when unknown). */
     std::vector<std::uint8_t> getSlotState (std::uint32_t slotId) const
     {
@@ -329,6 +352,7 @@ public:
             copy.params = s.params;
             copy.onServer = s.onServer;
             copy.loaded = s.loaded;
+            copy.localInfo = s.localInfo;
             copy.error = s.error;
             copy.info = s.info;
             copy.box = s.box;

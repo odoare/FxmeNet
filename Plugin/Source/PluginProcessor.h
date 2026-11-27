@@ -146,6 +146,10 @@ public:
     bool addScript (const fxmenet::jsfx::Script&, juce::String& error, juce::StringArray* notes = nullptr);
 
     /** A slot that holds a JSFX script. */
+    /** Its parameters are known: loaded on the server, or described from its
+        local copy (local play). */
+    static bool isDescribed (const fxmenet::client::SlotModel& s)   { return s.loaded || s.localInfo; }
+
     static bool isJsfx (const fxmenet::client::SlotModel& s)
     {
         return s.uid == fxmenet::jsfx::jsfxUid && s.vendor == fxmenet::jsfx::jsfxVendor;

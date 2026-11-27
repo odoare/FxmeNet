@@ -14,6 +14,7 @@
 #include "Log.h"
 
 #include <FxmeNet/catalog/Buses.h>
+#include <FxmeNet/chain/Describe.h>
 
 namespace fxmenet::server
 {
@@ -351,66 +352,24 @@ bool Chain::publish()
 //==============================================================================
 std::vector<control::BusInfo> describeBuses (juce::AudioProcessor& instance)
 {
-    std::vector<control::BusInfo> out;
-    for (const bool input : { true, false })
-        for (int i = 0; i < instance.getBusCount (input); ++i)
-            if (auto* bus = instance.getBus (input, i))
-            {
-                // Its full width even when disabled, so that the routing's
-                // channel numbers do not move when it is enabled.
-                int channels = bus->getNumberOfChannels();
-                if (channels == 0)
-                    channels = bus->getDefaultLayout().size();
-                if (channels == 0)
-                    channels = bus->getLastEnabledLayout().size();
-
-                control::BusInfo b;
-                b.name = bus->getName();
-                b.input = input;
-                b.channels = channels;
-                b.main = i == 0;
-                out.push_back (b);
-            }
-    return out;
+    return chain::describeBuses (instance);
 }
 
 std::vector<control::ParamInfo> describeParameters (juce::AudioPluginInstance& instance)
 {
-    std::vector<control::ParamInfo> out;
-    auto* bypass = instance.getBypassParameter();
-
-    for (auto* p : instance.getParameters())
+    return chain::describeParameters (instance, [] (juce::AudioProcessorParameter& p, control::ParamInfo& i)
     {
-        control::ParamInfo i;
-        i.index = p->getParameterIndex();
-        if (auto* hosted = dynamic_cast<juce::HostedAudioProcessorParameter*> (p))
-            i.paramId = hosted->getParameterID();
-        i.name = p->getName (256);
-        i.label = p->getLabel();
-        i.defaultValue = p->getDefaultValue();
-        i.value = p->getValue();
-        i.automatable = p->isAutomatable();
-        i.isBypass = p == bypass;
        #if FXMENET_JSFX
-        if (auto* ranged = dynamic_cast<RangedParameter*> (p))
+        if (auto* ranged = dynamic_cast<RangedParameter*> (&p))
         {
             i.hasRange = ranged->getRange (i.rangeMin, i.rangeMax, i.rangeStep);
             i.choices = ranged->isChoice();
             i.hidden = ranged->isHidden();
         }
+       #else
+        juce::ignoreUnused (p, i);
        #endif
-
-        const int steps = p->getNumSteps();
-        const bool stepped = (p->isDiscrete() || p->isBoolean()) && steps > 1
-                             && steps != juce::AudioProcessor::getDefaultNumParameterSteps();
-        i.numSteps = stepped ? steps : 0;
-        if (stepped && (steps <= 32 || (i.choices && steps <= 1024)))   // a list: every name
-            for (int k = 0; k < steps; ++k)
-                i.stepTexts.add (p->getText ((float) k / (float) (steps - 1), 64));
-
-        out.push_back (i);
-    }
-    return out;
+    });
 }
 
 } // namespace fxmenet::server

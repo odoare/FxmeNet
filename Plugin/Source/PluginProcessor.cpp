@@ -8,6 +8,8 @@
 */
 
 #include "PluginProcessor.h"
+
+#include <FxmeNet/chain/Describe.h>
 #include "PluginEditor.h"
 #include "AppSettings.h"
 
@@ -338,7 +340,7 @@ void FxmeNetAudioProcessor::followChain()
 
     juce::String signature;
     for (auto& s : slots)
-        signature << (int) s.slotId << (s.loaded ? "L" : "-") << ";";
+        signature << (int) s.slotId << (isDescribed (s) ? "L" : "-") << ";";
     if (signature == lastSlotsSignature)
         return;
     lastSlotsSignature = signature;
@@ -347,7 +349,7 @@ void FxmeNetAudioProcessor::followChain()
     for (auto& s : slots)
     {
         present.insert (s.slotId);
-        if (s.loaded)
+        if (isDescribed (s))
             loaded.insert (s.slotId);
     }
 
@@ -374,7 +376,7 @@ void FxmeNetAudioProcessor::followChain()
 
         for (auto& s : slots)
         {
-            if (! s.loaded || autoMapped.count (s.slotId) != 0)
+            if (! isDescribed (s) || autoMapped.count (s.slotId) != 0)
                 continue;
             autoMapped.insert (s.slotId);
 
@@ -393,7 +395,7 @@ void FxmeNetAudioProcessor::followChain()
 
         for (auto& s : slots)
         {
-            if (! s.loaded || syncedSlots.count (s.slotId) != 0)
+            if (! isDescribed (s) || syncedSlots.count (s.slotId) != 0)
                 continue;
             syncedSlots.insert (s.slotId);
 
@@ -733,7 +735,7 @@ float FxmeNetAudioProcessor::describeMapped (int poolIndex, const std::vector<Sl
 {
     const auto m = mapping[(std::size_t) poolIndex];
     for (auto& s : slots)
-        if (s.slotId == m.slotId && s.loaded)
+        if (s.slotId == m.slotId && isDescribed (s))
             for (auto& p : s.info.params)
                 if ((std::uint32_t) p.index == m.paramIndex)
                 {
@@ -1171,6 +1173,10 @@ fxmenet::plugin::Shadow* FxmeNetAudioProcessor::createLocalShadow (const SlotMod
     if (shadow->getNet() == nullptr)
         shadow->takeStateReference();
     shadow->stateReceived = true;
+
+    // Its parameters and buses, when no server has described the slot: the
+    // generic controls, the mapping and the routing work without one.
+    engine.setLocalInfo (slotId, fxmenet::chain::describeSlot (slotId, shadow->getInstance()));
 
     auto* raw = shadow.get();
     shadows[slotId] = std::move (shadow);

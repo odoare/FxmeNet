@@ -335,7 +335,9 @@ void FxmeNetAudioProcessorEditor::refreshChain()
     juce::String signature;
     signature << (int) processor.getLocalCatalog().getRevision() << ":" << catalogSignature << ":";
     for (auto& s : slots)
-        signature << (int) s.slotId << (s.loaded ? "L" : "-") << (s.bypassed ? "B" : "-") << s.error << ";";
+        signature << (int) s.slotId << (s.loaded ? "L" : "-") << (s.bypassed ? "B" : "-") << s.error
+                  << (s.localInfo ? "D" : "-") << processor.getLocalProblem (s.slotId) << ";";
+    signature << (processor.getProcessing() == FxmeNetAudioProcessor::Processing::local ? "local" : "server");
     if (signature == chainSignature)
         return;
     chainSignature = signature;
@@ -353,7 +355,26 @@ void FxmeNetAudioProcessorEditor::refreshChain()
             m.text = "A JSFX script, processed on the server. "
                      + juce::String (s.info.jsfxGfx ? "Its @gfx display is drawn here, from the server's data."
                                                     : "Generic controls (it has no @gfx section).");
-        if (s.error.isNotEmpty())
+        const bool local = processor.getProcessing() == FxmeNetAudioProcessor::Processing::local;
+        const auto problem = local ? processor.getLocalProblem (s.slotId) : juce::String();
+        if (local && problem.isNotEmpty())
+        {
+            detail = "missing here: passed through";
+            colour = theme::warning;
+            m.text = "Played locally without it: " + problem + ".";
+        }
+        else if (local && s.localInfo && ! s.loaded)
+        {
+            detail = "HERE  " + juce::String ((int) s.info.params.size()) + " parameters"
+                   + (s.info.latency > 0 ? ", latency " + juce::String (s.info.latency) : juce::String());
+            m.text = "Played on this computer (Local).";
+        }
+        else if (local && s.loaded)
+        {
+            detail = "HERE  " + juce::String ((int) s.info.params.size()) + " parameters";
+            m.text = "Played on this computer (Local).";
+        }
+        else if (s.error.isNotEmpty() && ! local)
         {
             detail = s.error;
             colour = theme::error;
