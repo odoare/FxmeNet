@@ -89,6 +89,14 @@ The DAW compensates for the latency that \fxme\ reports. If a track is
 still late, check that the DAW's plugin delay compensation is on and that
 the DAW applies it to this track.
 
+\section{An export does not sound right}
+
+With \ui{Processing} on \ui{Auto}, an export during which the server was
+lost, or came back, is made partly on each side: the status line says
+\emph{This export switched sides}. The local copies start with empty
+reverb tails and delay lines, so the switch can be heard. Export again,
+once the server is steady, or with \ui{Local} or \ui{Server}.
+
 \section{Everything stops when the server restarts}
 
 The plugin reconnects by itself and rebuilds the chain on the server. If the

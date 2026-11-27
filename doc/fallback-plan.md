@@ -230,6 +230,18 @@ when the server is lost (`goLocal` publishes the chain before handing it
 to the engine: silence while they load, not a chain missing plugins), and
 those no editor shows are dropped again after the return.
 
+Phase 5 written (2026-11-28). The statistics line shows "local load" in
+place of the round trip while the chain plays here (`LocalChain` measures
+each block; the worst of the last second against a block's duration);
+an export (offline render) during which Auto switched sides is marked in
+the status line until the next export (`noteSwitch`); the manual
+(statistics, troubleshooting: an export that switched sides) and the
+README. The status line and the warnings for bridged plugins came with
+phases 2 and 4. Not done: a global default mode for new instances
+(decided: Server, which new instances get), and the latency matching
+(local and server chain latencies are taken as equal, which they are
+with the same plugins). The fallback is complete otherwise.
+
 1. **The chain core in Common.** `ChainProcessor` (serial, routed, bypass,
    release of notes, latency per slot) and `MidiGuard` move to Common; the
    server's `Chain` uses them. No change in behaviour: the server's tests

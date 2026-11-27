@@ -45,6 +45,10 @@ Made by [FX-Mechanics](https://fx-mechanics.com).
   is concealed with a short fade. The added latency is about N × D samples.
 - **Instruments.** FxmeNet Instrument plays the server's synthesizers and
   samplers from the track's MIDI, followed by effects in the same chain.
+- **Playing without the server.** The chain can play on the DAW's computer with
+  the plugins installed there, by choice (Local) or automatically while the
+  server is lost (Auto), with the same latency so that tracks keep their
+  timing.
 - **JSFX scripts.** REAPER's JSFX effects, from this computer's REAPER folder or
   your own, run in the server's chain like plugins, with their sliders and their
   own display. REAPER is not needed.

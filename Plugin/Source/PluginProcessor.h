@@ -132,6 +132,15 @@ public:
     Processing getProcessing() const noexcept   { return processing; }
     void setProcessing (Processing);
 
+    /** Local play: the chain's load on this computer, the worst block of the
+        last second against a block's duration, in percent (-1: not
+        playing here). Message thread. */
+    double getLocalLoad() const noexcept        { return playingLocal ? localLoad : -1.0; }
+
+    /** A non-empty text when an export (an offline render) switched sides
+        during its course (Auto): it is not what either side alone gives. */
+    juce::String getRenderWarning() const       { return renderWarning; }
+
     /** True while the chain plays here: Local, or Auto with the server lost. */
     bool isPlayingLocal() const noexcept        { return playingLocal; }
 
@@ -271,6 +280,13 @@ private:
     bool playingLocal = false;    ///< the chain plays here (Local, or Auto with the server lost)
     bool autoReturn = true, serverBack = false, returnAsked = false;
     bool preloadCopies = true;
+    double localLoad = 0.0;               ///< percent, see getLocalLoad
+    juce::uint32 localLoadMs = 0;
+    std::uint32_t localPeakMicros = 0;
+    juce::String renderWarning;
+    bool wasRendering = false;
+    /** Notes an Auto switch made while the DAW renders offline. */
+    void noteSwitch (const juce::String& what);
     /** Auto, copies loaded when needed: the copies no editor shows go
         (memory back), out of local play only. */
     void dropUnshownCopies();

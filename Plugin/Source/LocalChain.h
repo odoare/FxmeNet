@@ -78,6 +78,7 @@ public:
                             int numSamples, const std::uint8_t* midiBytes, std::size_t numMidiBytes,
                             bool offline, bool reset) override
     {
+        const auto t0 = juce::Time::getHighResolutionTicks();
         if (numSamples > work.getNumSamples())
         {
             for (int c = 0; c < numOutputs; ++c)
@@ -105,7 +106,17 @@ public:
             else
                 std::fill (out[c], out[c] + numSamples, 0.0f);
         }
+
+        // The load on this computer: the worst block since the last look.
+        const auto micros = (std::uint32_t) (juce::Time::highResolutionTicksToSeconds (
+                                                 juce::Time::getHighResolutionTicks() - t0) * 1.0e6);
+        auto peak = peakMicros.load (std::memory_order_relaxed);
+        while (micros > peak && ! peakMicros.compare_exchange_weak (peak, micros)) {}
     }
+
+    /** The longest block processed since the last call, in microseconds
+        (0: none). Message thread. */
+    std::uint32_t takePeakMicros() noexcept   { return peakMicros.exchange (0); }
 
     int getLocalLatency() const override   { return core.getLatency(); }
 
@@ -113,6 +124,7 @@ private:
     chain::ChainProcessor core;
     std::vector<SlotPtr> current;   // message thread
 
+    std::atomic<std::uint32_t> peakMicros { 0 };
     juce::AudioBuffer<float> work;  // audio thread, sized by prepare()
     juce::MidiBuffer midi;
 

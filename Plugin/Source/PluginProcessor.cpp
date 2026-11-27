@@ -291,6 +291,28 @@ void FxmeNetAudioProcessor::timerCallback()
     applyServerParameterChanges();
     sendDirtyParameters();
     followChain();
+
+    // An export starting: its warning, if any, is the next one's.
+    const bool rendering = isNonRealtime();
+    if (rendering && ! wasRendering)
+        renderWarning = {};
+    wasRendering = rendering;
+
+    // The local chain's load, over the last second.
+    localPeakMicros = juce::jmax (localPeakMicros, localChain.takePeakMicros());
+    if (const auto now = juce::Time::getMillisecondCounter(); now - localLoadMs >= 1000)
+    {
+        double rate;
+        {
+            const std::lock_guard<std::mutex> l (settingsLock);
+            rate = preparedRate > 0.0 ? preparedRate : 48000.0;
+        }
+        const double blockMicros = 1.0e6 * getStreamSettings().blockSize / rate;
+        localLoad = 100.0 * localPeakMicros / blockMicros;
+        localPeakMicros = 0;
+        localLoadMs = now;
+    }
+
     followAuto();
     syncShadows();
     deliverTelemetry();
@@ -1206,8 +1228,15 @@ void FxmeNetAudioProcessor::followAuto()
         startReturn();
 }
 
+void FxmeNetAudioProcessor::noteSwitch (const juce::String& what)
+{
+    if (isNonRealtime())
+        renderWarning = "This export switched sides (" + what + "): check it, or export again";
+}
+
 void FxmeNetAudioProcessor::goLocal()
 {
+    noteSwitch ("server lost");
     // The copies loaded already (syncShadows, or the editors') take the local
     // role; the others are loaded now. The chain plays once all are there:
     // silence meanwhile rather than a chain missing some of its plugins.
@@ -1226,6 +1255,7 @@ void FxmeNetAudioProcessor::goLocal()
 
 void FxmeNetAudioProcessor::startReturn()
 {
+    noteSwitch ("back to the server");
     // The server gets the copies' state first (its chain was rebuilt from
     // the model when it came back), then the crossfade, about 50 ms.
     for (auto& [id, shadow] : shadows)

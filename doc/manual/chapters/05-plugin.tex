@@ -155,6 +155,9 @@ The line at the bottom of the window gives:
   \item[Latency] What \fxme\ reports to the DAW, in samples and milliseconds.
   \item[Round trip] The last measured time for a message to reach the server
     and come back.
+  \item[Local load] In its place while the chain plays on this computer
+    (section~\ref{sec:local}): the worst block of the last second, against
+    the time a block lasts. Near 100~\% the DAW computer cannot keep up.
   \item[Concealed] Blocks that came back too late and were replaced.
   \item[Rescued] Blocks that would have been concealed but arrived in time
     after a short wait.

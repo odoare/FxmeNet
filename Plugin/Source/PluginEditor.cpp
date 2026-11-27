@@ -185,13 +185,20 @@ void FxmeNetAudioProcessorEditor::timerCallback()
     {
         statusLine = "AUTO: " + statusLine;
     }
+    if (const auto warning = processor.getRenderWarning(); warning.isNotEmpty())
+    {
+        statusLine << " | " << warning;
+        statusColour = theme::warning;
+    }
     connectButton.setButtonText (processor.getServer().isNotEmpty() ? "Disconnect" : "Connect");
 
     const auto& st = engine.getStatistics();
     const int latency = engine.getLatency();
     const double rate = processor.getSampleRate() > 0.0 ? processor.getSampleRate() : 48000.0;
+    const double localLoad = processor.getLocalLoad();
     statsLine = "Latency " + juce::String (latency) + " samples (" + juce::String (1000.0 * latency / rate, 1)
-              + " ms)   round trip " + juce::String (st.lastRttMicros.load() / 1000.0, 2) + " ms"
+              + " ms)   " + (localLoad >= 0.0 ? "local load " + juce::String (localLoad, 0) + " %"
+                                              : "round trip " + juce::String (st.lastRttMicros.load() / 1000.0, 2) + " ms")
               + "   concealed " + juce::String ((juce::int64) engine.getConcealedCount())
               + "   rescued " + juce::String ((juce::int64) st.rescued.load())
               + "   UDP dropped " + juce::String ((juce::int64) st.udpDropped.load())
