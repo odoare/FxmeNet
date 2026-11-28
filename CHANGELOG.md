@@ -12,7 +12,7 @@ tag has no section here (`.github/changelog-notes.sh`).
 
 ## [Unreleased]
 
-## [0.4.0] - 2026-11-25
+## [0.4.0] - 2026-11-27
 
 Client and server must be updated together: this version adds protocol
 messages (`SLOT_LAYOUT`, `SLOT_EVENTS`) that a 0.3.0 server does not know.
@@ -67,7 +67,8 @@ messages (`SLOT_LAYOUT`, `SLOT_EVENTS`) that a 0.3.0 server does not know.
 Releases up to 0.3.0 predate this file: their notes are on the
 [releases page](https://github.com/odoare/FxmeNet/releases).
 
-[Unreleased]: https://github.com/odoare/FxmeNet/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/odoare/FxmeNet/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/odoare/FxmeNet/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/odoare/FxmeNet/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/odoare/FxmeNet/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/odoare/FxmeNet/compare/v0.1.0...v0.2.0
